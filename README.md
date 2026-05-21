@@ -15,3 +15,8 @@ Baseline scaffold folders created.
 ## Phase 1 Status 
 
 Standalone intelligence core scaffold created.
+Added Prompt source integration scaffold.
+
+## Phase 2 Status
+
+Added system settings and config scaffold.
