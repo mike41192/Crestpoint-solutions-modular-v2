@@ -11,3 +11,7 @@ Modular rebuild branch for Crestpoint Solutions.
 ## Phase 0 Status
 
 Baseline scaffold folders created.
+
+## Phase 1 Status 
+
+Standalone intelligence core scaffold created.
