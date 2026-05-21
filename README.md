@@ -32,3 +32,7 @@ Added Clean UI and onboarding component scaffold
 ## Phase 5 Status
 
 Added app route scaffold
+
+## Phase 6 Status 
+
+Added API route scaffold
