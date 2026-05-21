@@ -40,3 +40,7 @@ Added API route scaffold
 ## Phase 7 Status
 
 Added types hooks data and docs scaffold
+
+## Phase 8 Status
+
+Added project config scaffold
