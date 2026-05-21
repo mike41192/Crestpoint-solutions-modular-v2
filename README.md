@@ -64,3 +64,7 @@ Added tier access settings
 ## Phase 13 Status
 
 Added  pricing settings page
+
+## Phase 14 Status
+
+Added appearance settings page
