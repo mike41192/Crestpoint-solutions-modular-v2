@@ -36,3 +36,7 @@ Added app route scaffold
 ## Phase 6 Status 
 
 Added API route scaffold
+
+## Phase 7 Status
+
+Added types hooks data and docs scaffold
