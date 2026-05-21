@@ -56,3 +56,7 @@ Module access engine functional
 ## Phase 11 Status
 
 Added functional module settings admin page
+
+## Phase 12 Status
+
+Added tier access settings 
