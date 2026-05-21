@@ -60,3 +60,7 @@ Added functional module settings admin page
 ## Phase 12 Status
 
 Added tier access settings 
+
+## Phase 13 Status
+
+Added  pricing settings page
