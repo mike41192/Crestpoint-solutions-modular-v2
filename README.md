@@ -112,3 +112,7 @@ Added resuable first-use tutorial component
 ## Phase 25 Status
 
 Added tutorials to core module pages
+
+## Phase 26 Status
+
+Added module access badge component
