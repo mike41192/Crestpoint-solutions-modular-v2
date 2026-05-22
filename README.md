@@ -144,3 +144,7 @@ Added module access test page
 ## Phase 33
 
 Added access test link to settings hub
+
+## Phase 34
+
+Added resuable layout components
