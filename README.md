@@ -160,3 +160,7 @@ Refactored admin settings hub layout
 ## Phase 37
 
 Added reusable module Page Layout
+
+## Phase 38
+
+Refactored core module pages to shared layout

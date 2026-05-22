@@ -1,19 +1,36 @@
+import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
+import { SectionCard } from "@/components/layout/SectionCard"
 import { FirstUseTutorial } from "@/components/onboarding/FirstUseTutorial"
+
+const academySections = [
+  {
+    title: "Interview Basics",
+    description:
+      "Learn the foundations of successful interviewing and employer expectations.",
+  },
+  {
+    title: "STAR Method",
+    description:
+      "Practice answering behavioral questions using the STAR framework.",
+  },
+  {
+    title: "Confidence Training",
+    description:
+      "Improve communication, body language, and confidence during interviews.",
+  },
+  {
+    title: "AI Interview Practice",
+    description:
+      "Practice mock interviews and receive AI-powered feedback and coaching.",
+  },
+]
 
 export default function InterviewAcademyPage() {
   return (
-    <main style={{ padding: "32px" }}>
-      <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ fontSize: "32px", fontWeight: 700 }}>
-          Interview Academy
-        </h1>
-
-        <p style={{ marginTop: "8px", color: "#64748b" }}>
-          Learn how to prepare for interviews, improve confidence, answer
-          difficult questions, and increase your chances of getting hired.
-        </p>
-      </div>
-
+    <ModulePageLayout
+      title="Interview Academy"
+      description="Learn how to prepare for interviews, improve confidence, answer difficult questions, and increase your chances of getting hired."
+    >
       <FirstUseTutorial moduleKey="interview_academy" />
 
       <section
@@ -24,75 +41,18 @@ export default function InterviewAcademyPage() {
           marginTop: "24px",
         }}
       >
-        <div
-          style={{
-            border: "1px solid #e2e8f0",
-            borderRadius: "16px",
-            padding: "20px",
-            background: "#ffffff",
-          }}
-        >
-          <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
-            Interview Basics
-          </h2>
+        {academySections.map((section) => (
+          <SectionCard key={section.title}>
+            <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
+              {section.title}
+            </h2>
 
-          <p style={{ marginTop: "8px", color: "#64748b" }}>
-            Learn the foundations of successful interviewing and employer
-            expectations.
-          </p>
-        </div>
-
-        <div
-          style={{
-            border: "1px solid #e2e8f0",
-            borderRadius: "16px",
-            padding: "20px",
-            background: "#ffffff",
-          }}
-        >
-          <h2 style={{ fontSize: "20px", fontWeight: 700 }}>STAR Method</h2>
-
-          <p style={{ marginTop: "8px", color: "#64748b" }}>
-            Practice answering behavioral questions using the STAR framework.
-          </p>
-        </div>
-
-        <div
-          style={{
-            border: "1px solid #e2e8f0",
-            borderRadius: "16px",
-            padding: "20px",
-            background: "#ffffff",
-          }}
-        >
-          <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
-            Confidence Training
-          </h2>
-
-          <p style={{ marginTop: "8px", color: "#64748b" }}>
-            Improve communication, body language, and confidence during
-            interviews.
-          </p>
-        </div>
-
-        <div
-          style={{
-            border: "1px solid #e2e8f0",
-            borderRadius: "16px",
-            padding: "20px",
-            background: "#ffffff",
-          }}
-        >
-          <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
-            AI Interview Practice
-          </h2>
-
-          <p style={{ marginTop: "8px", color: "#64748b" }}>
-            Practice mock interviews and receive AI-powered feedback and
-            coaching.
-          </p>
-        </div>
+            <p style={{ marginTop: "8px", color: "#64748b" }}>
+              {section.description}
+            </p>
+          </SectionCard>
+        ))}
       </section>
-    </main>
+    </ModulePageLayout>
   )
 }
