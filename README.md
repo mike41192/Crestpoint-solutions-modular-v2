@@ -180,3 +180,7 @@ Added tutorials to remaining dashboard pages
 ## Phase 42
 
 Added tutorials to billing and account settings
+
+## Phase 43 
+
+Added reusable upgrade prompt component
