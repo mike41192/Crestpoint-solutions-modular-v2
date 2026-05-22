@@ -33,6 +33,11 @@ const settingsSections = [
     href: "/admin/settings/pricing",
   },
   {
+    title: "Billing Status",
+    description: "Check Stripe keys, price IDs, and billing readiness.",
+    href: "/admin/settings/billing-status",
+  },
+  {
     title: "Usage Limits",
     description: "Control monthly usage limits.",
     href: "/admin/settings/usage",
@@ -59,7 +64,7 @@ export default function AdminSettingsPage() {
     <main style={{ padding: "32px" }}>
       <PageHeader
         title="System Settings"
-        description="Manage Crestpoint modules, pricing, access, appearance, and system controls."
+        description="Manage Crestpoint modules, pricing, access, appearance, billing, and system controls."
       />
 
       <section

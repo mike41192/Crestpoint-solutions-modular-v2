@@ -1,3 +1,4 @@
+import { UpgradePrompt } from "@/components/billing/UpgradePrompt"
 import type { MembershipTier } from "@/types/modules"
 
 type LockedModuleNoticeProps = {
@@ -21,12 +22,14 @@ export function LockedModuleNotice({
         fontSize: "14px",
       }}
     >
-      <strong>Upgrade required</strong>
+      <strong>Module locked</strong>
 
       <p style={{ marginTop: "4px" }}>
         {reason} Required tier:{" "}
         <span style={{ textTransform: "capitalize" }}>{requiredTier}</span>.
       </p>
+
+      <UpgradePrompt requiredTier={requiredTier} />
     </div>
   )
 }
