@@ -124,3 +124,7 @@ Added module access badge to dashboard
 ## Phase 28 Status
 
 Added reuseable module access helper
+
+## Phase 29
+
+Added lock module notice component
