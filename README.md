@@ -108,3 +108,7 @@ Added first-use tutorial content system
 ## Phase 24 Status 
 
 Added resuable first-use tutorial component
+
+## Phase 25 Status
+
+Added tutorials to core module pages

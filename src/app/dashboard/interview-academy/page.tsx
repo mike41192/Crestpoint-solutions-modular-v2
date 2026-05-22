@@ -1,3 +1,5 @@
+import { FirstUseTutorial } from "@/components/onboarding/FirstUseTutorial"
+
 export default function InterviewAcademyPage() {
   return (
     <main style={{ padding: "32px" }}>
@@ -7,15 +9,19 @@ export default function InterviewAcademyPage() {
         </h1>
 
         <p style={{ marginTop: "8px", color: "#64748b" }}>
-          Learn how to prepare for interviews, improve confidence, answer difficult questions, and increase your chances of getting hired.
+          Learn how to prepare for interviews, improve confidence, answer
+          difficult questions, and increase your chances of getting hired.
         </p>
       </div>
+
+      <FirstUseTutorial moduleKey="interview_academy" />
 
       <section
         style={{
           display: "grid",
           gap: "16px",
           gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+          marginTop: "24px",
         }}
       >
         <div
@@ -31,7 +37,8 @@ export default function InterviewAcademyPage() {
           </h2>
 
           <p style={{ marginTop: "8px", color: "#64748b" }}>
-            Learn the foundations of successful interviewing and employer expectations.
+            Learn the foundations of successful interviewing and employer
+            expectations.
           </p>
         </div>
 
@@ -43,9 +50,7 @@ export default function InterviewAcademyPage() {
             background: "#ffffff",
           }}
         >
-          <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
-            STAR Method
-          </h2>
+          <h2 style={{ fontSize: "20px", fontWeight: 700 }}>STAR Method</h2>
 
           <p style={{ marginTop: "8px", color: "#64748b" }}>
             Practice answering behavioral questions using the STAR framework.
@@ -65,7 +70,8 @@ export default function InterviewAcademyPage() {
           </h2>
 
           <p style={{ marginTop: "8px", color: "#64748b" }}>
-            Improve communication, body language, and confidence during interviews.
+            Improve communication, body language, and confidence during
+            interviews.
           </p>
         </div>
 
@@ -82,7 +88,8 @@ export default function InterviewAcademyPage() {
           </h2>
 
           <p style={{ marginTop: "8px", color: "#64748b" }}>
-            Practice mock interviews and receive AI-powered feedback and coaching.
+            Practice mock interviews and receive AI-powered feedback and
+            coaching.
           </p>
         </div>
       </section>
