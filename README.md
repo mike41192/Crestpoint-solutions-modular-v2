@@ -72,3 +72,7 @@ Added appearance settings page
 ## Phase 15 Status
 
 Added usage limits settings page
+
+## Phase 16 Status
+
+Added admin settings navigation hub
