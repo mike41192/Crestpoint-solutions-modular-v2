@@ -96,3 +96,7 @@ Added Dashboard Navigation Hub
 ## Phase 21 Status
 
 Added user module starter pages
+
+## Phase 22 status
+
+Added remaining module starter pages
