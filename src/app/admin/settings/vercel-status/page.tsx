@@ -53,29 +53,6 @@ const settingsSections = [
     href: "/admin/settings/vercel-status",
   },
   {
-    title: "GitHub Status",
-    description: "Check repository configuration and backup readiness.",
-    href: "/admin/settings/github-status",
-  },
-  {
-    title: "Backup Status",
-    description:
-      "Review rollback rules, backup checkpoints, and stable tag guidance.",
-    href: "/admin/settings/backup-status",
-  },
-  {
-    title: "Deprecated Files",
-    description:
-      "Track outdated files, cleanup candidates, and rollback-safe removals.",
-    href: "/admin/settings/deprecated-files",
-  },
-  {
-    title: "Cleanup Checklist",
-    description:
-      "Verify safe cleanup procedures before deleting deprecated files.",
-    href: "/admin/settings/cleanup-checklist",
-  },
-  {
     title: "System Status",
     description: "Review billing, AI, module gating, and platform readiness.",
     href: "/admin/settings/system-status",
@@ -112,7 +89,7 @@ export default function AdminSettingsPage() {
     <main style={{ padding: "32px" }}>
       <PageHeader
         title="System Settings"
-        description="Manage Crestpoint modules, pricing, access, appearance, billing, AI systems, database readiness, deployment configuration, repository diagnostics, backups, deprecated files, cleanup procedures, application configuration, and platform controls."
+        description="Manage Crestpoint modules, pricing, access, appearance, billing, AI systems, database readiness, deployment configuration, application configuration, and platform controls."
       />
 
       <section
