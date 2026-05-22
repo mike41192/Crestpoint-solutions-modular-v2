@@ -58,6 +58,12 @@ const settingsSections = [
     href: "/admin/settings/github-status",
   },
   {
+    title: "Security Status",
+    description:
+      "Review secret handling, environment safety, and security rules.",
+    href: "/admin/settings/security-status",
+  },
+  {
     title: "Backup Status",
     description:
       "Review rollback rules, backup checkpoints, and stable tag guidance.",
@@ -118,7 +124,7 @@ export default function AdminSettingsPage() {
     <main style={{ padding: "32px" }}>
       <PageHeader
         title="System Settings"
-        description="Manage Crestpoint modules, pricing, access, appearance, billing, AI systems, database readiness, deployment configuration, repository diagnostics, backups, stable module checkpoints, deprecated files, cleanup procedures, application configuration, and platform controls."
+        description="Manage Crestpoint modules, pricing, access, appearance, billing, AI systems, database readiness, deployment configuration, repository diagnostics, backups, security standards, stable module checkpoints, deprecated files, cleanup procedures, application configuration, and platform controls."
       />
 
       <section
