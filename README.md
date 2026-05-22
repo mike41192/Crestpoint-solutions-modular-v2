@@ -80,3 +80,7 @@ Added admin settings navigation hub
 ## Phase 17 status 
 
 added AI quality center pages
+
+## Phase 18 status
+
+added prompt library admin page
