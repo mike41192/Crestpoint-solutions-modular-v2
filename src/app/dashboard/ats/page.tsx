@@ -1,7 +1,10 @@
-export default function Page() {
+export default function ATSDashboardPage() {
   return (
-    <main>
-      <h1>ats</h1>
+    <main style={{ padding: "32px" }}>
+      <h1 style={{ fontSize: "32px", fontWeight: 700 }}>ATS Scoring</h1>
+      <p style={{ marginTop: "8px", color: "#64748b" }}>
+        Score your resume against job descriptions and improve keyword alignment.
+      </p>
     </main>
   )
 }
