@@ -1,20 +1,66 @@
-import { ModuleAccessBadge } from "@/components/layout/ModuleAccessBadge"
+import { PageHeader } from "@/components/layout/PageHeader"
 import { SectionCard } from "@/components/layout/SectionCard"
-import { pricingPlans } from "@/lib/config/pricing.config"
+
+const pricingTiers = [
+  {
+    name: "Free",
+    price: "$0",
+    features: [
+      "Basic dashboard access",
+      "Limited resume scans",
+      "Basic ATS scoring",
+      "Starter interview practice",
+    ],
+  },
+  {
+    name: "Starter",
+    price: "$19/mo",
+    features: [
+      "Expanded resume optimization",
+      "LinkedIn optimization",
+      "Additional ATS scans",
+      "Job tracker access",
+    ],
+  },
+  {
+    name: "Pro",
+    price: "$49/mo",
+    features: [
+      "AI interviewer access",
+      "Interview academy",
+      "Advanced ATS analysis",
+      "Networking outreach tools",
+    ],
+  },
+  {
+    name: "Premium",
+    price: "$99/mo",
+    features: [
+      "Unlimited AI usage",
+      "Advanced analytics",
+      "Priority AI processing",
+      "Portfolio builder",
+    ],
+  },
+  {
+    name: "Business",
+    price: "$299/mo",
+    features: [
+      "Team management",
+      "Hiring analytics",
+      "Employer-side tools",
+      "Future recruiting systems",
+    ],
+  },
+]
 
 export default function PricingPage() {
   return (
     <main style={{ padding: "32px" }}>
-      <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ fontSize: "32px", fontWeight: 700 }}>
-          Crestpoint Pricing
-        </h1>
-
-        <p style={{ marginTop: "8px", color: "#64748b", lineHeight: 1.5 }}>
-          Choose the membership tier that fits your job search, interview prep,
-          and career growth needs.
-        </p>
-      </div>
+      <PageHeader
+        title="Membership Pricing"
+        description="Choose the Crestpoint membership tier that matches your career growth needs."
+      />
 
       <section
         style={{
@@ -23,53 +69,36 @@ export default function PricingPage() {
           gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
         }}
       >
-        {pricingPlans.map((plan) => (
-          <SectionCard key={plan.tier}>
-            <div
+        {pricingTiers.map((tier) => (
+          <SectionCard key={tier.name}>
+            <h2 style={{ fontSize: "24px", fontWeight: 700 }}>
+              {tier.name}
+            </h2>
+
+            <p
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: "12px",
-                alignItems: "center",
-              }}
-            >
-              <h2 style={{ fontSize: "22px", fontWeight: 700 }}>
-                {plan.name}
-              </h2>
-
-              <ModuleAccessBadge tier={plan.tier} />
-            </div>
-
-            <p style={{ marginTop: "10px", color: "#64748b", lineHeight: 1.5 }}>
-              {plan.description}
-            </p>
-
-            <div style={{ marginTop: "18px" }}>
-              <span style={{ fontSize: "32px", fontWeight: 800 }}>
-                ${plan.monthlyPrice}
-              </span>
-              <span style={{ color: "#64748b" }}> / month</span>
-            </div>
-
-            <p style={{ marginTop: "6px", color: "#64748b" }}>
-              ${plan.yearlyPrice} / year
-            </p>
-
-            <a
-              href="/dashboard/billing"
-              style={{
-                display: "inline-block",
-                marginTop: "18px",
-                padding: "10px 16px",
-                borderRadius: "12px",
-                background: "#2563eb",
-                color: "#ffffff",
-                textDecoration: "none",
+                marginTop: "8px",
+                fontSize: "20px",
                 fontWeight: 700,
+                color: "#2563eb",
               }}
             >
-              Choose Plan
-            </a>
+              {tier.price}
+            </p>
+
+            <ul style={{ marginTop: "16px", paddingLeft: "20px" }}>
+              {tier.features.map((feature) => (
+                <li
+                  key={feature}
+                  style={{
+                    marginBottom: "8px",
+                    color: "#475569",
+                  }}
+                >
+                  {feature}
+                </li>
+              ))}
+            </ul>
           </SectionCard>
         ))}
       </section>
