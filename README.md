@@ -116,3 +116,7 @@ Added tutorials to core module pages
 ## Phase 26 Status
 
 Added module access badge component
+
+# Phase 27 Status
+
+Added module access badge to dashboard
