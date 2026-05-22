@@ -140,3 +140,7 @@ Centralized test user access config
 ## Phase 32
 
 Added module access test page
+
+## Phase 33
+
+Added access test link to settings hub

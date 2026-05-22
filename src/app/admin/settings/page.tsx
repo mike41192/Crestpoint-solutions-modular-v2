@@ -20,6 +20,11 @@ const settingsSections = [
     href: "/admin/settings/tiers",
   },
   {
+    title: "Access Test",
+    description: "Verify module access rules across all membership tiers.",
+    href: "/admin/settings/access-test",
+  },
+  {
     title: "Pricing",
     description: "Review membership pricing.",
     href: "/admin/settings/pricing",
