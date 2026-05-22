@@ -1,5 +1,7 @@
+import { LockedModuleNotice } from "@/components/layout/LockedModuleNotice"
 import { ModuleAccessBadge } from "@/components/layout/ModuleAccessBadge"
-import { modulesConfig } from "@/lib/config/modules.config"
+import { getModuleAccess } from "@/lib/access/getModuleAccess"
+import { testUserConfig } from "@/lib/config/test-user.config"
 
 const dashboardModules = [
   {
@@ -11,7 +13,8 @@ const dashboardModules = [
   {
     moduleKey: "ats_scoring",
     title: "ATS Scoring",
-    description: "Compare your resume against job descriptions and improve keyword alignment.",
+    description:
+      "Compare your resume against job descriptions and improve keyword alignment.",
     href: "/dashboard/ats",
   },
   {
@@ -23,13 +26,15 @@ const dashboardModules = [
   {
     moduleKey: "interview_academy",
     title: "Interview Academy",
-    description: "Watch interview prep videos and learn strategies to get hired.",
+    description:
+      "Watch interview prep videos and learn strategies to get hired.",
     href: "/dashboard/interview-academy",
   },
   {
     moduleKey: "linkedin_optimizer",
     title: "LinkedIn Optimizer",
-    description: "Improve your LinkedIn headline, about section, and recruiter visibility.",
+    description:
+      "Improve your LinkedIn headline, about section, and recruiter visibility.",
     href: "/dashboard/linkedin",
   },
   {
@@ -47,7 +52,8 @@ const dashboardModules = [
   {
     moduleKey: "analytics_dashboard",
     title: "Analytics",
-    description: "View your career progress, readiness score, and activity insights.",
+    description:
+      "View your career progress, readiness score, and activity insights.",
     href: "/dashboard/analytics",
   },
 ] as const
@@ -61,7 +67,15 @@ export default function DashboardPage() {
         </h1>
 
         <p style={{ marginTop: "8px", color: "#64748b" }}>
-          Your all-in-one career operating system for resumes, interviews, job tracking, and career growth.
+          Your all-in-one career operating system for resumes, interviews, job
+          tracking, and career growth.
+        </p>
+
+        <p style={{ marginTop: "8px", color: "#334155" }}>
+          Current test tier:{" "}
+          <strong style={{ textTransform: "capitalize" }}>
+            {testUserConfig.tier}
+          </strong>
         </p>
       </div>
 
@@ -72,13 +86,76 @@ export default function DashboardPage() {
           gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
         }}
       >
-        {dashboardModules.map((module) => {
-          const config = modulesConfig.find((item) => item.key === module.moduleKey)
+        {dashboardModules.map((item) => {
+          const { module, access } = getModuleAccess({
+            userTier: testUserConfig.tier,
+            moduleKey: item.moduleKey,
+            isAdmin: testUserConfig.isAdmin,
+          })
+
+          if (!module) {
+            return null
+          }
+
+          const cardContent = (
+            <>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: "12px",
+                  alignItems: "center",
+                }}
+              >
+                <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
+                  {item.title}
+                </h2>
+
+                <ModuleAccessBadge tier={module.requiredTier} />
+              </div>
+
+              <p
+                style={{
+                  marginTop: "8px",
+                  color: "#64748b",
+                  lineHeight: 1.5,
+                }}
+              >
+                {item.description}
+              </p>
+
+              {!access.allowed && (
+                <LockedModuleNotice
+                  requiredTier={module.requiredTier}
+                  reason={access.reason}
+                />
+              )}
+            </>
+          )
+
+          if (!access.allowed) {
+            return (
+              <div
+                key={item.href}
+                style={{
+                  display: "block",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "16px",
+                  padding: "20px",
+                  background: "#f8fafc",
+                  color: "inherit",
+                  opacity: 0.9,
+                }}
+              >
+                {cardContent}
+              </div>
+            )
+          }
 
           return (
             <a
-              key={module.href}
-              href={module.href}
+              key={item.href}
+              href={item.href}
               style={{
                 display: "block",
                 border: "1px solid #e2e8f0",
@@ -89,24 +166,7 @@ export default function DashboardPage() {
                 color: "inherit",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: "12px",
-                  alignItems: "center",
-                }}
-              >
-                <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
-                  {module.title}
-                </h2>
-
-                {config && <ModuleAccessBadge tier={config.requiredTier} />}
-              </div>
-
-              <p style={{ marginTop: "8px", color: "#64748b", lineHeight: 1.5 }}>
-                {module.description}
-              </p>
+              {cardContent}
             </a>
           )
         })}
