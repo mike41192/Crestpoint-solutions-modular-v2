@@ -68,3 +68,7 @@ Added  pricing settings page
 ## Phase 14 Status
 
 Added appearance settings page
+
+## Phase 15 Status
+
+Added usage limits settings page
