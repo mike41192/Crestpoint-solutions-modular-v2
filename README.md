@@ -120,3 +120,7 @@ Added module access badge component
 # Phase 27 Status
 
 Added module access badge to dashboard
+
+## Phase 28 Status
+
+Added reuseable module access helper
