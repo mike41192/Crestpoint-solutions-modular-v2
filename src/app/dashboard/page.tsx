@@ -4,8 +4,7 @@ import { SectionCard } from "@/components/layout/SectionCard"
 const dashboardModules = [
   {
     title: "Resume Builder",
-    description:
-      "Build, optimize, and manage resumes with AI assistance.",
+    description: "Build, optimize, and manage resumes with AI assistance.",
     href: "/dashboard/resume",
   },
   {
@@ -49,6 +48,12 @@ const dashboardModules = [
     description:
       "Review application metrics, interview trends, AI usage, and platform analytics.",
     href: "/dashboard/analytics",
+  },
+  {
+    title: "Account Settings",
+    description:
+      "Manage profile, membership access, preferences, and account controls.",
+    href: "/dashboard/settings",
   },
   {
     title: "Billing",
