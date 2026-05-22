@@ -104,3 +104,7 @@ Added remaining module starter pages
 ## Phase 23 Status
 
 Added first-use tutorial content system
+
+## Phase 24 Status 
+
+Added resuable first-use tutorial component
