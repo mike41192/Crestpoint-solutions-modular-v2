@@ -168,3 +168,7 @@ Refactored core module pages to shared layout
 ## Phase 39
 
 Refactored remaining dashboard pages to shared layout
+
+## Phase 40 
+
+Added tutorials for remaining dashboard modules

@@ -20,11 +20,13 @@ export const tutorialContent: ModuleTutorial[] = [
     steps: [
       {
         title: "Start with your basic information",
-        description: "Add your name, contact details, work history, education, and skills.",
+        description:
+          "Add your name, contact details, work history, education, and skills.",
       },
       {
         title: "Use AI optimization",
-        description: "Let Crestpoint suggest improvements for clarity, keywords, and structure.",
+        description:
+          "Let Crestpoint suggest improvements for clarity, keywords, and structure.",
       },
       {
         title: "Export your resume",
@@ -43,11 +45,13 @@ export const tutorialContent: ModuleTutorial[] = [
       },
       {
         title: "Review missing keywords",
-        description: "Crestpoint identifies important keywords and skills your resume may be missing.",
+        description:
+          "Crestpoint identifies important keywords and skills your resume may be missing.",
       },
       {
         title: "Improve and rescore",
-        description: "Update your resume and run the score again to measure progress.",
+        description:
+          "Update your resume and run the score again to measure progress.",
       },
     ],
   },
@@ -66,7 +70,8 @@ export const tutorialContent: ModuleTutorial[] = [
       },
       {
         title: "Review feedback",
-        description: "Use the feedback to improve structure, confidence, and clarity.",
+        description:
+          "Use the feedback to improve structure, confidence, and clarity.",
       },
     ],
   },
@@ -77,7 +82,8 @@ export const tutorialContent: ModuleTutorial[] = [
     steps: [
       {
         title: "Choose a topic",
-        description: "Start with basics, STAR method, confidence, or salary negotiation.",
+        description:
+          "Start with basics, STAR method, confidence, or salary negotiation.",
       },
       {
         title: "Complete lessons",
@@ -86,6 +92,94 @@ export const tutorialContent: ModuleTutorial[] = [
       {
         title: "Practice with AI",
         description: "Use the AI Interviewer to apply what you learned.",
+      },
+    ],
+  },
+  {
+    moduleKey: "linkedin_optimizer",
+    title: "LinkedIn Optimizer Tutorial",
+    intro: "Improve your LinkedIn profile for recruiter visibility.",
+    steps: [
+      {
+        title: "Review your current profile",
+        description:
+          "Check your headline, about section, experience, skills, and keywords.",
+      },
+      {
+        title: "Optimize for recruiter search",
+        description:
+          "Use role-specific keywords and clearer positioning to improve visibility.",
+      },
+      {
+        title: "Apply improvements",
+        description:
+          "Update your profile sections and compare before/after quality.",
+      },
+    ],
+  },
+  {
+    moduleKey: "job_tracker",
+    title: "Job Tracker Tutorial",
+    intro: "Track your job search like a professional pipeline.",
+    steps: [
+      {
+        title: "Add applications",
+        description:
+          "Save jobs you applied to, including company, role, date, and status.",
+      },
+      {
+        title: "Track each stage",
+        description:
+          "Move jobs through applied, interviewing, offer, rejected, and accepted.",
+      },
+      {
+        title: "Follow up on time",
+        description:
+          "Use reminders and notes to stay organized with recruiters and hiring managers.",
+      },
+    ],
+  },
+  {
+    moduleKey: "networking_outreach",
+    title: "Networking Assistant Tutorial",
+    intro: "Create recruiter messages, referral requests, and follow-ups.",
+    steps: [
+      {
+        title: "Choose message type",
+        description:
+          "Select recruiter outreach, referral request, thank-you note, or follow-up.",
+      },
+      {
+        title: "Add context",
+        description:
+          "Include the role, company, recipient, and your goal for the message.",
+      },
+      {
+        title: "Send professionally",
+        description:
+          "Review the message, personalize it, and send it through your preferred platform.",
+      },
+    ],
+  },
+  {
+    moduleKey: "analytics_dashboard",
+    title: "Career Analytics Tutorial",
+    intro: "Understand your job-search activity and career readiness.",
+    steps: [
+      {
+        title: "Review your activity",
+        description:
+          "See applications, interviews, resume updates, and completed prep tasks.",
+      },
+      {
+        title: "Find weak spots",
+        description:
+          "Use insights to identify where your job search needs improvement.",
+      },
+      {
+        title: "Improve your readiness",
+        description:
+          "Follow recommendations to raise your hiring readiness score over time.",
       },
     ],
   },
