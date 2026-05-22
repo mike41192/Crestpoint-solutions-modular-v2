@@ -1,3 +1,6 @@
+import { PageHeader } from "@/components/layout/PageHeader"
+import { SectionCard } from "@/components/layout/SectionCard"
+
 const settingsSections = [
   {
     title: "General",
@@ -54,15 +57,10 @@ const settingsSections = [
 export default function AdminSettingsPage() {
   return (
     <main style={{ padding: "32px" }}>
-      <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ fontSize: "32px", fontWeight: 700 }}>
-          System Settings
-        </h1>
-
-        <p style={{ marginTop: "8px", color: "#64748b" }}>
-          Manage Crestpoint modules, pricing, access, appearance, and system controls.
-        </p>
-      </div>
+      <PageHeader
+        title="System Settings"
+        description="Manage Crestpoint modules, pricing, access, appearance, and system controls."
+      />
 
       <section
         style={{
@@ -76,22 +74,25 @@ export default function AdminSettingsPage() {
             key={section.href}
             href={section.href}
             style={{
-              display: "block",
-              border: "1px solid #e2e8f0",
-              borderRadius: "16px",
-              padding: "20px",
-              background: "#ffffff",
               textDecoration: "none",
               color: "inherit",
             }}
           >
-            <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
-              {section.title}
-            </h2>
+            <SectionCard>
+              <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
+                {section.title}
+              </h2>
 
-            <p style={{ marginTop: "8px", color: "#64748b", lineHeight: 1.5 }}>
-              {section.description}
-            </p>
+              <p
+                style={{
+                  marginTop: "8px",
+                  color: "#64748b",
+                  lineHeight: 1.5,
+                }}
+              >
+                {section.description}
+              </p>
+            </SectionCard>
           </a>
         ))}
       </section>
