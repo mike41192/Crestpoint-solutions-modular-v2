@@ -136,3 +136,7 @@ Applied Locked module logic to dashboard
 ## Phase 31 
 
 Centralized test user access config
+
+## Phase 32
+
+Added module access test page
