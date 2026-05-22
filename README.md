@@ -164,3 +164,7 @@ Added reusable module Page Layout
 ## Phase 38
 
 Refactored core module pages to shared layout
+
+## Phase 39
+
+Refactored remaining dashboard pages to shared layout
