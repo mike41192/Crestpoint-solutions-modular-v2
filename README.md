@@ -148,3 +148,7 @@ Added access test link to settings hub
 ## Phase 34
 
 Added resuable layout components
+
+## Phase 35
+
+Refactored dashboard to reusable layout components

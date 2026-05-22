@@ -1,5 +1,7 @@
 import { LockedModuleNotice } from "@/components/layout/LockedModuleNotice"
 import { ModuleAccessBadge } from "@/components/layout/ModuleAccessBadge"
+import { PageHeader } from "@/components/layout/PageHeader"
+import { SectionCard } from "@/components/layout/SectionCard"
 import { getModuleAccess } from "@/lib/access/getModuleAccess"
 import { testUserConfig } from "@/lib/config/test-user.config"
 
@@ -61,23 +63,17 @@ const dashboardModules = [
 export default function DashboardPage() {
   return (
     <main style={{ padding: "32px" }}>
-      <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ fontSize: "32px", fontWeight: 700 }}>
-          Crestpoint Dashboard
-        </h1>
+      <PageHeader
+        title="Crestpoint Dashboard"
+        description="Your all-in-one career operating system for resumes, interviews, job tracking, and career growth."
+      />
 
-        <p style={{ marginTop: "8px", color: "#64748b" }}>
-          Your all-in-one career operating system for resumes, interviews, job
-          tracking, and career growth.
-        </p>
-
-        <p style={{ marginTop: "8px", color: "#334155" }}>
-          Current test tier:{" "}
-          <strong style={{ textTransform: "capitalize" }}>
-            {testUserConfig.tier}
-          </strong>
-        </p>
-      </div>
+      <p style={{ marginBottom: "24px", color: "#334155" }}>
+        Current test tier:{" "}
+        <strong style={{ textTransform: "capitalize" }}>
+          {testUserConfig.tier}
+        </strong>
+      </p>
 
       <section
         style={{
@@ -138,16 +134,10 @@ export default function DashboardPage() {
               <div
                 key={item.href}
                 style={{
-                  display: "block",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "16px",
-                  padding: "20px",
-                  background: "#f8fafc",
-                  color: "inherit",
                   opacity: 0.9,
                 }}
               >
-                {cardContent}
+                <SectionCard>{cardContent}</SectionCard>
               </div>
             )
           }
@@ -157,16 +147,11 @@ export default function DashboardPage() {
               key={item.href}
               href={item.href}
               style={{
-                display: "block",
-                border: "1px solid #e2e8f0",
-                borderRadius: "16px",
-                padding: "20px",
-                background: "#ffffff",
                 textDecoration: "none",
                 color: "inherit",
               }}
             >
-              {cardContent}
+              <SectionCard>{cardContent}</SectionCard>
             </a>
           )
         })}
