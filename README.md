@@ -100,3 +100,7 @@ Added user module starter pages
 ## Phase 22 status
 
 Added remaining module starter pages
+
+## Phase 23 Status
+
+Added first-use tutorial content system
