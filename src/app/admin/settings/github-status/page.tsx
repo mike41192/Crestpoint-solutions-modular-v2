@@ -13,7 +13,7 @@ export default function GitHubStatusPage() {
     <main style={{ padding: "32px" }}>
       <PageHeader
         title="GitHub Repository Status"
-        description="Review whether GitHub repository configuration is available for source control and backup tracking."
+        description="Review whether GitHub repository configuration is available."
       />
 
       <SectionCard>
@@ -21,12 +21,7 @@ export default function GitHubStatusPage() {
           GitHub Configuration
         </h2>
 
-        <p
-          style={{
-            marginTop: "8px",
-            color: configured ? "#166534" : "#991b1b",
-          }}
-        >
+        <p style={{ marginTop: "8px", color: configured ? "#166534" : "#991b1b" }}>
           Status: <strong>{configured ? "Configured" : "Missing Keys"}</strong>
         </p>
 
