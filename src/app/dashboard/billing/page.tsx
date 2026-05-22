@@ -1,93 +1,62 @@
-import { UpgradePrompt } from "@/components/billing/UpgradePrompt"
-import { ModuleAccessBadge } from "@/components/layout/ModuleAccessBadge"
-import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
+import { PageHeader } from "@/components/layout/PageHeader"
 import { SectionCard } from "@/components/layout/SectionCard"
-import { FirstUseTutorial } from "@/components/onboarding/FirstUseTutorial"
-import { pricingPlans } from "@/lib/config/pricing.config"
-import { testUserConfig } from "@/lib/config/test-user.config"
+
+const billingSections = [
+  {
+    title: "Current Membership",
+    description:
+      "Review the currently active membership tier and billing status.",
+  },
+  {
+    title: "Usage Limits",
+    description:
+      "Track AI credits, scans, exports, interview sessions, and uploads.",
+  },
+  {
+    title: "Upgrade Plan",
+    description:
+      "Upgrade to higher membership tiers for expanded access and AI usage.",
+  },
+  {
+    title: "Billing Portal",
+    description:
+      "Future Stripe billing portal integration for subscription management.",
+  },
+]
 
 export default function BillingDashboardPage() {
   return (
-    <ModulePageLayout
-      title="Billing"
-      description="Review your membership, billing status, plan access, and upgrade options."
-    >
-      <FirstUseTutorial moduleKey="billing_manager" />
-
-      <section style={{ marginTop: "24px" }}>
-        <SectionCard>
-          <h2 style={{ fontSize: "22px", fontWeight: 700 }}>
-            Current Membership
-          </h2>
-
-          <p style={{ marginTop: "8px", color: "#64748b" }}>
-            Your current test membership tier is:
-          </p>
-
-          <div style={{ marginTop: "12px" }}>
-            <ModuleAccessBadge tier={testUserConfig.tier} />
-          </div>
-
-          <UpgradePrompt requiredTier="starter" />
-        </SectionCard>
-      </section>
+    <main style={{ padding: "32px" }}>
+      <PageHeader
+        title="Billing Dashboard"
+        description="Review subscription access, usage limits, membership tiers, and billing controls."
+      />
 
       <section
         style={{
           display: "grid",
           gap: "16px",
           gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          marginTop: "24px",
         }}
       >
-        {pricingPlans.map((plan) => (
-          <SectionCard key={plan.tier}>
-            <div
+        {billingSections.map((section) => (
+          <SectionCard key={section.title}>
+            <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
+              {section.title}
+            </h2>
+
+            <p
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: "12px",
-                alignItems: "center",
+                marginTop: "8px",
+                color: "#64748b",
+                lineHeight: 1.5,
               }}
             >
-              <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
-                {plan.name}
-              </h2>
-
-              <ModuleAccessBadge tier={plan.tier} />
-            </div>
-
-            <p style={{ marginTop: "10px", color: "#64748b", lineHeight: 1.5 }}>
-              {plan.description}
+              {section.description}
             </p>
-
-            <div style={{ marginTop: "16px" }}>
-              <strong>${plan.monthlyPrice}</strong>
-              <span style={{ color: "#64748b" }}> / month</span>
-            </div>
-
-            <div style={{ marginTop: "6px", color: "#64748b" }}>
-              ${plan.yearlyPrice} / year
-            </div>
-
-            <button
-              type="button"
-              style={{
-                marginTop: "16px",
-                border: "0",
-                borderRadius: "12px",
-                padding: "10px 16px",
-                background: "#2563eb",
-                color: "#ffffff",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              Select {plan.name}
-            </button>
           </SectionCard>
         ))}
       </section>
-    </ModulePageLayout>
+    </main>
   )
 }
