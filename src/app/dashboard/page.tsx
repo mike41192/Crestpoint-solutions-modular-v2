@@ -1,79 +1,70 @@
-import { LockedModuleNotice } from "@/components/layout/LockedModuleNotice"
-import { ModuleAccessBadge } from "@/components/layout/ModuleAccessBadge"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { SectionCard } from "@/components/layout/SectionCard"
-import { getModuleAccess } from "@/lib/access/getModuleAccess"
-import { testUserConfig } from "@/lib/config/test-user.config"
 
 const dashboardModules = [
   {
-    moduleKey: "resume_builder",
     title: "Resume Builder",
-    description: "Create, edit, optimize, and export professional resumes.",
+    description:
+      "Build, optimize, and manage resumes with AI assistance.",
     href: "/dashboard/resume",
   },
   {
-    moduleKey: "ats_scoring",
     title: "ATS Scoring",
     description:
-      "Compare your resume against job descriptions and improve keyword alignment.",
+      "Analyze resume compatibility against job descriptions and ATS systems.",
     href: "/dashboard/ats",
   },
   {
-    moduleKey: "ai_interviewer",
     title: "AI Interviewer",
-    description: "Practice mock interviews and get AI-powered feedback.",
+    description:
+      "Practice mock interviews with AI-generated questions and feedback.",
     href: "/dashboard/interview",
   },
   {
-    moduleKey: "interview_academy",
     title: "Interview Academy",
     description:
-      "Watch interview prep videos and learn strategies to get hired.",
+      "Learn interview strategy, STAR responses, confidence, and preparation systems.",
     href: "/dashboard/interview-academy",
   },
   {
-    moduleKey: "linkedin_optimizer",
     title: "LinkedIn Optimizer",
     description:
-      "Improve your LinkedIn headline, about section, and recruiter visibility.",
+      "Improve LinkedIn profiles for recruiter visibility and conversions.",
     href: "/dashboard/linkedin",
   },
   {
-    moduleKey: "job_tracker",
     title: "Job Tracker",
-    description: "Track applications, interviews, follow-ups, and offers.",
+    description:
+      "Track applications, interviews, networking, and hiring pipeline progress.",
     href: "/dashboard/jobs",
   },
   {
-    moduleKey: "networking_outreach",
-    title: "Networking",
-    description: "Create recruiter messages, referral requests, and follow-ups.",
+    title: "Networking Outreach",
+    description:
+      "Generate recruiter outreach, networking scripts, and follow-up messaging.",
     href: "/dashboard/networking",
   },
   {
-    moduleKey: "analytics_dashboard",
-    title: "Analytics",
+    title: "Analytics Dashboard",
     description:
-      "View your career progress, readiness score, and activity insights.",
+      "Review application metrics, interview trends, AI usage, and platform analytics.",
     href: "/dashboard/analytics",
   },
-] as const
+  {
+    title: "Billing",
+    description:
+      "Review membership access, subscription status, and billing details.",
+    href: "/dashboard/billing",
+  },
+]
 
-export default function DashboardPage() {
+export default function DashboardHomePage() {
   return (
     <main style={{ padding: "32px" }}>
       <PageHeader
-        title="Crestpoint Dashboard"
-        description="Your all-in-one career operating system for resumes, interviews, job tracking, and career growth."
+        title="Career Dashboard"
+        description="Access all Crestpoint career systems, AI modules, learning tools, and optimization engines."
       />
-
-      <p style={{ marginBottom: "24px", color: "#334155" }}>
-        Current test tier:{" "}
-        <strong style={{ textTransform: "capitalize" }}>
-          {testUserConfig.tier}
-        </strong>
-      </p>
 
       <section
         style={{
@@ -82,33 +73,19 @@ export default function DashboardPage() {
           gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
         }}
       >
-        {dashboardModules.map((item) => {
-          const { module, access } = getModuleAccess({
-            userTier: testUserConfig.tier,
-            moduleKey: item.moduleKey,
-            isAdmin: testUserConfig.isAdmin,
-          })
-
-          if (!module) {
-            return null
-          }
-
-          const cardContent = (
-            <>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: "12px",
-                  alignItems: "center",
-                }}
-              >
-                <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
-                  {item.title}
-                </h2>
-
-                <ModuleAccessBadge tier={module.requiredTier} />
-              </div>
+        {dashboardModules.map((module) => (
+          <a
+            key={module.href}
+            href={module.href}
+            style={{
+              textDecoration: "none",
+              color: "inherit",
+            }}
+          >
+            <SectionCard>
+              <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
+                {module.title}
+              </h2>
 
               <p
                 style={{
@@ -117,44 +94,11 @@ export default function DashboardPage() {
                   lineHeight: 1.5,
                 }}
               >
-                {item.description}
+                {module.description}
               </p>
-
-              {!access.allowed && (
-                <LockedModuleNotice
-                  requiredTier={module.requiredTier}
-                  reason={access.reason}
-                />
-              )}
-            </>
-          )
-
-          if (!access.allowed) {
-            return (
-              <div
-                key={item.href}
-                style={{
-                  opacity: 0.9,
-                }}
-              >
-                <SectionCard>{cardContent}</SectionCard>
-              </div>
-            )
-          }
-
-          return (
-            <a
-              key={item.href}
-              href={item.href}
-              style={{
-                textDecoration: "none",
-                color: "inherit",
-              }}
-            >
-              <SectionCard>{cardContent}</SectionCard>
-            </a>
-          )
-        })}
+            </SectionCard>
+          </a>
+        ))}
       </section>
     </main>
   )
