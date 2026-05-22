@@ -156,3 +156,7 @@ Refactored dashboard to reusable layout components
 ## Phase 36
 
 Refactored admin settings hub layout
+
+## Phase 37
+
+Added reusable module Page Layout
