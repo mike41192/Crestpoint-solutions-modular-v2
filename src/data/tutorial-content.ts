@@ -34,6 +34,7 @@ export const tutorialContent: ModuleTutorial[] = [
       },
     ],
   },
+
   {
     moduleKey: "ats_scoring",
     title: "ATS Scoring Tutorial",
@@ -55,6 +56,7 @@ export const tutorialContent: ModuleTutorial[] = [
       },
     ],
   },
+
   {
     moduleKey: "ai_interviewer",
     title: "AI Interviewer Tutorial",
@@ -75,6 +77,7 @@ export const tutorialContent: ModuleTutorial[] = [
       },
     ],
   },
+
   {
     moduleKey: "interview_academy",
     title: "Interview Academy Tutorial",
@@ -95,6 +98,7 @@ export const tutorialContent: ModuleTutorial[] = [
       },
     ],
   },
+
   {
     moduleKey: "linkedin_optimizer",
     title: "LinkedIn Optimizer Tutorial",
@@ -117,6 +121,7 @@ export const tutorialContent: ModuleTutorial[] = [
       },
     ],
   },
+
   {
     moduleKey: "job_tracker",
     title: "Job Tracker Tutorial",
@@ -139,6 +144,7 @@ export const tutorialContent: ModuleTutorial[] = [
       },
     ],
   },
+
   {
     moduleKey: "networking_outreach",
     title: "Networking Assistant Tutorial",
@@ -161,6 +167,7 @@ export const tutorialContent: ModuleTutorial[] = [
       },
     ],
   },
+
   {
     moduleKey: "analytics_dashboard",
     title: "Career Analytics Tutorial",
@@ -180,6 +187,52 @@ export const tutorialContent: ModuleTutorial[] = [
         title: "Improve your readiness",
         description:
           "Follow recommendations to raise your hiring readiness score over time.",
+      },
+    ],
+  },
+
+  {
+    moduleKey: "billing_manager",
+    title: "Billing Tutorial",
+    intro: "Understand your membership, billing status, and upgrade options.",
+    steps: [
+      {
+        title: "Review your current plan",
+        description:
+          "Check which membership tier you currently have and what features are available.",
+      },
+      {
+        title: "Compare upgrade options",
+        description:
+          "Review higher tiers to unlock more modules, AI credits, and career tools.",
+      },
+      {
+        title: "Manage billing",
+        description:
+          "Update billing details, review subscription status, and manage payment access.",
+      },
+    ],
+  },
+
+  {
+    moduleKey: "admin_tools",
+    title: "Account Settings Tutorial",
+    intro: "Manage your profile, preferences, access, and account controls.",
+    steps: [
+      {
+        title: "Review your profile",
+        description:
+          "Confirm your personal information and career preferences are accurate.",
+      },
+      {
+        title: "Update preferences",
+        description:
+          "Adjust account settings, notifications, and platform preferences.",
+      },
+      {
+        title: "Check access",
+        description:
+          "Review which features your account can currently use.",
       },
     ],
   },

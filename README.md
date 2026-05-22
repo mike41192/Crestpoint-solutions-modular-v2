@@ -176,3 +176,7 @@ Added tutorials for remaining dashboard modules
 ## Phase 41
 
 Added tutorials to remaining dashboard pages
+
+## Phase 42
+
+Added tutorials to billing and account settings
