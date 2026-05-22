@@ -64,6 +64,12 @@ const settingsSections = [
     href: "/admin/settings/backup-status",
   },
   {
+    title: "Module Registry",
+    description:
+      "Track stable module checkpoints and rollback-safe versions.",
+    href: "/admin/settings/module-registry",
+  },
+  {
     title: "Deprecated Files",
     description:
       "Track outdated files, cleanup candidates, and rollback-safe removals.",
@@ -112,7 +118,7 @@ export default function AdminSettingsPage() {
     <main style={{ padding: "32px" }}>
       <PageHeader
         title="System Settings"
-        description="Manage Crestpoint modules, pricing, access, appearance, billing, AI systems, database readiness, deployment configuration, repository diagnostics, backups, deprecated files, cleanup procedures, application configuration, and platform controls."
+        description="Manage Crestpoint modules, pricing, access, appearance, billing, AI systems, database readiness, deployment configuration, repository diagnostics, backups, stable module checkpoints, deprecated files, cleanup procedures, application configuration, and platform controls."
       />
 
       <section
