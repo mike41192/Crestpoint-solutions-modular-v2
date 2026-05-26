@@ -98,6 +98,37 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     }))
   }
 
+  function addExperienceBullet(id: string) {
+    setFormData((current) => ({
+      ...current,
+      experience: current.experience.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              bullets: [...item.bullets, ""],
+            }
+          : item
+      ),
+    }))
+  }
+
+  function removeExperienceBullet(id: string, index: number) {
+    setFormData((current) => ({
+      ...current,
+      experience: current.experience.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              bullets:
+                item.bullets.length > 1
+                  ? item.bullets.filter((_, bulletIndex) => bulletIndex !== index)
+                  : [""],
+            }
+          : item
+      ),
+    }))
+  }
+
   function addExperienceItem() {
     setFormData((current) => ({
       ...current,
@@ -366,25 +397,71 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
                 </div>
 
                 <div style={{ marginTop: "12px" }}>
-                  <label style={labelStyle}>
-                    Achievement Bullet
-                    <textarea
-                      style={{
-                        ...inputStyle,
-                        minHeight: "80px",
-                        resize: "vertical",
-                      }}
-                      value={item.bullets[0] || ""}
-                      onChange={(event) =>
-                        updateExperienceBullet(
-                          item.id,
-                          0,
-                          event.target.value
-                        )
-                      }
-                      placeholder="Improved operations efficiency by..."
-                    />
-                  </label>
+                  <h4 style={{ fontSize: "16px", fontWeight: 700 }}>
+                    Achievement Bullets
+                  </h4>
+
+                  <div style={{ display: "grid", gap: "10px", marginTop: "8px" }}>
+                    {item.bullets.map((bullet, bulletIndex) => (
+                      <div key={`${item.id}-bullet-${bulletIndex}`}>
+                        <label style={labelStyle}>
+                          Bullet {bulletIndex + 1}
+                          <textarea
+                            style={{
+                              ...inputStyle,
+                              minHeight: "80px",
+                              resize: "vertical",
+                            }}
+                            value={bullet}
+                            onChange={(event) =>
+                              updateExperienceBullet(
+                                item.id,
+                                bulletIndex,
+                                event.target.value
+                              )
+                            }
+                            placeholder="Improved operations efficiency by..."
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            removeExperienceBullet(item.id, bulletIndex)
+                          }
+                          style={{
+                            marginTop: "8px",
+                            border: "1px solid #fecaca",
+                            borderRadius: "12px",
+                            padding: "8px 12px",
+                            background: "#fff1f2",
+                            color: "#991b1b",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Remove Bullet
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => addExperienceBullet(item.id)}
+                    style={{
+                      marginTop: "12px",
+                      border: "1px solid #cbd5e1",
+                      borderRadius: "12px",
+                      padding: "10px 14px",
+                      background: "#ffffff",
+                      color: "#334155",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Add Bullet
+                  </button>
                 </div>
 
                 <button
