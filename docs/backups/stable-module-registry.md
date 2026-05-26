@@ -72,6 +72,7 @@ v2-stable-scaffold-phase-103
   Restoration command
 
   git checkout v2-resume-builder-foundation
+
 ## Resume Builder Form Consolidation
 
   Stable Version
@@ -96,11 +97,12 @@ v2-stable-scaffold-phase-103
   Restore command
 
   git checkout v2-resume-builder-form-consolidated
+
 ## Resume Builder Local Draft System
 
    Stable Version
 
-  ```txt
+  txt
   resume-builder-local-draft-v1
 
   Stable Tag 
@@ -143,3 +145,40 @@ v2-stable-scaffold-phase-103
   Restore command
 
   git checkout v2-resume-builder-local-draft
+  
+## Resume Builder Export + Print View System
+
+### Stable Version
+
+.txt
+resume-builder-export-print-v1
+
+Stable Tag
+
+v2-resume-builder-export-print
+
+Routes
+
+/dashboard/resume
+/dashboard/resume/export
+
+Files included
+
+src/app/dashboard/resume/page.tsx
+src/app/dashboard/resume/export/page.tsx
+src/components/resume/ResumeExportPreview.tsx
+src/components/resume/ResumePrintActions.tsx
+src/components/resume/ResumeStarterForm.tsx
+src/modules/resume-builder/
+
+Verified features
+
+Resume dashboard export link
+Print-friendly export preview route
+Browser print action
+Save-as-PDF browser workflow
+Resume export layout sections
+
+Restore command
+
+git checkout v2-resume-builder-export-print

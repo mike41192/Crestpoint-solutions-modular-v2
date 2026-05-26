@@ -44,7 +44,7 @@
 
 ## Phase 120 — Resume Builder Local Draft System
 
-```txt
+txt
 Old file:
 None deleted
 
@@ -60,6 +60,29 @@ Date:
 
 Phase:
 120
+
+Safe To Delete:
+No deletion needed
+
+## Phase 125 — Resume Builder Export + Print View
+
+txt
+Old file:
+None deleted
+
+Replacement:
+src/app/dashboard/resume/export/page.tsx
+src/components/resume/ResumeExportPreview.tsx
+src/components/resume/ResumePrintActions.tsx
+
+Reason:
+Added export preview and print-friendly resume view.
+
+Date:
+2026-05-26
+
+Phase:
+125
 
 Safe To Delete:
 No deletion needed
