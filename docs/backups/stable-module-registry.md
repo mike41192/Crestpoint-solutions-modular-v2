@@ -72,3 +72,27 @@ v2-stable-scaffold-phase-103
   Restoration command
 
   git checkout v2-resume-builder-foundation
+## Resume Builder Form Consolidation
+
+  Stable Version
+
+  ```txt
+  resume-builder-form-consolidated
+
+  Stable Tag
+
+  v2-resume-builder-form-consolidated
+
+  Files Included
+
+  src/components/resume/ResumeStarterForm.tsx
+  src/components/resume/form-sections/ContactSection.tsx
+  src/components/resume/form-sections/SummarySection.tsx
+  src/components/resume/form-sections/ExperienceSection.tsx
+  src/components/resume/form-sections/EducationSection.tsx
+  src/components/resume/form-sections/SkillsCertificationsSection.tsx
+  src/components/resume/form-sections/sharedStyles.ts
+
+  Restore command
+
+  git checkout v2-resume-builder-form-consolidated
