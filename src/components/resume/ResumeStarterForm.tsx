@@ -22,6 +22,7 @@ const LOCAL_STORAGE_KEY = "crestpoint_resume_builder_draft"
 export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   const [formData, setFormData] = useState<ResumeBuilderFormData>(data)
   const [saveMessage, setSaveMessage] = useState("")
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   useEffect(() => {
     const savedDraft = window.localStorage.getItem(LOCAL_STORAGE_KEY)
@@ -33,38 +34,46 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     try {
       setFormData(JSON.parse(savedDraft) as ResumeBuilderFormData)
       setSaveMessage("Loaded saved local draft.")
+      setHasUnsavedChanges(false)
     } catch {
       setSaveMessage("Saved local draft could not be loaded.")
     }
   }, [])
 
+  function updateFormData(updater: (current: ResumeBuilderFormData) => ResumeBuilderFormData) {
+    setFormData((current) => updater(current))
+    setHasUnsavedChanges(true)
+  }
+
   function saveDraft() {
     window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(formData))
     setSaveMessage("Draft saved locally in this browser.")
+    setHasUnsavedChanges(false)
   }
 
   function clearDraft() {
     window.localStorage.removeItem(LOCAL_STORAGE_KEY)
     setFormData(data)
     setSaveMessage("Local draft cleared.")
+    setHasUnsavedChanges(false)
   }
 
   function updateContactField(
     field: keyof ResumeBuilderFormData["contact"],
     value: string
   ) {
-    setFormData((current) => ({
+    updateFormData((current) => ({
       ...current,
       contact: { ...current.contact, [field]: value },
     }))
   }
 
   function updateSummary(value: string) {
-    setFormData((current) => ({ ...current, summary: value }))
+    updateFormData((current) => ({ ...current, summary: value }))
   }
 
   function updateListField(field: "skills" | "certifications", value: string) {
-    setFormData((current) => ({
+    updateFormData((current) => ({
       ...current,
       [field]: value
         .split(",")
@@ -78,7 +87,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     field: keyof Omit<ResumeExperienceItem, "id" | "bullets">,
     value: string
   ) {
-    setFormData((current) => ({
+    updateFormData((current) => ({
       ...current,
       experience: current.experience.map((item) =>
         item.id === id ? { ...item, [field]: value } : item
@@ -87,7 +96,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   }
 
   function updateExperienceBullet(id: string, index: number, value: string) {
-    setFormData((current) => ({
+    updateFormData((current) => ({
       ...current,
       experience: current.experience.map((item) =>
         item.id === id
@@ -103,7 +112,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   }
 
   function addExperienceBullet(id: string) {
-    setFormData((current) => ({
+    updateFormData((current) => ({
       ...current,
       experience: current.experience.map((item) =>
         item.id === id ? { ...item, bullets: [...item.bullets, ""] } : item
@@ -112,7 +121,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   }
 
   function removeExperienceBullet(id: string, index: number) {
-    setFormData((current) => ({
+    updateFormData((current) => ({
       ...current,
       experience: current.experience.map((item) =>
         item.id === id
@@ -131,7 +140,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   }
 
   function addExperienceItem() {
-    setFormData((current) => ({
+    updateFormData((current) => ({
       ...current,
       experience: [
         ...current.experience,
@@ -149,7 +158,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   }
 
   function removeExperienceItem(id: string) {
-    setFormData((current) => ({
+    updateFormData((current) => ({
       ...current,
       experience: current.experience.filter((item) => item.id !== id),
     }))
@@ -160,7 +169,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     field: keyof Omit<ResumeEducationItem, "id">,
     value: string
   ) {
-    setFormData((current) => ({
+    updateFormData((current) => ({
       ...current,
       education: current.education.map((item) =>
         item.id === id ? { ...item, [field]: value } : item
@@ -169,7 +178,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   }
 
   function addEducationItem() {
-    setFormData((current) => ({
+    updateFormData((current) => ({
       ...current,
       education: [
         ...current.education,
@@ -185,7 +194,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   }
 
   function removeEducationItem(id: string) {
-    setFormData((current) => ({
+    updateFormData((current) => ({
       ...current,
       education: current.education.filter((item) => item.id !== id),
     }))
@@ -194,6 +203,26 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   return (
     <div style={{ display: "grid", gap: "24px" }}>
       <form style={{ display: "grid", gap: "16px" }}>
+        <div
+          style={{
+            border: "1px solid #e2e8f0",
+            borderRadius: "12px",
+            padding: "12px",
+            background: hasUnsavedChanges ? "#fffbeb" : "#f8fafc",
+            color: hasUnsavedChanges ? "#92400e" : "#334155",
+          }}
+        >
+          <strong>
+            {hasUnsavedChanges ? "Unsaved changes" : "Draft saved"}
+          </strong>
+
+          <p style={{ marginTop: "4px" }}>
+            {hasUnsavedChanges
+              ? "You have changes that are not saved locally yet."
+              : "Your current draft state is saved or unchanged."}
+          </p>
+        </div>
+
         <ContactSection
           contact={formData.contact}
           onChange={updateContactField}
