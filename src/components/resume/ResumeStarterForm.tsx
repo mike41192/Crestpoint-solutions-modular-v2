@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ResumeEditorPreview } from "@/components/resume/ResumeEditorPreview"
 import { ContactSection } from "@/components/resume/form-sections/ContactSection"
 import { EducationSection } from "@/components/resume/form-sections/EducationSection"
@@ -17,8 +17,37 @@ type ResumeStarterFormProps = {
   data: ResumeBuilderFormData
 }
 
+const LOCAL_STORAGE_KEY = "crestpoint_resume_builder_draft"
+
 export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   const [formData, setFormData] = useState<ResumeBuilderFormData>(data)
+  const [saveMessage, setSaveMessage] = useState("")
+
+  useEffect(() => {
+    const savedDraft = window.localStorage.getItem(LOCAL_STORAGE_KEY)
+
+    if (!savedDraft) {
+      return
+    }
+
+    try {
+      setFormData(JSON.parse(savedDraft) as ResumeBuilderFormData)
+      setSaveMessage("Loaded saved local draft.")
+    } catch {
+      setSaveMessage("Saved local draft could not be loaded.")
+    }
+  }, [])
+
+  function saveDraft() {
+    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(formData))
+    setSaveMessage("Draft saved locally in this browser.")
+  }
+
+  function clearDraft() {
+    window.localStorage.removeItem(LOCAL_STORAGE_KEY)
+    setFormData(data)
+    setSaveMessage("Local draft cleared.")
+  }
 
   function updateContactField(
     field: keyof ResumeBuilderFormData["contact"],
@@ -34,10 +63,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     setFormData((current) => ({ ...current, summary: value }))
   }
 
-  function updateListField(
-    field: "skills" | "certifications",
-    value: string
-  ) {
+  function updateListField(field: "skills" | "certifications", value: string) {
     setFormData((current) => ({
       ...current,
       [field]: value
@@ -94,7 +120,9 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
               ...item,
               bullets:
                 item.bullets.length > 1
-                  ? item.bullets.filter((_, bulletIndex) => bulletIndex !== index)
+                  ? item.bullets.filter(
+                      (_, bulletIndex) => bulletIndex !== index
+                    )
                   : [""],
             }
           : item
@@ -199,21 +227,43 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
           }
         />
 
-        <button
-          type="button"
-          style={{
-            border: "0",
-            borderRadius: "12px",
-            padding: "12px 16px",
-            background: "#2563eb",
-            color: "#ffffff",
-            fontWeight: 700,
-            cursor: "not-allowed",
-            opacity: 0.8,
-          }}
-        >
-          Save Draft Coming Soon
-        </button>
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={saveDraft}
+            style={{
+              border: "0",
+              borderRadius: "12px",
+              padding: "12px 16px",
+              background: "#2563eb",
+              color: "#ffffff",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Save Local Draft
+          </button>
+
+          <button
+            type="button"
+            onClick={clearDraft}
+            style={{
+              border: "1px solid #fecaca",
+              borderRadius: "12px",
+              padding: "12px 16px",
+              background: "#fff1f2",
+              color: "#991b1b",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Clear Local Draft
+          </button>
+        </div>
+
+        {saveMessage && (
+          <p style={{ color: "#64748b", marginTop: "-4px" }}>{saveMessage}</p>
+        )}
       </form>
 
       <div>
