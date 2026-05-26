@@ -7,6 +7,11 @@ import { EducationSection } from "@/components/resume/form-sections/EducationSec
 import { ExperienceSection } from "@/components/resume/form-sections/ExperienceSection"
 import { SkillsCertificationsSection } from "@/components/resume/form-sections/SkillsCertificationsSection"
 import { SummarySection } from "@/components/resume/form-sections/SummarySection"
+import {
+  clearResumeDraftLocally,
+  loadResumeDraftLocally,
+  saveResumeDraftLocally,
+} from "@/modules/resume-builder"
 import type {
   ResumeBuilderFormData,
   ResumeEducationItem,
@@ -17,22 +22,20 @@ type ResumeStarterFormProps = {
   data: ResumeBuilderFormData
 }
 
-const LOCAL_STORAGE_KEY = "crestpoint_resume_builder_draft"
-
 export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   const [formData, setFormData] = useState<ResumeBuilderFormData>(data)
   const [saveMessage, setSaveMessage] = useState("")
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   useEffect(() => {
-    const savedDraft = window.localStorage.getItem(LOCAL_STORAGE_KEY)
-
-    if (!savedDraft) {
-      return
-    }
-
     try {
-      setFormData(JSON.parse(savedDraft) as ResumeBuilderFormData)
+      const savedDraft = loadResumeDraftLocally()
+
+      if (!savedDraft) {
+        return
+      }
+
+      setFormData(savedDraft)
       setSaveMessage("Loaded saved local draft.")
       setHasUnsavedChanges(false)
     } catch {
@@ -40,19 +43,21 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     }
   }, [])
 
-  function updateFormData(updater: (current: ResumeBuilderFormData) => ResumeBuilderFormData) {
+  function updateFormData(
+    updater: (current: ResumeBuilderFormData) => ResumeBuilderFormData
+  ) {
     setFormData((current) => updater(current))
     setHasUnsavedChanges(true)
   }
 
   function saveDraft() {
-    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(formData))
+    saveResumeDraftLocally(formData)
     setSaveMessage("Draft saved locally in this browser.")
     setHasUnsavedChanges(false)
   }
 
   function clearDraft() {
-    window.localStorage.removeItem(LOCAL_STORAGE_KEY)
+    clearResumeDraftLocally()
     setFormData(data)
     setSaveMessage("Local draft cleared.")
     setHasUnsavedChanges(false)
@@ -69,7 +74,10 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   }
 
   function updateSummary(value: string) {
-    updateFormData((current) => ({ ...current, summary: value }))
+    updateFormData((current) => ({
+      ...current,
+      summary: value,
+    }))
   }
 
   function updateListField(field: "skills" | "certifications", value: string) {
@@ -212,9 +220,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
             color: hasUnsavedChanges ? "#92400e" : "#334155",
           }}
         >
-          <strong>
-            {hasUnsavedChanges ? "Unsaved changes" : "Draft saved"}
-          </strong>
+          <strong>{hasUnsavedChanges ? "Unsaved changes" : "Draft saved"}</strong>
 
           <p style={{ marginTop: "4px" }}>
             {hasUnsavedChanges
