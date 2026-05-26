@@ -56,6 +56,22 @@ export default function ResumeDashboardPage() {
                 Status: {primaryResume.status}
               </p>
             </div>
+
+            <a
+              href="/dashboard/resume/export"
+              style={{
+                display: "inline-block",
+                marginTop: "16px",
+                padding: "10px 14px",
+                borderRadius: "12px",
+                background: "#2563eb",
+                color: "#ffffff",
+                textDecoration: "none",
+                fontWeight: 700,
+              }}
+            >
+              Open Export Preview
+            </a>
           </SectionCard>
 
           <SectionCard>
