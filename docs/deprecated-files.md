@@ -41,3 +41,25 @@
 
     Safe To Delete:
     No files deleted. Old all-in-one code pattern is obsolete.
+
+## Phase 120 — Resume Builder Local Draft System
+
+```txt
+Old file:
+None deleted
+
+Replacement:
+src/modules/resume-builder/service.ts local draft utilities
+src/components/resume/form-sections/
+
+Reason:
+Resume Builder now has modular form sections and safe local browser draft saving.
+
+Date:
+2026-05-26
+
+Phase:
+120
+
+Safe To Delete:
+No deletion needed
