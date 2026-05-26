@@ -1,4 +1,20 @@
-import type { ResumeBuilderData } from "./types"
+import type { ResumeBuilderData, ResumeBuilderFormData } from "./types"
+
+export const starterResumeData: ResumeBuilderFormData = {
+  contact: {
+    fullName: "",
+    email: "",
+    phone: "",
+    location: "",
+    linkedIn: "",
+    website: "",
+  },
+  summary: "",
+  experience: [],
+  education: [],
+  skills: [],
+  certifications: [],
+}
 
 export function getResumeBuilderPreviewData(): ResumeBuilderData[] {
   return [
@@ -7,6 +23,7 @@ export function getResumeBuilderPreviewData(): ResumeBuilderData[] {
       title: "Primary Resume",
       status: "draft",
       updatedAt: "Not saved yet",
+      data: starterResumeData,
     },
   ]
 }
