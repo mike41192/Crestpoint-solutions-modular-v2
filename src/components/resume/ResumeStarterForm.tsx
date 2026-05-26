@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { ResumeCompletionCard } from "@/components/resume/ResumeCompletionCard"
 import { ResumeEditorPreview } from "@/components/resume/ResumeEditorPreview"
+import { ResumeOptimizeActions } from "@/components/resume/ResumeOptimizeActions"
 import { ResumeValidationPanel } from "@/components/resume/ResumeValidationPanel"
 import { ContactSection } from "@/components/resume/form-sections/ContactSection"
 import { EducationSection } from "@/components/resume/form-sections/EducationSection"
@@ -245,6 +246,8 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
         <ResumeCompletionCard analysis={completionAnalysis} />
 
         <ResumeValidationPanel issues={validation.issues} />
+
+        <ResumeOptimizeActions data={formData} />
 
         <ContactSection
           contact={formData.contact}
