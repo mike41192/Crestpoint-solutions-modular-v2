@@ -1,8 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 import { ResumeEditorPreview } from "@/components/resume/ResumeEditorPreview"
+import type {
+  ResumeBuilderFormData,
+  ResumeExperienceItem,
+} from "@/modules/resume-builder"
 
 type ResumeStarterFormProps = {
   data: ResumeBuilderFormData
@@ -52,6 +55,53 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
         .split(",")
         .map((skill) => skill.trim())
         .filter(Boolean),
+    }))
+  }
+
+  function updateExperienceField(
+    id: string,
+    field: keyof Omit<ResumeExperienceItem, "id" | "bullets">,
+    value: string
+  ) {
+    setFormData((current) => ({
+      ...current,
+      experience: current.experience.map((item) =>
+        item.id === id ? { ...item, [field]: value } : item
+      ),
+    }))
+  }
+
+  function updateExperienceBullet(id: string, index: number, value: string) {
+    setFormData((current) => ({
+      ...current,
+      experience: current.experience.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              bullets: item.bullets.map((bullet, bulletIndex) =>
+                bulletIndex === index ? value : bullet
+              ),
+            }
+          : item
+      ),
+    }))
+  }
+
+  function addExperienceItem() {
+    setFormData((current) => ({
+      ...current,
+      experience: [
+        ...current.experience,
+        {
+          id: `experience-${current.experience.length + 1}`,
+          company: "",
+          role: "",
+          location: "",
+          startDate: "",
+          endDate: "",
+          bullets: [""],
+        },
+      ],
     }))
   }
 
@@ -156,6 +206,152 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
               placeholder="Write a short professional summary..."
             />
           </label>
+        </div>
+
+        <div>
+          <h3 style={{ fontSize: "18px", fontWeight: 700 }}>
+            Work Experience
+          </h3>
+
+          <div style={{ marginTop: "12px", display: "grid", gap: "16px" }}>
+            {formData.experience.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "12px",
+                  padding: "14px",
+                }}
+              >
+                <label style={labelStyle}>
+                  Role
+                  <input
+                    style={inputStyle}
+                    value={item.role}
+                    onChange={(event) =>
+                      updateExperienceField(
+                        item.id,
+                        "role",
+                        event.target.value
+                      )
+                    }
+                    placeholder="Operations Manager"
+                  />
+                </label>
+
+                <div style={{ marginTop: "12px" }}>
+                  <label style={labelStyle}>
+                    Company
+                    <input
+                      style={inputStyle}
+                      value={item.company}
+                      onChange={(event) =>
+                        updateExperienceField(
+                          item.id,
+                          "company",
+                          event.target.value
+                        )
+                      }
+                      placeholder="Company Name"
+                    />
+                  </label>
+                </div>
+
+                <div style={{ marginTop: "12px" }}>
+                  <label style={labelStyle}>
+                    Location
+                    <input
+                      style={inputStyle}
+                      value={item.location || ""}
+                      onChange={(event) =>
+                        updateExperienceField(
+                          item.id,
+                          "location",
+                          event.target.value
+                        )
+                      }
+                      placeholder="Chicago, IL"
+                    />
+                  </label>
+                </div>
+
+                <div style={{ marginTop: "12px" }}>
+                  <label style={labelStyle}>
+                    Start Date
+                    <input
+                      style={inputStyle}
+                      value={item.startDate}
+                      onChange={(event) =>
+                        updateExperienceField(
+                          item.id,
+                          "startDate",
+                          event.target.value
+                        )
+                      }
+                      placeholder="Jan 2020"
+                    />
+                  </label>
+                </div>
+
+                <div style={{ marginTop: "12px" }}>
+                  <label style={labelStyle}>
+                    End Date
+                    <input
+                      style={inputStyle}
+                      value={item.endDate}
+                      onChange={(event) =>
+                        updateExperienceField(
+                          item.id,
+                          "endDate",
+                          event.target.value
+                        )
+                      }
+                      placeholder="Present"
+                    />
+                  </label>
+                </div>
+
+                <div style={{ marginTop: "12px" }}>
+                  <label style={labelStyle}>
+                    Achievement Bullet
+                    <textarea
+                      style={{
+                        ...inputStyle,
+                        minHeight: "80px",
+                        resize: "vertical",
+                      }}
+                      value={item.bullets[0] || ""}
+                      onChange={(event) =>
+                        updateExperienceBullet(
+                          item.id,
+                          0,
+                          event.target.value
+                        )
+                      }
+                      placeholder="Improved operations efficiency by..."
+                    />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={addExperienceItem}
+            style={{
+              marginTop: "12px",
+              border: "1px solid #cbd5e1",
+              borderRadius: "12px",
+              padding: "10px 14px",
+              background: "#ffffff",
+              color: "#334155",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Add Experience
+          </button>
         </div>
 
         <div>

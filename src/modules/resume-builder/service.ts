@@ -10,7 +10,17 @@ export const starterResumeData: ResumeBuilderFormData = {
     website: "",
   },
   summary: "",
-  experience: [],
+  experience: [
+    {
+      id: "experience-1",
+      company: "",
+      role: "",
+      location: "",
+      startDate: "",
+      endDate: "",
+      bullets: [""],
+    },
+  ],
   education: [],
   skills: [],
   certifications: [],
