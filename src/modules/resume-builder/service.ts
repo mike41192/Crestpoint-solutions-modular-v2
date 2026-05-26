@@ -21,7 +21,15 @@ export const starterResumeData: ResumeBuilderFormData = {
       bullets: [""],
     },
   ],
-  education: [],
+  education: [
+    {
+      id: "education-1",
+      school: "",
+      degree: "",
+      field: "",
+      graduationDate: "",
+    },
+  ],
   skills: [],
   certifications: [],
 }

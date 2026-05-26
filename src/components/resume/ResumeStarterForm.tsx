@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ResumeEditorPreview } from "@/components/resume/ResumeEditorPreview"
 import type {
   ResumeBuilderFormData,
+  ResumeEducationItem,
   ResumeExperienceItem,
 } from "@/modules/resume-builder"
 
@@ -58,6 +59,16 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     }))
   }
 
+  function updateCertifications(value: string) {
+    setFormData((current) => ({
+      ...current,
+      certifications: value
+        .split(",")
+        .map((certification) => certification.trim())
+        .filter(Boolean),
+    }))
+  }
+
   function updateExperienceField(
     id: string,
     field: keyof Omit<ResumeExperienceItem, "id" | "bullets">,
@@ -100,6 +111,35 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
           startDate: "",
           endDate: "",
           bullets: [""],
+        },
+      ],
+    }))
+  }
+
+  function updateEducationField(
+    id: string,
+    field: keyof Omit<ResumeEducationItem, "id">,
+    value: string
+  ) {
+    setFormData((current) => ({
+      ...current,
+      education: current.education.map((item) =>
+        item.id === id ? { ...item, [field]: value } : item
+      ),
+    }))
+  }
+
+  function addEducationItem() {
+    setFormData((current) => ({
+      ...current,
+      education: [
+        ...current.education,
+        {
+          id: `education-${current.education.length + 1}`,
+          school: "",
+          degree: "",
+          field: "",
+          graduationDate: "",
         },
       ],
     }))
@@ -355,6 +395,122 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
         </div>
 
         <div>
+          <h3 style={{ fontSize: "18px", fontWeight: 700 }}>Education</h3>
+
+          <div style={{ marginTop: "12px", display: "grid", gap: "16px" }}>
+            {formData.education.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "12px",
+                  padding: "14px",
+                }}
+              >
+                <label style={labelStyle}>
+                  School
+                  <input
+                    style={inputStyle}
+                    value={item.school}
+                    onChange={(event) =>
+                      updateEducationField(
+                        item.id,
+                        "school",
+                        event.target.value
+                      )
+                    }
+                    placeholder="University or School Name"
+                  />
+                </label>
+
+                <div style={{ marginTop: "12px" }}>
+                  <label style={labelStyle}>
+                    Degree
+                    <input
+                      style={inputStyle}
+                      value={item.degree}
+                      onChange={(event) =>
+                        updateEducationField(
+                          item.id,
+                          "degree",
+                          event.target.value
+                        )
+                      }
+                      placeholder="Bachelor's, Associate, Certification"
+                    />
+                  </label>
+                </div>
+
+                <div style={{ marginTop: "12px" }}>
+                  <label style={labelStyle}>
+                    Field of Study
+                    <input
+                      style={inputStyle}
+                      value={item.field || ""}
+                      onChange={(event) =>
+                        updateEducationField(
+                          item.id,
+                          "field",
+                          event.target.value
+                        )
+                      }
+                      placeholder="Business, IT, Healthcare"
+                    />
+                  </label>
+                </div>
+
+                <div style={{ marginTop: "12px" }}>
+                  <label style={labelStyle}>
+                    Graduation Date
+                    <input
+                      style={inputStyle}
+                      value={item.graduationDate || ""}
+                      onChange={(event) =>
+                        updateEducationField(
+                          item.id,
+                          "graduationDate",
+                          event.target.value
+                        )
+                      }
+                      placeholder="May 2024"
+                    />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={addEducationItem}
+            style={{
+              marginTop: "12px",
+              border: "1px solid #cbd5e1",
+              borderRadius: "12px",
+              padding: "10px 14px",
+              background: "#ffffff",
+              color: "#334155",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Add Education
+          </button>
+        </div>
+
+        <div>
+          <label style={labelStyle}>
+            Certifications
+            <input
+              style={inputStyle}
+              value={formData.certifications.join(", ")}
+              onChange={(event) => updateCertifications(event.target.value)}
+              placeholder="PMP, CPR, Google Analytics, OSHA 30"
+            />
+          </label>
+        </div>
+
+        <div>
           <label style={labelStyle}>
             Skills
             <input
@@ -384,9 +540,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
       </form>
 
       <div>
-        <h3 style={{ fontSize: "18px", fontWeight: 700 }}>
-          Live Preview
-        </h3>
+        <h3 style={{ fontSize: "18px", fontWeight: 700 }}>Live Preview</h3>
 
         <div style={{ marginTop: "12px" }}>
           <ResumeEditorPreview data={formData} />

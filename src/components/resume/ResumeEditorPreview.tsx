@@ -84,9 +84,43 @@ export function ResumeEditorPreview({ data }: ResumeEditorPreviewProps) {
       </div>
 
       <div>
+        <strong>Education</strong>
+
+        {data.education.length > 0 ? (
+          <div style={{ marginTop: "8px", display: "grid", gap: "10px" }}>
+            {data.education.map((item) => (
+              <div key={item.id}>
+                <p style={{ color: "#334155", fontWeight: 700 }}>
+                  {item.degree || "Degree not added"}
+                  {item.field ? `, ${item.field}` : ""}
+                </p>
+
+                <p style={{ color: "#64748b" }}>
+                  {[item.school, item.graduationDate]
+                    .filter(Boolean)
+                    .join(" • ") || "School/date not added"}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ color: "#64748b" }}>Not added yet</p>
+        )}
+      </div>
+
+      <div>
         <strong>Skills</strong>
         <p style={{ color: "#64748b" }}>
           {data.skills.length > 0 ? data.skills.join(", ") : "Not added yet"}
+        </p>
+      </div>
+
+      <div>
+        <strong>Certifications</strong>
+        <p style={{ color: "#64748b" }}>
+          {data.certifications.length > 0
+            ? data.certifications.join(", ")
+            : "Not added yet"}
         </p>
       </div>
     </div>
