@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { ResumeCompletionCard } from "@/components/resume/ResumeCompletionCard"
 import { ResumeEditorPreview } from "@/components/resume/ResumeEditorPreview"
 import { ResumeValidationPanel } from "@/components/resume/ResumeValidationPanel"
 import { ContactSection } from "@/components/resume/form-sections/ContactSection"
@@ -9,6 +10,7 @@ import { ExperienceSection } from "@/components/resume/form-sections/ExperienceS
 import { SkillsCertificationsSection } from "@/components/resume/form-sections/SkillsCertificationsSection"
 import { SummarySection } from "@/components/resume/form-sections/SummarySection"
 import {
+  analyzeResumeCompletion,
   clearResumeDraftLocally,
   loadResumeDraftLocally,
   saveResumeDraftLocally,
@@ -30,6 +32,11 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   const validation = useMemo(() => validateResumeData(formData), [formData])
+
+  const completionAnalysis = useMemo(
+    () => analyzeResumeCompletion(formData),
+    [formData]
+  )
 
   useEffect(() => {
     try {
@@ -224,7 +231,9 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
             color: hasUnsavedChanges ? "#92400e" : "#334155",
           }}
         >
-          <strong>{hasUnsavedChanges ? "Unsaved changes" : "Draft saved"}</strong>
+          <strong>
+            {hasUnsavedChanges ? "Unsaved changes" : "Draft saved"}
+          </strong>
 
           <p style={{ marginTop: "4px" }}>
             {hasUnsavedChanges
@@ -232,6 +241,8 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
               : "Your current draft state is saved or unchanged."}
           </p>
         </div>
+
+        <ResumeCompletionCard analysis={completionAnalysis} />
 
         <ResumeValidationPanel issues={validation.issues} />
 
@@ -303,12 +314,16 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
         </div>
 
         {saveMessage && (
-          <p style={{ color: "#64748b", marginTop: "-4px" }}>{saveMessage}</p>
+          <p style={{ color: "#64748b", marginTop: "-4px" }}>
+            {saveMessage}
+          </p>
         )}
       </form>
 
       <div>
-        <h3 style={{ fontSize: "18px", fontWeight: 700 }}>Live Preview</h3>
+        <h3 style={{ fontSize: "18px", fontWeight: 700 }}>
+          Live Preview
+        </h3>
 
         <div style={{ marginTop: "12px" }}>
           <ResumeEditorPreview data={formData} />
