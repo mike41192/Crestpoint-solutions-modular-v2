@@ -49,3 +49,26 @@ v2-stable-scaffold-phase-103
 
 ### Module
 
+## Resume Builder Foundation
+  v2-resume-builder-foundation
+
+   File route
+
+  /dashboard/resume
+
+  Included files 
+
+  src/app/dashboard/resume/page.tsx
+  src/modules/resume-builder/index.ts
+  src/modules/resume-builder/config.ts
+  src/modules/resume-builder/types.ts
+  src/modules/resume-builder/schema.ts
+  src/modules/resume-builder/service.ts
+  src/modules/resume-builder/constants.ts
+  src/modules/resume-builder/tutorial.ts
+  src/modules/resume-builder/usage.ts
+  src/modules/resume-builder/backup.ts
+
+  Restoration command
+
+  git checkout v2-resume-builder-foundation
