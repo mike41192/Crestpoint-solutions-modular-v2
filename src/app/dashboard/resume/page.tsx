@@ -2,6 +2,7 @@ import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
 import { SectionCard } from "@/components/layout/SectionCard"
 import { FirstUseTutorial } from "@/components/onboarding/FirstUseTutorial"
 import { ResumeEditorPreview } from "@/components/resume/ResumeEditorPreview"
+import { ResumeStarterForm } from "@/components/resume/ResumeStarterForm"
 import {
   getResumeBuilderPreviewData,
   resumeBuilderSections,
@@ -22,7 +23,7 @@ export default function ResumeDashboardPage() {
         style={{
           display: "grid",
           gap: "16px",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
           marginTop: "24px",
         }}
       >
@@ -47,19 +48,14 @@ export default function ResumeDashboardPage() {
 
         <SectionCard>
           <h2 style={{ fontSize: "22px", fontWeight: 700 }}>
-            Resume Sections
+            Resume Starter Form
           </h2>
 
-          <ul style={{ marginTop: "12px", paddingLeft: "20px" }}>
-            {resumeBuilderSections.map((section) => (
-              <li
-                key={section}
-                style={{ marginBottom: "8px", color: "#475569" }}
-              >
-                {section}
-              </li>
-            ))}
-          </ul>
+          {primaryResume.data && (
+            <div style={{ marginTop: "16px" }}>
+              <ResumeStarterForm data={primaryResume.data} />
+            </div>
+          )}
         </SectionCard>
 
         <SectionCard>
@@ -76,13 +72,19 @@ export default function ResumeDashboardPage() {
 
         <SectionCard>
           <h2 style={{ fontSize: "22px", fontWeight: 700 }}>
-            Next Build Steps
+            Resume Sections
           </h2>
 
-          <p style={{ marginTop: "8px", color: "#64748b", lineHeight: 1.5 }}>
-            Upcoming phases will add editable inputs, import parsing, AI
-            optimization, ATS alignment, and export controls.
-          </p>
+          <ul style={{ marginTop: "12px", paddingLeft: "20px" }}>
+            {resumeBuilderSections.map((section) => (
+              <li
+                key={section}
+                style={{ marginBottom: "8px", color: "#475569" }}
+              >
+                {section}
+              </li>
+            ))}
+          </ul>
         </SectionCard>
       </section>
     </ModulePageLayout>
