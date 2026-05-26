@@ -49,7 +49,15 @@ export function getResumeBuilderPreviewData(): ResumeBuilderData[] {
   ]
 }
 
+function canUseLocalStorage() {
+  return typeof window !== "undefined" && Boolean(window.localStorage)
+}
+
 export function saveResumeDraftLocally(data: ResumeBuilderFormData) {
+  if (!canUseLocalStorage()) {
+    return
+  }
+
   window.localStorage.setItem(
     RESUME_BUILDER_LOCAL_STORAGE_KEY,
     JSON.stringify(data)
@@ -57,6 +65,10 @@ export function saveResumeDraftLocally(data: ResumeBuilderFormData) {
 }
 
 export function loadResumeDraftLocally() {
+  if (!canUseLocalStorage()) {
+    return null
+  }
+
   const savedDraft = window.localStorage.getItem(
     RESUME_BUILDER_LOCAL_STORAGE_KEY
   )
@@ -69,5 +81,9 @@ export function loadResumeDraftLocally() {
 }
 
 export function clearResumeDraftLocally() {
+  if (!canUseLocalStorage()) {
+    return
+  }
+
   window.localStorage.removeItem(RESUME_BUILDER_LOCAL_STORAGE_KEY)
 }
