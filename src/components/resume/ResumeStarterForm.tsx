@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ResumeEditorPreview } from "@/components/resume/ResumeEditorPreview"
+import { ResumeValidationPanel } from "@/components/resume/ResumeValidationPanel"
 import { ContactSection } from "@/components/resume/form-sections/ContactSection"
 import { EducationSection } from "@/components/resume/form-sections/EducationSection"
 import { ExperienceSection } from "@/components/resume/form-sections/ExperienceSection"
@@ -11,6 +12,7 @@ import {
   clearResumeDraftLocally,
   loadResumeDraftLocally,
   saveResumeDraftLocally,
+  validateResumeData,
 } from "@/modules/resume-builder"
 import type {
   ResumeBuilderFormData,
@@ -26,6 +28,8 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   const [formData, setFormData] = useState<ResumeBuilderFormData>(data)
   const [saveMessage, setSaveMessage] = useState("")
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+
+  const validation = useMemo(() => validateResumeData(formData), [formData])
 
   useEffect(() => {
     try {
@@ -228,6 +232,8 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
               : "Your current draft state is saved or unchanged."}
           </p>
         </div>
+
+        <ResumeValidationPanel issues={validation.issues} />
 
         <ContactSection
           contact={formData.contact}
