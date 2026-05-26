@@ -1,7 +1,6 @@
 import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
 import { SectionCard } from "@/components/layout/SectionCard"
 import { FirstUseTutorial } from "@/components/onboarding/FirstUseTutorial"
-import { ResumeEditorPreview } from "@/components/resume/ResumeEditorPreview"
 import { ResumeStarterForm } from "@/components/resume/ResumeStarterForm"
 import {
   getResumeBuilderPreviewData,
@@ -23,29 +22,10 @@ export default function ResumeDashboardPage() {
         style={{
           display: "grid",
           gap: "16px",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gridTemplateColumns: "minmax(320px, 2fr) minmax(260px, 1fr)",
           marginTop: "24px",
         }}
       >
-        <SectionCard>
-          <h2 style={{ fontSize: "22px", fontWeight: 700 }}>
-            Resume Workspace
-          </h2>
-
-          <p style={{ marginTop: "8px", color: "#64748b", lineHeight: 1.5 }}>
-            Start with your main resume, then expand into AI optimization,
-            importing, formatting, and exporting.
-          </p>
-
-          <div style={{ marginTop: "16px" }}>
-            <strong>{primaryResume.title}</strong>
-
-            <p style={{ color: "#64748b", marginTop: "4px" }}>
-              Status: {primaryResume.status}
-            </p>
-          </div>
-        </SectionCard>
-
         <SectionCard>
           <h2 style={{ fontSize: "22px", fontWeight: 700 }}>
             Resume Starter Form
@@ -58,34 +38,43 @@ export default function ResumeDashboardPage() {
           )}
         </SectionCard>
 
-        <SectionCard>
-          <h2 style={{ fontSize: "22px", fontWeight: 700 }}>
-            Resume Data Preview
-          </h2>
+        <div style={{ display: "grid", gap: "16px" }}>
+          <SectionCard>
+            <h2 style={{ fontSize: "22px", fontWeight: 700 }}>
+              Resume Workspace
+            </h2>
 
-          {primaryResume.data && (
+            <p style={{ marginTop: "8px", color: "#64748b", lineHeight: 1.5 }}>
+              Start with your main resume, then expand into AI optimization,
+              importing, formatting, and exporting.
+            </p>
+
             <div style={{ marginTop: "16px" }}>
-              <ResumeEditorPreview data={primaryResume.data} />
+              <strong>{primaryResume.title}</strong>
+
+              <p style={{ color: "#64748b", marginTop: "4px" }}>
+                Status: {primaryResume.status}
+              </p>
             </div>
-          )}
-        </SectionCard>
+          </SectionCard>
 
-        <SectionCard>
-          <h2 style={{ fontSize: "22px", fontWeight: 700 }}>
-            Resume Sections
-          </h2>
+          <SectionCard>
+            <h2 style={{ fontSize: "22px", fontWeight: 700 }}>
+              Resume Sections
+            </h2>
 
-          <ul style={{ marginTop: "12px", paddingLeft: "20px" }}>
-            {resumeBuilderSections.map((section) => (
-              <li
-                key={section}
-                style={{ marginBottom: "8px", color: "#475569" }}
-              >
-                {section}
-              </li>
-            ))}
-          </ul>
-        </SectionCard>
+            <ul style={{ marginTop: "12px", paddingLeft: "20px" }}>
+              {resumeBuilderSections.map((section) => (
+                <li
+                  key={section}
+                  style={{ marginBottom: "8px", color: "#475569" }}
+                >
+                  {section}
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+        </div>
       </section>
     </ModulePageLayout>
   )
