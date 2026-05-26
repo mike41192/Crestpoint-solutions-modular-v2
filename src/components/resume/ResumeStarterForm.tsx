@@ -116,6 +116,13 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     }))
   }
 
+  function removeExperienceItem(id: string) {
+    setFormData((current) => ({
+      ...current,
+      experience: current.experience.filter((item) => item.id !== id),
+    }))
+  }
+
   function updateEducationField(
     id: string,
     field: keyof Omit<ResumeEducationItem, "id">,
@@ -142,6 +149,13 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
           graduationDate: "",
         },
       ],
+    }))
+  }
+
+  function removeEducationItem(id: string) {
+    setFormData((current) => ({
+      ...current,
+      education: current.education.filter((item) => item.id !== id),
     }))
   }
 
@@ -372,6 +386,23 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
                     />
                   </label>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => removeExperienceItem(item.id)}
+                  style={{
+                    marginTop: "12px",
+                    border: "1px solid #fecaca",
+                    borderRadius: "12px",
+                    padding: "10px 14px",
+                    background: "#fff1f2",
+                    color: "#991b1b",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Remove Experience
+                </button>
               </div>
             ))}
           </div>
@@ -476,6 +507,23 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
                     />
                   </label>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => removeEducationItem(item.id)}
+                  style={{
+                    marginTop: "12px",
+                    border: "1px solid #fecaca",
+                    borderRadius: "12px",
+                    padding: "10px 14px",
+                    background: "#fff1f2",
+                    color: "#991b1b",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Remove Education
+                </button>
               </div>
             ))}
           </div>
