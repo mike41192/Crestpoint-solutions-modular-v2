@@ -13,6 +13,7 @@ import { SummarySection } from "@/components/resume/form-sections/SummarySection
 import {
   analyzeResumeCompletion,
   clearResumeDraftLocally,
+  getFirstLoadedResumeData,
   loadResumeDraftLocally,
   loadResumeDraftsFromServer,
   saveResumeDraftLocally,
@@ -80,22 +81,36 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   }
 
   async function saveDraftToServer() {
-    setServerMessage("Saving draft to server scaffold...")
+    setServerMessage("Saving draft to Supabase...")
 
     try {
       const result = await saveResumeDraftToServer(formData)
       setServerMessage(result.message || "Server save completed.")
+
+      if (result.status === "success") {
+        setHasUnsavedChanges(false)
+      }
     } catch {
       setServerMessage("Server save request failed.")
     }
   }
 
   async function loadDraftsFromServer() {
-    setServerMessage("Loading drafts from server scaffold...")
+    setServerMessage("Loading drafts from Supabase...")
 
     try {
       const result = await loadResumeDraftsFromServer()
-      setServerMessage(result.message || "Server load completed.")
+      const loadedResume = getFirstLoadedResumeData(result)
+
+      if (loadedResume) {
+        setFormData(loadedResume)
+        saveResumeDraftLocally(loadedResume)
+        setHasUnsavedChanges(false)
+        setServerMessage("Resume loaded from Supabase.")
+        return
+      }
+
+      setServerMessage(result.message || "No server resume found.")
     } catch {
       setServerMessage("Server load request failed.")
     }
@@ -328,7 +343,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
 
           <p style={{ marginTop: "4px" }}>
             {hasUnsavedChanges
-              ? "You have changes that are not saved locally yet."
+              ? "You have changes that are not saved locally or to Supabase yet."
               : "Your current draft state is saved or unchanged."}
           </p>
         </div>
@@ -421,7 +436,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
               cursor: "pointer",
             }}
           >
-            Save to Server Scaffold
+            Save to Supabase
           </button>
 
           <button
@@ -437,7 +452,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
               cursor: "pointer",
             }}
           >
-            Load Server Drafts Scaffold
+            Load from Supabase
           </button>
         </div>
 

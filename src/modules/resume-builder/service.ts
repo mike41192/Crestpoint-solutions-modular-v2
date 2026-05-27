@@ -109,3 +109,25 @@ export async function loadResumeDraftsFromServer() {
 
   return response.json()
 }
+
+export function getFirstLoadedResumeData(
+  serverResponse: unknown
+): ResumeBuilderFormData | null {
+  if (
+    typeof serverResponse !== "object" ||
+    serverResponse === null ||
+    !("resumes" in serverResponse)
+  ) {
+    return null
+  }
+
+  const response = serverResponse as {
+    resumes?: Array<{
+      resume_data?: ResumeBuilderFormData
+    }>
+  }
+
+  const firstResume = response.resumes?.[0]
+
+  return firstResume?.resume_data || null
+}

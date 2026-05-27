@@ -1,10 +1,44 @@
+import { createSupabaseServerClient } from "@/lib/supabase/server"
+
 export async function GET() {
+  const supabase = await createSupabaseServerClient()
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return Response.json(
+      {
+        status: "unauthorized",
+        message: "You must be signed in to load resumes.",
+        resumes: [],
+      },
+      { status: 401 }
+    )
+  }
+
+  const { data, error } = await supabase
+    .from("resumes")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("updated_at", { ascending: false })
+
+  if (error) {
+    return Response.json(
+      {
+        status: "error",
+        message: error.message,
+        resumes: [],
+      },
+      { status: 500 }
+    )
+  }
+
   return Response.json({
-    status: "scaffolded",
-    message:
-      "Resume load API is scaffolded. Supabase resume loading will activate after auth/session wiring is connected.",
-    resumes: [],
-    nextStep:
-      "Connect Supabase server client, authenticated user session, and resume select logic.",
+    status: "success",
+    message: "Resumes loaded from Supabase.",
+    resumes: data || [],
   })
 }
