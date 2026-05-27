@@ -47,8 +47,8 @@ export function ResumeEditorPreview({ data }: ResumeEditorPreviewProps) {
 
         {data.experience.length > 0 ? (
           <div style={{ marginTop: "8px", display: "grid", gap: "10px" }}>
-            {data.experience.map((item) => (
-              <div key={item.id}>
+            {data.experience.map((item, experienceIndex) => (
+              <div key={`${item.id}-${experienceIndex}`}>
                 <p style={{ color: "#334155", fontWeight: 700 }}>
                   {item.role || "Role not added"}{" "}
                   {item.company ? `at ${item.company}` : ""}
@@ -64,8 +64,14 @@ export function ResumeEditorPreview({ data }: ResumeEditorPreviewProps) {
                   {item.bullets.filter(Boolean).length > 0 ? (
                     item.bullets
                       .filter(Boolean)
-                      .map((bullet) => (
-                        <li key={bullet} style={{ color: "#64748b" }}>
+                      .map((bullet, bulletIndex) => (
+                        <li
+                          key={`${item.id}-bullet-${bulletIndex}-${bullet.slice(
+                            0,
+                            20
+                          )}`}
+                          style={{ color: "#64748b" }}
+                        >
                           {bullet}
                         </li>
                       ))
@@ -88,8 +94,8 @@ export function ResumeEditorPreview({ data }: ResumeEditorPreviewProps) {
 
         {data.education.length > 0 ? (
           <div style={{ marginTop: "8px", display: "grid", gap: "10px" }}>
-            {data.education.map((item) => (
-              <div key={item.id}>
+            {data.education.map((item, educationIndex) => (
+              <div key={`${item.id}-${educationIndex}`}>
                 <p style={{ color: "#334155", fontWeight: 700 }}>
                   {item.degree || "Degree not added"}
                   {item.field ? `, ${item.field}` : ""}
