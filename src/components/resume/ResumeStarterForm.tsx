@@ -14,7 +14,9 @@ import {
   analyzeResumeCompletion,
   clearResumeDraftLocally,
   loadResumeDraftLocally,
+  loadResumeDraftsFromServer,
   saveResumeDraftLocally,
+  saveResumeDraftToServer,
   validateResumeData,
 } from "@/modules/resume-builder"
 import type {
@@ -31,6 +33,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   const [formData, setFormData] = useState<ResumeBuilderFormData>(data)
   const [saveMessage, setSaveMessage] = useState("")
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [serverMessage, setServerMessage] = useState("")
 
   const validation = useMemo(() => validateResumeData(formData), [formData])
 
@@ -73,6 +76,28 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     setFormData(data)
     setSaveMessage("Local draft cleared.")
     setHasUnsavedChanges(false)
+  }
+
+  async function saveDraftToServer() {
+    setServerMessage("Saving draft to server scaffold...")
+
+    try {
+      const result = await saveResumeDraftToServer(formData)
+      setServerMessage(result.message || "Server save completed.")
+    } catch {
+      setServerMessage("Server save request failed.")
+    }
+  }
+
+  async function loadDraftsFromServer() {
+    setServerMessage("Loading drafts from server scaffold...")
+
+    try {
+      const result = await loadResumeDraftsFromServer()
+      setServerMessage(result.message || "Server load completed.")
+    } catch {
+      setServerMessage("Server load request failed.")
+    }
   }
 
   function updateContactField(
@@ -314,11 +339,49 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
           >
             Clear Local Draft
           </button>
+
+          <button
+            type="button"
+            onClick={saveDraftToServer}
+            style={{
+              border: "1px solid #bfdbfe",
+              borderRadius: "12px",
+              padding: "12px 16px",
+              background: "#eff6ff",
+              color: "#1d4ed8",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Save to Server Scaffold
+          </button>
+
+          <button
+            type="button"
+            onClick={loadDraftsFromServer}
+            style={{
+              border: "1px solid #d9f99d",
+              borderRadius: "12px",
+              padding: "12px 16px",
+              background: "#f7fee7",
+              color: "#3f6212",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Load Server Drafts Scaffold
+          </button>
         </div>
 
         {saveMessage && (
           <p style={{ color: "#64748b", marginTop: "-4px" }}>
             {saveMessage}
+          </p>
+        )}
+
+        {serverMessage && (
+          <p style={{ color: "#334155", marginTop: "-4px" }}>
+            {serverMessage}
           </p>
         )}
       </form>

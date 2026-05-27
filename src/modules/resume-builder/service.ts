@@ -87,3 +87,25 @@ export function clearResumeDraftLocally() {
 
   window.localStorage.removeItem(RESUME_BUILDER_LOCAL_STORAGE_KEY)
 }
+
+export async function saveResumeDraftToServer(data: ResumeBuilderFormData) {
+  const response = await fetch("/api/resume/save", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      title: "Primary Resume",
+      status: "draft",
+      resumeData: data,
+    }),
+  })
+
+  return response.json()
+}
+
+export async function loadResumeDraftsFromServer() {
+  const response = await fetch("/api/resume/load")
+
+  return response.json()
+}
