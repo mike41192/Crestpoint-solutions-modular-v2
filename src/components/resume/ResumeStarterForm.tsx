@@ -23,6 +23,7 @@ import type {
   ResumeBuilderFormData,
   ResumeEducationItem,
   ResumeExperienceItem,
+  ResumeOptimizationSuggestion,
 } from "@/modules/resume-builder"
 
 type ResumeStarterFormProps = {
@@ -98,6 +99,70 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     } catch {
       setServerMessage("Server load request failed.")
     }
+  }
+
+  function applyOptimizationSuggestion(
+    suggestion: ResumeOptimizationSuggestion
+  ) {
+    if (!suggestion.suggestedText) {
+      setSaveMessage("Suggestion reviewed. No direct text was provided.")
+      return
+    }
+
+    if (suggestion.category === "summary") {
+      updateFormData((current) => ({
+        ...current,
+        summary: suggestion.suggestedText || current.summary,
+      }))
+
+      setSaveMessage("AI summary suggestion applied.")
+      return
+    }
+
+    if (suggestion.category === "skills") {
+      updateFormData((current) => ({
+        ...current,
+        skills: suggestion.suggestedText
+          ? suggestion.suggestedText
+              .split(",")
+              .map((skill) => skill.trim())
+              .filter(Boolean)
+          : current.skills,
+      }))
+
+      setSaveMessage("AI skills suggestion applied.")
+      return
+    }
+
+    if (suggestion.category === "experience") {
+      updateFormData((current) => {
+        const firstExperience = current.experience[0]
+
+        if (!firstExperience) {
+          return current
+        }
+
+        return {
+          ...current,
+          experience: current.experience.map((item, index) =>
+            index === 0
+              ? {
+                  ...item,
+                  bullets: [
+                    suggestion.suggestedText || "",
+                    ...item.bullets.filter(Boolean),
+                  ],
+                }
+              : item
+          ),
+        }
+      })
+
+      setSaveMessage("AI experience suggestion added to first role.")
+      return
+    }
+
+    setSaveMessage("Suggestion reviewed for future formatting or ATS logic.")
   }
 
   function updateContactField(
@@ -272,7 +337,10 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
 
         <ResumeValidationPanel issues={validation.issues} />
 
-        <ResumeOptimizeActions data={formData} />
+        <ResumeOptimizeActions
+          data={formData}
+          onApplySuggestion={applyOptimizationSuggestion}
+        />
 
         <ContactSection
           contact={formData.contact}

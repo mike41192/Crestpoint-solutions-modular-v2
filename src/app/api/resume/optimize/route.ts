@@ -1,20 +1,42 @@
+import {
+  buildResumeOptimizationPrompt,
+  getScaffoldedResumeOptimizationSuggestions,
+} from "@/modules/resume-builder"
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    const resume = body?.resume
+
+    if (!resume) {
+      return Response.json(
+        {
+          status: "error",
+          message: "Resume data is required.",
+          suggestions: [],
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    const prompt = buildResumeOptimizationPrompt(resume)
+    const suggestions = getScaffoldedResumeOptimizationSuggestions()
 
     return Response.json({
       status: "scaffolded",
       message:
-        "Resume optimization API is scaffolded but not connected to OpenAI yet.",
-      receivedFields: Object.keys(body || {}),
-      nextStep:
-        "Connect OpenAI optimization service after prompt and safety rules are finalized.",
+        "Resume AI optimization system is ready. OpenAI live completion will be connected after final prompt testing.",
+      promptPreview: prompt.slice(0, 500),
+      suggestions,
     })
   } catch {
     return Response.json(
       {
         status: "error",
         message: "Invalid request body.",
+        suggestions: [],
       },
       {
         status: 400,

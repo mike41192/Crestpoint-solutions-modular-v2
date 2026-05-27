@@ -2,18 +2,23 @@
 
 import { useState } from "react"
 import { ResumeOptimizationResults } from "@/components/resume/ResumeOptimizationResults"
-import type { ResumeBuilderFormData } from "@/modules/resume-builder"
+import type {
+  ResumeBuilderFormData,
+  ResumeOptimizationSuggestion,
+} from "@/modules/resume-builder"
 
 type ResumeOptimizeActionsProps = {
   data: ResumeBuilderFormData
+  onApplySuggestion: (suggestion: ResumeOptimizationSuggestion) => void
 }
 
 export function ResumeOptimizeActions({
   data,
+  onApplySuggestion,
 }: ResumeOptimizeActionsProps) {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
-  const [results, setResults] = useState<string[]>([])
+  const [results, setResults] = useState<ResumeOptimizationSuggestion[]>([])
 
   async function optimizeResume() {
     setLoading(true)
@@ -33,18 +38,22 @@ export function ResumeOptimizeActions({
       const result = await response.json()
 
       setMessage(result.message || "Optimization request completed.")
-
-      setResults([
-        "Use stronger action verbs in work experience bullet points.",
-        "Add more measurable metrics and achievements.",
-        "Expand your professional summary for stronger ATS matching.",
-        "Increase skills alignment with your target job title.",
-      ])
+      setResults(result.suggestions || [])
     } catch {
       setMessage("Resume optimization request failed.")
     } finally {
       setLoading(false)
     }
+  }
+
+  function applySuggestion(suggestion: ResumeOptimizationSuggestion) {
+    onApplySuggestion(suggestion)
+
+    setResults((current) =>
+      current.map((item) =>
+        item.id === suggestion.id ? { ...item, applied: true } : item
+      )
+    )
   }
 
   return (
@@ -64,8 +73,8 @@ export function ResumeOptimizeActions({
         </h3>
 
         <p style={{ marginTop: "6px", color: "#475569", lineHeight: 1.5 }}>
-          Send this resume draft to the optimization pipeline. OpenAI
-          connection will be enabled in a later phase.
+          Review your resume against AI optimization rules. Live OpenAI
+          completion will be connected after final prompt testing.
         </p>
 
         <button
@@ -93,7 +102,10 @@ export function ResumeOptimizeActions({
         )}
       </div>
 
-      <ResumeOptimizationResults results={results} />
+      <ResumeOptimizationResults
+        results={results}
+        onApplySuggestion={applySuggestion}
+      />
     </div>
   )
 }
