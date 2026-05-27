@@ -1,12 +1,23 @@
 "use client"
 
 import { useState } from "react"
+import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 
-export function ResumeImportPanel() {
+type ResumeImportPanelProps = {
+  onApplyImportedResume: (data: ResumeBuilderFormData) => void
+}
+
+export function ResumeImportPanel({
+  onApplyImportedResume,
+}: ResumeImportPanelProps) {
   const [fileName, setFileName] = useState("")
   const [message, setMessage] = useState("")
   const [preview, setPreview] = useState("")
   const [loading, setLoading] = useState(false)
+  const [detectedSections, setDetectedSections] = useState<string[]>([])
+  const [parsedData, setParsedData] = useState<ResumeBuilderFormData | null>(
+    null
+  )
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -18,6 +29,8 @@ export function ResumeImportPanel() {
     setFileName(file.name)
     setMessage("")
     setPreview("")
+    setDetectedSections([])
+    setParsedData(null)
   }
 
   async function uploadResume(event: React.FormEvent<HTMLFormElement>) {
@@ -38,6 +51,8 @@ export function ResumeImportPanel() {
     setLoading(true)
     setMessage("")
     setPreview("")
+    setDetectedSections([])
+    setParsedData(null)
 
     try {
       const response = await fetch("/api/resume/import", {
@@ -49,11 +64,23 @@ export function ResumeImportPanel() {
 
       setMessage(result.message || "Import request completed.")
       setPreview(result.preview || "")
+      setDetectedSections(result.detectedSections || [])
+      setParsedData(result.parsedData || null)
     } catch {
       setMessage("Resume import request failed.")
     } finally {
       setLoading(false)
     }
+  }
+
+  function applyImportedResume() {
+    if (!parsedData) {
+      setMessage("No parsed resume data is available to apply.")
+      return
+    }
+
+    onApplyImportedResume(parsedData)
+    setMessage("Imported resume data applied to the editor.")
   }
 
   return (
@@ -65,13 +92,11 @@ export function ResumeImportPanel() {
         background: "#f8fafc",
       }}
     >
-      <h3 style={{ fontSize: "18px", fontWeight: 700 }}>
-        Resume Import
-      </h3>
+      <h3 style={{ fontSize: "18px", fontWeight: 700 }}>Resume Import</h3>
 
       <p style={{ marginTop: "6px", color: "#64748b", lineHeight: 1.5 }}>
-        Upload a plain text resume to begin import testing. PDF and DOCX parsing
-        will be added after the text import flow is verified.
+        Upload a plain text resume to import structured resume fields. PDF and
+        DOCX parsing will be added after the text import flow is verified.
       </p>
 
       <form
@@ -111,6 +136,58 @@ export function ResumeImportPanel() {
 
       {message && (
         <p style={{ marginTop: "12px", color: "#334155" }}>{message}</p>
+      )}
+
+      {detectedSections.length > 0 && (
+        <div
+          style={{
+            marginTop: "12px",
+            border: "1px solid #bbf7d0",
+            borderRadius: "10px",
+            padding: "12px",
+            background: "#f0fdf4",
+            color: "#166534",
+          }}
+        >
+          <strong>Detected Sections</strong>
+
+          <p style={{ marginTop: "6px" }}>{detectedSections.join(", ")}</p>
+        </div>
+      )}
+
+      {parsedData && (
+        <div
+          style={{
+            marginTop: "12px",
+            border: "1px solid #bfdbfe",
+            borderRadius: "10px",
+            padding: "12px",
+            background: "#eff6ff",
+          }}
+        >
+          <strong>Structured Import Ready</strong>
+
+          <p style={{ marginTop: "6px", color: "#334155" }}>
+            Parsed resume fields are ready to apply to the editor.
+          </p>
+
+          <button
+            type="button"
+            onClick={applyImportedResume}
+            style={{
+              marginTop: "10px",
+              border: "0",
+              borderRadius: "12px",
+              padding: "10px 14px",
+              background: "#2563eb",
+              color: "#ffffff",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Apply Imported Resume
+          </button>
+        </div>
       )}
 
       {preview && (

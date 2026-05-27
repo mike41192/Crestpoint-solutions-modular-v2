@@ -1,3 +1,5 @@
+import { parseTextResume } from "@/modules/resume-builder"
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData()
@@ -16,15 +18,17 @@ export async function POST(request: Request) {
     const fileName = file.name
     const fileType = file.type
     const fileText = await file.text()
+    const parsedResult = parseTextResume(fileText)
 
     return Response.json({
-      status: "scaffolded",
-      message:
-        "Resume import scaffold received the file. TXT parsing will be expanded in the next import phase.",
+      status: parsedResult.status,
+      message: parsedResult.message,
       fileName,
       fileType,
       characterCount: fileText.length,
       preview: fileText.slice(0, 500),
+      detectedSections: parsedResult.detectedSections,
+      parsedData: parsedResult.parsedData,
     })
   } catch {
     return Response.json(

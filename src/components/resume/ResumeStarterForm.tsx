@@ -21,7 +21,6 @@ import {
   saveResumeDraftToServer,
   validateResumeData,
 } from "@/modules/resume-builder"
-
 import type {
   ResumeBuilderFormData,
   ResumeEducationItem,
@@ -33,208 +32,134 @@ type ResumeStarterFormProps = {
   data: ResumeBuilderFormData
 }
 
-export function ResumeStarterForm({
-  data,
-}: ResumeStarterFormProps) {
-  const [formData, setFormData] =
-    useState<ResumeBuilderFormData>(data)
+export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
+  const [formData, setFormData] = useState<ResumeBuilderFormData>(data)
+  const [saveMessage, setSaveMessage] = useState("")
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [serverMessage, setServerMessage] = useState("")
 
-  const [saveMessage, setSaveMessage] =
-    useState("")
+  const validation = useMemo(() => validateResumeData(formData), [formData])
 
-  const [hasUnsavedChanges, setHasUnsavedChanges] =
-    useState(false)
-
-  const [serverMessage, setServerMessage] =
-    useState("")
-
-  const validation =
-    useMemo(
-      () => validateResumeData(formData),
-      [formData]
-    )
-
-  const completionAnalysis =
-    useMemo(
-      () => analyzeResumeCompletion(formData),
-      [formData]
-    )
+  const completionAnalysis = useMemo(
+    () => analyzeResumeCompletion(formData),
+    [formData]
+  )
 
   useEffect(() => {
     try {
-      const savedDraft =
-        loadResumeDraftLocally()
+      const savedDraft = loadResumeDraftLocally()
 
       if (!savedDraft) {
         return
       }
 
       setFormData(savedDraft)
-
-      setSaveMessage(
-        "Loaded saved local draft."
-      )
-
+      setSaveMessage("Loaded saved local draft.")
       setHasUnsavedChanges(false)
     } catch {
-      setSaveMessage(
-        "Saved local draft could not be loaded."
-      )
+      setSaveMessage("Saved local draft could not be loaded.")
     }
   }, [])
 
   function updateFormData(
-    updater: (
-      current: ResumeBuilderFormData
-    ) => ResumeBuilderFormData
+    updater: (current: ResumeBuilderFormData) => ResumeBuilderFormData
   ) {
-    setFormData((current) =>
-      updater(current)
-    )
-
+    setFormData((current) => updater(current))
     setHasUnsavedChanges(true)
   }
 
   function saveDraft() {
     saveResumeDraftLocally(formData)
-
-    setSaveMessage(
-      "Draft saved locally in this browser."
-    )
-
+    setSaveMessage("Draft saved locally in this browser.")
     setHasUnsavedChanges(false)
   }
 
   function clearDraft() {
     clearResumeDraftLocally()
-
     setFormData(data)
-
-    setSaveMessage(
-      "Local draft cleared."
-    )
-
+    setSaveMessage("Local draft cleared.")
     setHasUnsavedChanges(false)
   }
 
   async function saveDraftToServer() {
-    setServerMessage(
-      "Saving draft to Supabase..."
-    )
+    setServerMessage("Saving draft to Supabase...")
 
     try {
-      const result =
-        await saveResumeDraftToServer(
-          formData
-        )
-
-      setServerMessage(
-        result.message ||
-          "Server save completed."
-      )
+      const result = await saveResumeDraftToServer(formData)
+      setServerMessage(result.message || "Server save completed.")
 
       if (result.status === "success") {
         setHasUnsavedChanges(false)
       }
     } catch {
-      setServerMessage(
-        "Server save request failed."
-      )
+      setServerMessage("Server save request failed.")
     }
   }
 
   async function loadDraftsFromServer() {
-    setServerMessage(
-      "Loading drafts from Supabase..."
-    )
+    setServerMessage("Loading drafts from Supabase...")
 
     try {
-      const result =
-        await loadResumeDraftsFromServer()
-
-      const loadedResume =
-        getFirstLoadedResumeData(result)
+      const result = await loadResumeDraftsFromServer()
+      const loadedResume = getFirstLoadedResumeData(result)
 
       if (loadedResume) {
         setFormData(loadedResume)
-
-        saveResumeDraftLocally(
-          loadedResume
-        )
-
+        saveResumeDraftLocally(loadedResume)
         setHasUnsavedChanges(false)
-
-        setServerMessage(
-          "Resume loaded from Supabase."
-        )
-
+        setServerMessage("Resume loaded from Supabase.")
         return
       }
 
-      setServerMessage(
-        result.message ||
-          "No server resume found."
-      )
+      setServerMessage(result.message || "No server resume found.")
     } catch {
-      setServerMessage(
-        "Server load request failed."
-      )
+      setServerMessage("Server load request failed.")
     }
+  }
+
+  function applyImportedResume(importedData: ResumeBuilderFormData) {
+    setFormData(importedData)
+    saveResumeDraftLocally(importedData)
+    setHasUnsavedChanges(true)
+    setSaveMessage("Imported resume data applied.")
   }
 
   function applyOptimizationSuggestion(
     suggestion: ResumeOptimizationSuggestion
   ) {
     if (!suggestion.suggestedText) {
-      setSaveMessage(
-        "Suggestion reviewed. No direct text was provided."
-      )
-
+      setSaveMessage("Suggestion reviewed. No direct text was provided.")
       return
     }
 
     if (suggestion.category === "summary") {
       updateFormData((current) => ({
         ...current,
-        summary:
-          suggestion.suggestedText ||
-          current.summary,
+        summary: suggestion.suggestedText || current.summary,
       }))
 
-      setSaveMessage(
-        "AI summary suggestion applied."
-      )
-
+      setSaveMessage("AI summary suggestion applied.")
       return
     }
 
     if (suggestion.category === "skills") {
       updateFormData((current) => ({
         ...current,
-        skills:
-          suggestion.suggestedText
-            ? suggestion.suggestedText
-                .split(",")
-                .map((skill) =>
-                  skill.trim()
-                )
-                .filter(Boolean)
-            : current.skills,
+        skills: suggestion.suggestedText
+          ? suggestion.suggestedText
+              .split(",")
+              .map((skill) => skill.trim())
+              .filter(Boolean)
+          : current.skills,
       }))
 
-      setSaveMessage(
-        "AI skills suggestion applied."
-      )
-
+      setSaveMessage("AI skills suggestion applied.")
       return
     }
 
-    if (
-      suggestion.category === "experience"
-    ) {
+    if (suggestion.category === "experience") {
       updateFormData((current) => {
-        const firstExperience =
-          current.experience[0]
+        const firstExperience = current.experience[0]
 
         if (!firstExperience) {
           return current
@@ -242,35 +167,25 @@ export function ResumeStarterForm({
 
         return {
           ...current,
-          experience:
-            current.experience.map(
-              (item, index) =>
-                index === 0
-                  ? {
-                      ...item,
-                      bullets: [
-                        suggestion.suggestedText ||
-                          "",
-                        ...item.bullets.filter(
-                          Boolean
-                        ),
-                      ],
-                    }
-                  : item
-            ),
+          experience: current.experience.map((item, index) =>
+            index === 0
+              ? {
+                  ...item,
+                  bullets: [
+                    suggestion.suggestedText || "",
+                    ...item.bullets.filter(Boolean),
+                  ],
+                }
+              : item
+          ),
         }
       })
 
-      setSaveMessage(
-        "AI experience suggestion added to first role."
-      )
-
+      setSaveMessage("AI experience suggestion added to first role.")
       return
     }
 
-    setSaveMessage(
-      "Suggestion reviewed for future formatting or ATS logic."
-    )
+    setSaveMessage("Suggestion reviewed for future formatting or ATS logic.")
   }
 
   function updateContactField(
@@ -286,125 +201,87 @@ export function ResumeStarterForm({
     }))
   }
 
-  function updateSummary(
-    value: string
-  ) {
+  function updateSummary(value: string) {
     updateFormData((current) => ({
       ...current,
       summary: value,
     }))
   }
 
-  function updateListField(
-    field: "skills" | "certifications",
-    value: string
-  ) {
+  function updateListField(field: "skills" | "certifications", value: string) {
     updateFormData((current) => ({
       ...current,
       [field]: value
         .split(",")
-        .map((item) =>
-          item.trim()
-        )
+        .map((item) => item.trim())
         .filter(Boolean),
     }))
   }
 
   function updateExperienceField(
     id: string,
-    field: keyof Omit<
-      ResumeExperienceItem,
-      "id" | "bullets"
-    >,
+    field: keyof Omit<ResumeExperienceItem, "id" | "bullets">,
     value: string
   ) {
     updateFormData((current) => ({
       ...current,
-      experience:
-        current.experience.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                [field]: value,
-              }
-            : item
-        ),
+      experience: current.experience.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              [field]: value,
+            }
+          : item
+      ),
     }))
   }
 
-  function updateExperienceBullet(
-    id: string,
-    index: number,
-    value: string
-  ) {
+  function updateExperienceBullet(id: string, index: number, value: string) {
     updateFormData((current) => ({
       ...current,
-      experience:
-        current.experience.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                bullets:
-                  item.bullets.map(
-                    (
-                      bullet,
-                      bulletIndex
-                    ) =>
-                      bulletIndex === index
-                        ? value
-                        : bullet
-                  ),
-              }
-            : item
-        ),
+      experience: current.experience.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              bullets: item.bullets.map((bullet, bulletIndex) =>
+                bulletIndex === index ? value : bullet
+              ),
+            }
+          : item
+      ),
     }))
   }
 
-  function addExperienceBullet(
-    id: string
-  ) {
+  function addExperienceBullet(id: string) {
     updateFormData((current) => ({
       ...current,
-      experience:
-        current.experience.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                bullets: [
-                  ...item.bullets,
-                  "",
-                ],
-              }
-            : item
-        ),
+      experience: current.experience.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              bullets: [...item.bullets, ""],
+            }
+          : item
+      ),
     }))
   }
 
-  function removeExperienceBullet(
-    id: string,
-    index: number
-  ) {
+  function removeExperienceBullet(id: string, index: number) {
     updateFormData((current) => ({
       ...current,
-      experience:
-        current.experience.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                bullets:
-                  item.bullets.length > 1
-                    ? item.bullets.filter(
-                        (
-                          _,
-                          bulletIndex
-                        ) =>
-                          bulletIndex !==
-                          index
-                      )
-                    : [""],
-              }
-            : item
-        ),
+      experience: current.experience.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              bullets:
+                item.bullets.length > 1
+                  ? item.bullets.filter(
+                      (_, bulletIndex) => bulletIndex !== index
+                    )
+                  : [""],
+            }
+          : item
+      ),
     }))
   }
 
@@ -414,10 +291,7 @@ export function ResumeStarterForm({
       experience: [
         ...current.experience,
         {
-          id: `experience-${
-            current.experience.length +
-            1
-          }`,
+          id: `experience-${current.experience.length + 1}`,
           company: "",
           role: "",
           location: "",
@@ -429,37 +303,28 @@ export function ResumeStarterForm({
     }))
   }
 
-  function removeExperienceItem(
-    id: string
-  ) {
+  function removeExperienceItem(id: string) {
     updateFormData((current) => ({
       ...current,
-      experience:
-        current.experience.filter(
-          (item) => item.id !== id
-        ),
+      experience: current.experience.filter((item) => item.id !== id),
     }))
   }
 
   function updateEducationField(
     id: string,
-    field: keyof Omit<
-      ResumeEducationItem,
-      "id"
-    >,
+    field: keyof Omit<ResumeEducationItem, "id">,
     value: string
   ) {
     updateFormData((current) => ({
       ...current,
-      education:
-        current.education.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                [field]: value,
-              }
-            : item
-        ),
+      education: current.education.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              [field]: value,
+            }
+          : item
+      ),
     }))
   }
 
@@ -469,10 +334,7 @@ export function ResumeStarterForm({
       education: [
         ...current.education,
         {
-          id: `education-${
-            current.education.length +
-            1
-          }`,
+          id: `education-${current.education.length + 1}`,
           school: "",
           degree: "",
           field: "",
@@ -482,172 +344,89 @@ export function ResumeStarterForm({
     }))
   }
 
-  function removeEducationItem(
-    id: string
-  ) {
+  function removeEducationItem(id: string) {
     updateFormData((current) => ({
       ...current,
-      education:
-        current.education.filter(
-          (item) => item.id !== id
-        ),
+      education: current.education.filter((item) => item.id !== id),
     }))
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gap: "24px",
-      }}
-    >
-      <div
-        style={{
-          display: "grid",
-          gap: "16px",
-        }}
-      >
+    <div style={{ display: "grid", gap: "24px" }}>
+      <div style={{ display: "grid", gap: "16px" }}>
         <div
           style={{
-            border:
-              "1px solid #e2e8f0",
+            border: "1px solid #e2e8f0",
             borderRadius: "12px",
             padding: "12px",
-            background:
-              hasUnsavedChanges
-                ? "#fffbeb"
-                : "#f8fafc",
-            color:
-              hasUnsavedChanges
-                ? "#92400e"
-                : "#334155",
+            background: hasUnsavedChanges ? "#fffbeb" : "#f8fafc",
+            color: hasUnsavedChanges ? "#92400e" : "#334155",
           }}
         >
           <strong>
-            {hasUnsavedChanges
-              ? "Unsaved changes"
-              : "Draft saved"}
+            {hasUnsavedChanges ? "Unsaved changes" : "Draft saved"}
           </strong>
 
-          <p
-            style={{
-              marginTop: "4px",
-            }}
-          >
+          <p style={{ marginTop: "4px" }}>
             {hasUnsavedChanges
               ? "You have changes that are not saved locally or to Supabase yet."
               : "Your current draft state is saved or unchanged."}
           </p>
         </div>
 
-        <ResumeCompletionCard
-          analysis={
-            completionAnalysis
-          }
-        />
+        <ResumeCompletionCard analysis={completionAnalysis} />
 
-        <ResumeValidationPanel
-          issues={validation.issues}
-        />
+        <ResumeValidationPanel issues={validation.issues} />
 
-        <ResumeImportPanel />
+        <ResumeImportPanel onApplyImportedResume={applyImportedResume} />
 
         <ResumeOptimizeActions
           data={formData}
-          onApplySuggestion={
-            applyOptimizationSuggestion
-          }
+          onApplySuggestion={applyOptimizationSuggestion}
         />
 
         <ContactSection
           contact={formData.contact}
-          onChange={
-            updateContactField
-          }
+          onChange={updateContactField}
         />
 
-        <SummarySection
-          summary={formData.summary}
-          onChange={updateSummary}
-        />
+        <SummarySection summary={formData.summary} onChange={updateSummary} />
 
         <ExperienceSection
-          experience={
-            formData.experience
-          }
-          onFieldChange={
-            updateExperienceField
-          }
-          onBulletChange={
-            updateExperienceBullet
-          }
-          onAddBullet={
-            addExperienceBullet
-          }
-          onRemoveBullet={
-            removeExperienceBullet
-          }
-          onAddExperience={
-            addExperienceItem
-          }
-          onRemoveExperience={
-            removeExperienceItem
-          }
+          experience={formData.experience}
+          onFieldChange={updateExperienceField}
+          onBulletChange={updateExperienceBullet}
+          onAddBullet={addExperienceBullet}
+          onRemoveBullet={removeExperienceBullet}
+          onAddExperience={addExperienceItem}
+          onRemoveExperience={removeExperienceItem}
         />
 
         <EducationSection
-          education={
-            formData.education
-          }
-          onFieldChange={
-            updateEducationField
-          }
-          onAddEducation={
-            addEducationItem
-          }
-          onRemoveEducation={
-            removeEducationItem
-          }
+          education={formData.education}
+          onFieldChange={updateEducationField}
+          onAddEducation={addEducationItem}
+          onRemoveEducation={removeEducationItem}
         />
 
         <SkillsCertificationsSection
           skills={formData.skills}
-          certifications={
-            formData.certifications
-          }
-          onSkillsChange={(value) =>
-            updateListField(
-              "skills",
-              value
-            )
-          }
-          onCertificationsChange={(
-            value
-          ) =>
-            updateListField(
-              "certifications",
-              value
-            )
+          certifications={formData.certifications}
+          onSkillsChange={(value) => updateListField("skills", value)}
+          onCertificationsChange={(value) =>
+            updateListField("certifications", value)
           }
         />
 
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            flexWrap: "wrap",
-          }}
-        >
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
           <button
             type="button"
             onClick={saveDraft}
             style={{
               border: "0",
               borderRadius: "12px",
-              padding:
-                "12px 16px",
-              background:
-                "#2563eb",
+              padding: "12px 16px",
+              background: "#2563eb",
               color: "#ffffff",
               fontWeight: 700,
               cursor: "pointer",
@@ -660,13 +439,10 @@ export function ResumeStarterForm({
             type="button"
             onClick={clearDraft}
             style={{
-              border:
-                "1px solid #fecaca",
+              border: "1px solid #fecaca",
               borderRadius: "12px",
-              padding:
-                "12px 16px",
-              background:
-                "#fff1f2",
+              padding: "12px 16px",
+              background: "#fff1f2",
               color: "#991b1b",
               fontWeight: 700,
               cursor: "pointer",
@@ -677,17 +453,12 @@ export function ResumeStarterForm({
 
           <button
             type="button"
-            onClick={
-              saveDraftToServer
-            }
+            onClick={saveDraftToServer}
             style={{
-              border:
-                "1px solid #bfdbfe",
+              border: "1px solid #bfdbfe",
               borderRadius: "12px",
-              padding:
-                "12px 16px",
-              background:
-                "#eff6ff",
+              padding: "12px 16px",
+              background: "#eff6ff",
               color: "#1d4ed8",
               fontWeight: 700,
               cursor: "pointer",
@@ -698,17 +469,12 @@ export function ResumeStarterForm({
 
           <button
             type="button"
-            onClick={
-              loadDraftsFromServer
-            }
+            onClick={loadDraftsFromServer}
             style={{
-              border:
-                "1px solid #d9f99d",
+              border: "1px solid #d9f99d",
               borderRadius: "12px",
-              padding:
-                "12px 16px",
-              background:
-                "#f7fee7",
+              padding: "12px 16px",
+              background: "#f7fee7",
               color: "#3f6212",
               fontWeight: 700,
               cursor: "pointer",
@@ -719,46 +485,23 @@ export function ResumeStarterForm({
         </div>
 
         {saveMessage && (
-          <p
-            style={{
-              color: "#64748b",
-              marginTop: "-4px",
-            }}
-          >
+          <p style={{ color: "#64748b", marginTop: "-4px" }}>
             {saveMessage}
           </p>
         )}
 
         {serverMessage && (
-          <p
-            style={{
-              color: "#334155",
-              marginTop: "-4px",
-            }}
-          >
+          <p style={{ color: "#334155", marginTop: "-4px" }}>
             {serverMessage}
           </p>
         )}
       </div>
 
       <div>
-        <h3
-          style={{
-            fontSize: "18px",
-            fontWeight: 700,
-          }}
-        >
-          Live Preview
-        </h3>
+        <h3 style={{ fontSize: "18px", fontWeight: 700 }}>Live Preview</h3>
 
-        <div
-          style={{
-            marginTop: "12px",
-          }}
-        >
-          <ResumeEditorPreview
-            data={formData}
-          />
+        <div style={{ marginTop: "12px" }}>
+          <ResumeEditorPreview data={formData} />
         </div>
       </div>
     </div>
