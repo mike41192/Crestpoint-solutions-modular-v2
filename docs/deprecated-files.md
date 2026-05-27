@@ -86,3 +86,27 @@ Phase:
 
 Safe To Delete:
 No deletion needed
+
+## Phase 131 — Resume Builder Persistence Scaffold
+
+txt
+Old file:
+None deleted
+
+Replacement:
+src/app/api/resume/save/route.ts
+src/app/api/resume/load/route.ts
+supabase/migrations/202605260001_resume_builder_tables.sql
+src/modules/resume-builder/service.ts
+
+Reason:
+Added scaffolded Supabase persistence structure for future authenticated resume saving/loading.
+
+Date:
+2026-05-26
+
+Phase:
+131
+
+Safe To Delete:
+No deletion needed

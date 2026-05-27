@@ -148,7 +148,7 @@ v2-stable-scaffold-phase-103
   
 ## Resume Builder Export + Print View System
 
-### Stable Version
+Stable Version
 
 .txt
 resume-builder-export-print-v1
@@ -182,3 +182,53 @@ Resume export layout sections
 Restore command
 
 git checkout v2-resume-builder-export-print
+
+## Resume Builder Persistence Scaffold
+
+ Stable Version
+
+  txt
+  resume-builder-persistence-scaffold-v1
+
+Stable Tag
+
+v2-resume-builder-persistence-scaffold
+
+Routes
+
+/dashboard/resume
+/dashboard/resume/export
+/api/resume/optimize
+/api/resume/save
+/api/resume/load
+
+Files Included
+
+src/app/dashboard/resume/page.tsx
+src/app/dashboard/resume/export/page.tsx
+src/app/api/resume/optimize/route.ts
+src/app/api/resume/save/route.ts
+src/app/api/resume/load/route.ts
+src/components/resume/
+src/components/resume/form-sections/
+src/modules/resume-builder/
+supabase/migrations/202605260001_resume_builder_tables.sql
+
+Verified Features
+
+Resume live editor
+Local draft saving
+Local draft loading
+Local draft clearing
+Completion intelligence
+Validation panel
+Export preview
+Print view
+AI optimization scaffold
+Server save scaffold
+Server load scaffold
+Supabase resume table migration scaffold
+
+Restore Command
+
+git checkout v2-resume-builder-persistence-scaffold
