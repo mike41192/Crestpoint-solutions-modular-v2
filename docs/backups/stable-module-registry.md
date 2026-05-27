@@ -232,3 +232,43 @@ Supabase resume table migration scaffold
 Restore Command
 
 git checkout v2-resume-builder-persistence-scaffold
+
+## Resume AI Optimization System
+
+ Stable Version
+
+txt
+resume-ai-optimization-v1
+
+Stable Tag
+
+v2-resume-ai-optimization
+
+Routes
+
+/dashboard/resume
+/api/resume/optimize
+
+Files Included
+
+src/app/api/resume/optimize/route.ts
+src/components/resume/ResumeOptimizeActions.tsx
+src/components/resume/ResumeOptimizationResults.tsx
+src/components/resume/ResumeStarterForm.tsx
+src/modules/resume-builder/ai.ts
+src/modules/resume-builder/index.ts
+
+Verified Features
+
+AI optimization API scaffold
+Resume optimization prompt builder
+Structured optimization suggestions
+Optimization results panel
+Apply summary suggestion
+Apply skills suggestion
+Apply experience suggestion
+Live preview updates after applying suggestions
+
+Restore command
+
+git checkout v2-resume-ai-optimization
