@@ -272,3 +272,95 @@ Live preview updates after applying suggestions
 Restore command
 
 git checkout v2-resume-ai-optimization
+
+## Resume Builder Module Foundation Complete
+
+Stable Version
+
+resume-builder-foundation-complete-v1
+
+Stable Tag
+
+v2-resume-builder-foundation-complete
+
+Routes
+
+/dashboard/resume
+/dashboard/resume/export
+/api/resume/optimize
+/api/resume/save
+/api/resume/load
+
+Files Included
+
+src/app/dashboard/resume/page.tsx
+src/app/dashboard/resume/export/page.tsx
+src/app/api/resume/optimize/route.ts
+src/app/api/resume/save/route.ts
+src/app/api/resume/load/route.ts
+src/components/resume/ResumeStarterForm.tsx
+src/components/resume/ResumeEditorPreview.tsx
+src/components/resume/ResumeValidationPanel.tsx
+src/components/resume/ResumeCompletionCard.tsx
+src/components/resume/ResumeExportPreview.tsx
+src/components/resume/ResumeExportOptions.tsx
+src/components/resume/ResumePrintActions.tsx
+src/components/resume/ResumeOptimizeActions.tsx
+src/components/resume/ResumeOptimizationResults.tsx
+src/components/resume/form-sections/ContactSection.tsx
+src/components/resume/form-sections/SummarySection.tsx
+src/components/resume/form-sections/ExperienceSection.tsx
+src/components/resume/form-sections/EducationSection.tsx
+src/components/resume/form-sections/SkillsCertificationsSection.tsx
+src/components/resume/form-sections/sharedStyles.ts
+src/modules/resume-builder/ai.ts
+src/modules/resume-builder/backup.ts
+src/modules/resume-builder/config.ts
+src/modules/resume-builder/constants.ts
+src/modules/resume-builder/export.ts
+src/modules/resume-builder/index.ts
+src/modules/resume-builder/intelligence.ts
+src/modules/resume-builder/schema.ts
+src/modules/resume-builder/service.ts
+src/modules/resume-builder/tutorial.ts
+src/modules/resume-builder/types.ts
+src/modules/resume-builder/usage.ts
+src/modules/resume-builder/validation.ts
+supabase/migrations/202605260001_resume_builder_tables.sql
+
+Verified Features
+
+Resume live editor
+Contact section
+Summary section
+Work experience section
+Multiple achievement bullets
+Education section
+Skills section
+Certifications section
+Live preview
+Validation panel
+Completion percentage
+Resume strength score
+Section completion tracking
+Local draft saving
+Local draft loading
+Local draft clearing
+Safe localStorage guard
+Export preview route
+Print-friendly resume view
+Browser print/save-as-PDF workflow
+PDF export planning scaffold
+AI optimization API scaffold
+AI prompt builder
+Structured optimization suggestions
+Apply summary suggestion
+Apply skills suggestion
+Apply experience suggestion
+Supabase resume table migration scaffold
+Server save API scaffold
+Server load API scaffold
+
+Restore Command
+
+git checkout v2-resume-builder-foundation-complete
