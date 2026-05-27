@@ -405,3 +405,50 @@ Unique user resume title constraint
 Restore Command
 
 git checkout v2-resume-supabase-persistence-live
+
+## Resume Import System Foundation
+
+Stable Version
+
+resume-import-foundation-v1
+
+Stable Tag
+
+v2-resume-import-foundation
+
+Routes
+
+/dashboard/resume
+/api/resume/import
+
+Files Included
+
+src/app/api/resume/import/route.ts
+src/components/resume/ResumeImportPanel.tsx
+src/components/resume/ResumeStarterForm.tsx
+src/modules/resume-builder/import.ts
+src/modules/resume-builder/index.ts
+
+Verified Features
+
+Resume TXT upload support
+Resume import API route
+TXT parsing utility
+Section heading detection
+Email extraction
+Phone extraction
+LinkedIn extraction
+Website extraction
+Location extraction
+Summary parsing
+Experience parsing
+Skills parsing
+Certifications parsing
+Structured import preview
+Apply imported resume data button
+Import-to-editor workflow
+Local draft sync after import
+
+Restore Command
+
+git checkout v2-resume-import-foundation

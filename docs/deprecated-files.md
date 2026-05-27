@@ -180,3 +180,26 @@ Phase:
 
 Safe To Delete:
 No file deletion needed. Old scaffold behavior replaced in place.
+
+## Phase 140 — Resume Import System Foundation
+
+Old file:
+Scaffold-only import route behavior
+
+Replacement:
+src/modules/resume-builder/import.ts
+src/app/api/resume/import/route.ts
+src/components/resume/ResumeImportPanel.tsx
+
+Reason:
+Replaced scaffold-only import preview with structured TXT resume parsing and editor application flow.
+
+Date:
+2026-05-26
+
+Phase:
+140
+
+Safe To Delete:
+No file deletion needed. Scaffold behavior replaced in place.
+
