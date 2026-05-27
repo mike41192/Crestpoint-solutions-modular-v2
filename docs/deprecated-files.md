@@ -157,3 +157,26 @@ Phase:
 
 Safe To Delete:
 No deletion needed
+
+## Phase 137 — Resume Supabase Persistence Live Wiring
+
+Old file:
+Scaffold-only resume save/load route behavior
+
+Replacement:
+src/app/api/resume/save/route.ts
+src/app/api/resume/load/route.ts
+src/lib/supabase/server.ts
+src/modules/resume-builder/service.ts
+
+Reason:
+Replaced scaffold-only API responses with authenticated Supabase persistence wiring.
+
+Date:
+2026-05-26
+
+Phase:
+137
+
+Safe To Delete:
+No file deletion needed. Old scaffold behavior replaced in place.

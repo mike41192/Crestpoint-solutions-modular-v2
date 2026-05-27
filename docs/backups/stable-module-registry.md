@@ -364,3 +364,44 @@ Server load API scaffold
 Restore Command
 
 git checkout v2-resume-builder-foundation-complete
+
+## Resume Supabase Persistence Live Wiring
+
+Stable Version
+
+resume-supabase-persistence-live-v1
+
+Stable Tag
+
+v2-resume-supabase-persistence-live
+
+Routes
+
+/dashboard/resume
+/api/resume/save
+/api/resume/load
+
+Files Included
+
+src/lib/supabase/server.ts
+src/app/api/resume/save/route.ts
+src/app/api/resume/load/route.ts
+src/components/resume/ResumeStarterForm.tsx
+src/modules/resume-builder/service.ts
+supabase/migrations/202605260001_resume_builder_tables.sql
+
+Verified Features
+
+Supabase server client helper
+Authenticated resume save API
+Authenticated resume load API
+Resume upsert by user and title
+Resume load by authenticated user
+Local draft to Supabase save path
+Supabase load to local draft path
+RLS policies for user-owned resumes
+Unique user resume title constraint
+
+Restore Command
+
+git checkout v2-resume-supabase-persistence-live
