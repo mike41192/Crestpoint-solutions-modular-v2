@@ -1,5 +1,14 @@
+"use client"
+
+import { RichTextEditor } from "@/components/resume/editor/RichTextEditor"
 import type { ResumeExperienceItem } from "@/modules/resume-builder"
-import { inputStyle, labelStyle } from "./sharedStyles"
+import {
+  dangerButtonStyle,
+  inputStyle,
+  labelStyle,
+  sectionCardStyle,
+  toolbarButtonStyle,
+} from "./sharedStyles"
 
 type ExperienceSectionProps = {
   experience: ResumeExperienceItem[]
@@ -15,153 +24,191 @@ type ExperienceSectionProps = {
   onRemoveExperience: (id: string) => void
 }
 
+function bulletsToHtml(bullets: string[]) {
+  const safeBullets = bullets.filter(Boolean)
+
+  if (safeBullets.length === 0) {
+    return "<ul><li></li></ul>"
+  }
+
+  return `<ul>${safeBullets.map((bullet) => `<li>${bullet}</li>`).join("")}</ul>`
+}
+
+function htmlToBullets(html: string) {
+  if (!html.trim()) {
+    return [""]
+  }
+
+  if (typeof window === "undefined") {
+    return [html]
+  }
+
+  const parser = new DOMParser()
+  const document = parser.parseFromString(html, "text/html")
+
+  const listItems = Array.from(document.querySelectorAll("li"))
+    .map((item) => item.textContent?.trim() || "")
+    .filter(Boolean)
+
+  if (listItems.length > 0) {
+    return listItems
+  }
+
+  const paragraphs = Array.from(document.querySelectorAll("p"))
+    .map((item) => item.textContent?.trim() || "")
+    .filter(Boolean)
+
+  return paragraphs.length > 0 ? paragraphs : [""]
+}
+
 export function ExperienceSection({
   experience,
   onFieldChange,
   onBulletChange,
-  onAddBullet,
-  onRemoveBullet,
   onAddExperience,
   onRemoveExperience,
 }: ExperienceSectionProps) {
+  function updateResponsibilities(id: string, html: string) {
+    const bullets = htmlToBullets(html)
+
+    bullets.forEach((bullet, index) => {
+      onBulletChange(id, index, bullet)
+    })
+  }
+
   return (
     <div>
-      <h3 style={{ fontSize: "18px", fontWeight: 700 }}>Work Experience</h3>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "12px",
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <h3 style={{ fontSize: "20px", fontWeight: 800 }}>
+            Work Experience
+          </h3>
 
-      <div style={{ marginTop: "12px", display: "grid", gap: "16px" }}>
-        {experience.map((item) => (
-          <div
-            key={item.id}
-            style={{
-              border: "1px solid #e2e8f0",
-              borderRadius: "12px",
-              padding: "14px",
-            }}
-          >
-            {[
-              ["Role", "role", "Operations Manager"],
-              ["Company", "company", "Company Name"],
-              ["Location", "location", "Chicago, IL"],
-              ["Start Date", "startDate", "Jan 2020"],
-              ["End Date", "endDate", "Present"],
-            ].map(([label, field, placeholder]) => (
-              <div key={field} style={{ marginTop: field === "role" ? 0 : "12px" }}>
-                <label style={labelStyle}>
-                  {label}
-                  <input
-                    style={inputStyle}
-                    value={item[field as keyof Omit<ResumeExperienceItem, "id" | "bullets">] || ""}
-                    onChange={(event) =>
-                      onFieldChange(
-                        item.id,
-                        field as keyof Omit<ResumeExperienceItem, "id" | "bullets">,
-                        event.target.value
-                      )
-                    }
-                    placeholder={placeholder}
-                  />
-                </label>
-              </div>
-            ))}
+          <p style={{ marginTop: "4px", color: "#64748b", lineHeight: 1.5 }}>
+            Add each role once, then write all responsibilities and achievements
+            inside one clean document-style editor.
+          </p>
+        </div>
 
-            <div style={{ marginTop: "12px" }}>
-              <h4 style={{ fontSize: "16px", fontWeight: 700 }}>
-                Achievement Bullets
-              </h4>
+        <button type="button" onClick={onAddExperience} style={toolbarButtonStyle}>
+          Add Experience
+        </button>
+      </div>
 
-              <div style={{ display: "grid", gap: "10px", marginTop: "8px" }}>
-                {item.bullets.map((bullet, bulletIndex) => (
-                  <div key={`${item.id}-bullet-${bulletIndex}`}>
-                    <label style={labelStyle}>
-                      Bullet {bulletIndex + 1}
-                      <textarea
-                        style={{
-                          ...inputStyle,
-                          minHeight: "80px",
-                          resize: "vertical",
-                        }}
-                        value={bullet}
-                        onChange={(event) =>
-                          onBulletChange(item.id, bulletIndex, event.target.value)
-                        }
-                        placeholder="Improved operations efficiency by..."
-                      />
-                    </label>
+      <div style={{ marginTop: "16px", display: "grid", gap: "16px" }}>
+        {experience.map((item, index) => (
+          <div key={item.id} style={sectionCardStyle}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: "12px",
+                alignItems: "center",
+                flexWrap: "wrap",
+                marginBottom: "14px",
+              }}
+            >
+              <div>
+                <strong style={{ fontSize: "18px" }}>
+                  Experience {index + 1}
+                </strong>
 
-                    <button
-                      type="button"
-                      onClick={() => onRemoveBullet(item.id, bulletIndex)}
-                      style={{
-                        marginTop: "8px",
-                        border: "1px solid #fecaca",
-                        borderRadius: "12px",
-                        padding: "8px 12px",
-                        background: "#fff1f2",
-                        color: "#991b1b",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                      }}
-                    >
-                      Remove Bullet
-                    </button>
-                  </div>
-                ))}
+                <p style={{ marginTop: "4px", color: "#64748b" }}>
+                  {item.role || "Untitled role"}
+                  {item.company ? ` at ${item.company}` : ""}
+                </p>
               </div>
 
               <button
                 type="button"
-                onClick={() => onAddBullet(item.id)}
-                style={{
-                  marginTop: "12px",
-                  border: "1px solid #cbd5e1",
-                  borderRadius: "12px",
-                  padding: "10px 14px",
-                  background: "#ffffff",
-                  color: "#334155",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
+                onClick={() => onRemoveExperience(item.id)}
+                style={dangerButtonStyle}
               >
-                Add Bullet
+                Remove
               </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => onRemoveExperience(item.id)}
+            <div
               style={{
-                marginTop: "12px",
-                border: "1px solid #fecaca",
-                borderRadius: "12px",
-                padding: "10px 14px",
-                background: "#fff1f2",
-                color: "#991b1b",
-                fontWeight: 700,
-                cursor: "pointer",
+                display: "grid",
+                gap: "12px",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
               }}
             >
-              Remove Experience
-            </button>
+              <label style={labelStyle}>
+                Role
+                <input
+                  style={inputStyle}
+                  value={item.role}
+                  onChange={(event) =>
+                    onFieldChange(item.id, "role", event.target.value)
+                  }
+                  placeholder="Maintenance Technician"
+                />
+              </label>
+
+              <label style={labelStyle}>
+                Company
+                <input
+                  style={inputStyle}
+                  value={item.company}
+                  onChange={(event) =>
+                    onFieldChange(item.id, "company", event.target.value)
+                  }
+                  placeholder="Company Name"
+                />
+              </label>
+
+              <label style={labelStyle}>
+                Location
+                <input
+                  style={inputStyle}
+                  value={item.location || ""}
+                  onChange={(event) =>
+                    onFieldChange(item.id, "location", event.target.value)
+                  }
+                  placeholder="Chicago, IL"
+                />
+              </label>
+
+              <label style={labelStyle}>
+                Dates
+                <input
+                  style={inputStyle}
+                  value={item.startDate}
+                  onChange={(event) =>
+                    onFieldChange(item.id, "startDate", event.target.value)
+                  }
+                  placeholder="Jan 2020 - Present"
+                />
+              </label>
+            </div>
+
+            <div style={{ marginTop: "16px" }}>
+              <label style={labelStyle}>Responsibilities & Achievements</label>
+
+              <p style={{ marginTop: "4px", marginBottom: "8px", color: "#64748b" }}>
+                Use bullets in one editor instead of separate boxes.
+              </p>
+
+              <RichTextEditor
+                value={bulletsToHtml(item.bullets)}
+                minHeight="180px"
+                placeholder="Add responsibilities, achievements, and measurable results..."
+                onChange={(html) => updateResponsibilities(item.id, html)}
+              />
+            </div>
           </div>
         ))}
       </div>
-
-      <button
-        type="button"
-        onClick={onAddExperience}
-        style={{
-          marginTop: "12px",
-          border: "1px solid #cbd5e1",
-          borderRadius: "12px",
-          padding: "10px 14px",
-          background: "#ffffff",
-          color: "#334155",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
-      >
-        Add Experience
-      </button>
     </div>
   )
 }

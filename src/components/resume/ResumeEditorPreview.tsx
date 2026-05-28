@@ -4,6 +4,10 @@ type ResumeEditorPreviewProps = {
   data: ResumeBuilderFormData
 }
 
+function stripHtml(value: string) {
+  return value.replace(/<[^>]+>/g, "").trim()
+}
+
 export function ResumeEditorPreview({ data }: ResumeEditorPreviewProps) {
   return (
     <div style={{ display: "grid", gap: "12px" }}>
@@ -38,7 +42,7 @@ export function ResumeEditorPreview({ data }: ResumeEditorPreviewProps) {
       <div>
         <strong>Professional Summary</strong>
         <p style={{ color: "#64748b" }}>
-          {data.summary || "Not added yet"}
+          {stripHtml(data.summary) || "Not added yet"}
         </p>
       </div>
 
@@ -72,7 +76,7 @@ export function ResumeEditorPreview({ data }: ResumeEditorPreviewProps) {
                           )}`}
                           style={{ color: "#64748b" }}
                         >
-                          {bullet}
+                          {stripHtml(bullet)}
                         </li>
                       ))
                   ) : (

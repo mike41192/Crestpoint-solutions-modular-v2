@@ -1,4 +1,7 @@
-import { inputStyle, labelStyle } from "./sharedStyles"
+"use client"
+
+import { RichTextEditor } from "@/components/resume/editor/RichTextEditor"
+import { labelStyle } from "./sharedStyles"
 
 type SummarySectionProps = {
   summary: string
@@ -8,19 +11,16 @@ type SummarySectionProps = {
 export function SummarySection({ summary, onChange }: SummarySectionProps) {
   return (
     <div>
-      <label style={labelStyle}>
-        Professional Summary
-        <textarea
-          style={{
-            ...inputStyle,
-            minHeight: "120px",
-            resize: "vertical",
-          }}
+      <label style={labelStyle}>Professional Summary</label>
+
+      <div style={{ marginTop: "8px" }}>
+        <RichTextEditor
           value={summary}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder="Write a short professional summary..."
+          minHeight="140px"
+          placeholder="Write a strong professional summary..."
+          onChange={onChange}
         />
-      </label>
+      </div>
     </div>
   )
 }
