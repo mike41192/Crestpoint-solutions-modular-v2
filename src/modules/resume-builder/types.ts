@@ -6,7 +6,16 @@ export type ResumeSection =
   | "skills"
   | "certifications"
 
-export type ResumeBuilderStatus = "draft" | "reviewing" | "optimized" | "exported"
+export type ResumeBuilderStatus =
+  | "draft"
+  | "reviewing"
+  | "optimized"
+  | "exported"
+
+export type ResumeTemplateType =
+  | "classic"
+  | "modern"
+  | "executive"
 
 export type ResumeContactInfo = {
   fullName: string
