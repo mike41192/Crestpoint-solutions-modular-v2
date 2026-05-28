@@ -1,12 +1,15 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { ResumeActionBar } from "@/components/resume/ResumeActionBar"
 import { ResumeCompletionCard } from "@/components/resume/ResumeCompletionCard"
 import { ResumeEditorPreview } from "@/components/resume/ResumeEditorPreview"
 import { ResumeImportPanel } from "@/components/resume/ResumeImportPanel"
 import { ResumeJobMatchForm } from "@/components/resume/ResumeJobMatchForm"
 import { ResumeOptimizeActions } from "@/components/resume/ResumeOptimizeActions"
+import { ResumeToolPanel } from "@/components/resume/ResumeToolPanel"
 import { ResumeValidationPanel } from "@/components/resume/ResumeValidationPanel"
+import { ResumeWorkspaceShell } from "@/components/resume/ResumeWorkspaceShell"
 import { ContactSection } from "@/components/resume/form-sections/ContactSection"
 import { EducationSection } from "@/components/resume/form-sections/EducationSection"
 import { ExperienceSection } from "@/components/resume/form-sections/ExperienceSection"
@@ -353,160 +356,125 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   }
 
   return (
-    <div style={{ display: "grid", gap: "24px" }}>
-      <div style={{ display: "grid", gap: "16px" }}>
-        <div
-          style={{
-            border: "1px solid #e2e8f0",
-            borderRadius: "12px",
-            padding: "12px",
-            background: hasUnsavedChanges ? "#fffbeb" : "#f8fafc",
-            color: hasUnsavedChanges ? "#92400e" : "#334155",
+    <ResumeWorkspaceShell
+      header={
+        <ResumeActionBar
+          title="Primary Resume"
+          status={hasUnsavedChanges ? "Editing" : "Draft"}
+          hasUnsavedChanges={hasUnsavedChanges}
+          onSaveLocal={saveDraft}
+          onClearLocal={clearDraft}
+          onSaveServer={saveDraftToServer}
+          onLoadServer={loadDraftsFromServer}
+          onExport={() => {
+            alert("PDF and Docx export engine will be connected in Phase 148.")
           }}
-        >
-          <strong>
-            {hasUnsavedChanges ? "Unsaved changes" : "Draft saved"}
-          </strong>
+        />
+      }
+      editor={
+        <>
+          {(saveMessage || serverMessage) && (
+            <ResumeToolPanel title="System Messages">
+              <div style={{ display: "grid", gap: "8px" }}>
+                {saveMessage && (
+                  <p style={{ color: "#64748b" }}>{saveMessage}</p>
+                )}
 
-          <p style={{ marginTop: "4px" }}>
-            {hasUnsavedChanges
-              ? "You have changes that are not saved locally or to Supabase yet."
-              : "Your current draft state is saved or unchanged."}
-          </p>
+                {serverMessage && (
+                  <p style={{ color: "#334155" }}>{serverMessage}</p>
+                )}
+              </div>
+            </ResumeToolPanel>
+          )}
+
+          <ResumeToolPanel
+            title="Resume Health"
+            description="Track completion, validation, and readiness before exporting."
+          >
+            <div style={{ display: "grid", gap: "14px" }}>
+              <ResumeCompletionCard analysis={completionAnalysis} />
+              <ResumeValidationPanel issues={validation.issues} />
+            </div>
+          </ResumeToolPanel>
+
+          <ResumeToolPanel
+            title="Import Resume"
+            description="Import TXT or DOCX resumes into the builder. PDFs safely fall back when text extraction is unsupported."
+          >
+            <ResumeImportPanel onApplyImportedResume={applyImportedResume} />
+          </ResumeToolPanel>
+
+          <ResumeToolPanel
+            title="AI Optimization"
+            description="Generate structured optimization suggestions and apply them to your resume."
+          >
+            <ResumeOptimizeActions
+              data={formData}
+              onApplySuggestion={applyOptimizationSuggestion}
+            />
+          </ResumeToolPanel>
+
+          <ResumeToolPanel
+            title="ATS Job Match"
+            description="Paste a job description and compare your resume against target keywords."
+          >
+            <ResumeJobMatchForm data={formData} />
+          </ResumeToolPanel>
+
+          <ResumeToolPanel
+            title="Resume Editor"
+            description="Edit your resume in clean, organized sections."
+          >
+            <div style={{ display: "grid", gap: "20px" }}>
+              <ContactSection
+                contact={formData.contact}
+                onChange={updateContactField}
+              />
+
+              <SummarySection
+                summary={formData.summary}
+                onChange={updateSummary}
+              />
+
+              <ExperienceSection
+                experience={formData.experience}
+                onFieldChange={updateExperienceField}
+                onBulletChange={updateExperienceBullet}
+                onAddBullet={addExperienceBullet}
+                onRemoveBullet={removeExperienceBullet}
+                onAddExperience={addExperienceItem}
+                onRemoveExperience={removeExperienceItem}
+              />
+
+              <EducationSection
+                education={formData.education}
+                onFieldChange={updateEducationField}
+                onAddEducation={addEducationItem}
+                onRemoveEducation={removeEducationItem}
+              />
+
+              <SkillsCertificationsSection
+                skills={formData.skills}
+                certifications={formData.certifications}
+                onSkillsChange={(value) => updateListField("skills", value)}
+                onCertificationsChange={(value) =>
+                  updateListField("certifications", value)
+                }
+              />
+            </div>
+          </ResumeToolPanel>
+        </>
+      }
+      preview={
+        <div style={{ display: "grid", gap: "16px" }}>
+          <ResumeToolPanel
+            title="Resume Designer"
+            description="Choose a professional template and preview the final resume."
+          >
+            <ResumeEditorPreview data={formData} />
+          </ResumeToolPanel>
         </div>
-
-        <ResumeCompletionCard analysis={completionAnalysis} />
-
-        <ResumeValidationPanel issues={validation.issues} />
-
-        <ResumeImportPanel onApplyImportedResume={applyImportedResume} />
-
-        <ResumeOptimizeActions
-          data={formData}
-          onApplySuggestion={applyOptimizationSuggestion}
-        />
-
-        <ResumeJobMatchForm data={formData} />
-
-        <ContactSection
-          contact={formData.contact}
-          onChange={updateContactField}
-        />
-
-        <SummarySection summary={formData.summary} onChange={updateSummary} />
-
-        <ExperienceSection
-          experience={formData.experience}
-          onFieldChange={updateExperienceField}
-          onBulletChange={updateExperienceBullet}
-          onAddBullet={addExperienceBullet}
-          onRemoveBullet={removeExperienceBullet}
-          onAddExperience={addExperienceItem}
-          onRemoveExperience={removeExperienceItem}
-        />
-
-        <EducationSection
-          education={formData.education}
-          onFieldChange={updateEducationField}
-          onAddEducation={addEducationItem}
-          onRemoveEducation={removeEducationItem}
-        />
-
-        <SkillsCertificationsSection
-          skills={formData.skills}
-          certifications={formData.certifications}
-          onSkillsChange={(value) => updateListField("skills", value)}
-          onCertificationsChange={(value) =>
-            updateListField("certifications", value)
-          }
-        />
-
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <button
-            type="button"
-            onClick={saveDraft}
-            style={{
-              border: "0",
-              borderRadius: "12px",
-              padding: "12px 16px",
-              background: "#2563eb",
-              color: "#ffffff",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            Save Local Draft
-          </button>
-
-          <button
-            type="button"
-            onClick={clearDraft}
-            style={{
-              border: "1px solid #fecaca",
-              borderRadius: "12px",
-              padding: "12px 16px",
-              background: "#fff1f2",
-              color: "#991b1b",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            Clear Local Draft
-          </button>
-
-          <button
-            type="button"
-            onClick={saveDraftToServer}
-            style={{
-              border: "1px solid #bfdbfe",
-              borderRadius: "12px",
-              padding: "12px 16px",
-              background: "#eff6ff",
-              color: "#1d4ed8",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            Save to Supabase
-          </button>
-
-          <button
-            type="button"
-            onClick={loadDraftsFromServer}
-            style={{
-              border: "1px solid #d9f99d",
-              borderRadius: "12px",
-              padding: "12px 16px",
-              background: "#f7fee7",
-              color: "#3f6212",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            Load from Supabase
-          </button>
-        </div>
-
-        {saveMessage && (
-          <p style={{ color: "#64748b", marginTop: "-4px" }}>
-            {saveMessage}
-          </p>
-        )}
-
-        {serverMessage && (
-          <p style={{ color: "#334155", marginTop: "-4px" }}>
-            {serverMessage}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <h3 style={{ fontSize: "18px", fontWeight: 700 }}>Live Preview</h3>
-
-        <div style={{ marginTop: "12px" }}>
-          <ResumeEditorPreview data={formData} />
-        </div>
-      </div>
-    </div>
+      }
+    />
   )
 }

@@ -14,84 +14,46 @@ export default function ResumeDashboardPage() {
   return (
     <ModulePageLayout
       title="Resume Builder"
-      description="Build, import, optimize, and export professional resumes."
+      description="Build, import, optimize, score, and export professional resumes."
     >
-      <FirstUseTutorial moduleKey="resume_builder" />
-
-      <section
+      <div
         style={{
           display: "grid",
-          gap: "16px",
-          gridTemplateColumns: "minmax(320px, 2fr) minmax(260px, 1fr)",
-          marginTop: "24px",
+          gap: "18px",
+          marginTop: "20px",
         }}
       >
-        <SectionCard>
-          <h2 style={{ fontSize: "22px", fontWeight: 700 }}>
-            Resume Starter Form
-          </h2>
+        <FirstUseTutorial moduleKey="resume_builder" />
 
-          {primaryResume.data && (
-            <div style={{ marginTop: "16px" }}>
-              <ResumeStarterForm data={primaryResume.data} />
-            </div>
-          )}
+        <SectionCard>
+          {primaryResume.data && <ResumeStarterForm data={primaryResume.data} />}
         </SectionCard>
 
-        <div style={{ display: "grid", gap: "16px" }}>
-          <SectionCard>
-            <h2 style={{ fontSize: "22px", fontWeight: 700 }}>
-              Resume Workspace
-            </h2>
+        <SectionCard>
+          <h2 style={{ fontSize: "20px", fontWeight: 800 }}>
+            Resume Builder Includes
+          </h2>
 
-            <p style={{ marginTop: "8px", color: "#64748b", lineHeight: 1.5 }}>
-              Start with your main resume, then expand into AI optimization,
-              importing, formatting, and exporting.
-            </p>
+          <p style={{ marginTop: "6px", color: "#64748b", lineHeight: 1.5 }}>
+            This workspace is modular. Each section supports future AI, export,
+            scoring, and account-based saving upgrades.
+          </p>
 
-            <div style={{ marginTop: "16px" }}>
-              <strong>{primaryResume.title}</strong>
-
-              <p style={{ color: "#64748b", marginTop: "4px" }}>
-                Status: {primaryResume.status}
-              </p>
-            </div>
-
-            <a
-              href="/dashboard/resume/export"
-              style={{
-                display: "inline-block",
-                marginTop: "16px",
-                padding: "10px 14px",
-                borderRadius: "12px",
-                background: "#2563eb",
-                color: "#ffffff",
-                textDecoration: "none",
-                fontWeight: 700,
-              }}
-            >
-              Open Export Preview
-            </a>
-          </SectionCard>
-
-          <SectionCard>
-            <h2 style={{ fontSize: "22px", fontWeight: 700 }}>
-              Resume Sections
-            </h2>
-
-            <ul style={{ marginTop: "12px", paddingLeft: "20px" }}>
-              {resumeBuilderSections.map((section) => (
-                <li
-                  key={section}
-                  style={{ marginBottom: "8px", color: "#475569" }}
-                >
-                  {section}
-                </li>
-              ))}
-            </ul>
-          </SectionCard>
-        </div>
-      </section>
+          <ul style={{ marginTop: "14px", paddingLeft: "20px" }}>
+            {resumeBuilderSections.map((section) => (
+              <li
+                key={section}
+                style={{
+                  marginBottom: "8px",
+                  color: "#475569",
+                }}
+              >
+                {section}
+              </li>
+            ))}
+          </ul>
+        </SectionCard>
+      </div>
     </ModulePageLayout>
   )
 }
