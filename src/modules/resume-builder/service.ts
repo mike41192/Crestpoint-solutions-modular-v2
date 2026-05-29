@@ -1,4 +1,9 @@
-import type { ResumeBuilderData, ResumeBuilderFormData } from "./types"
+import type {
+  ResumeBuilderData,
+  ResumeBuilderFormData,
+  ResumeTemplateType,
+} from "./types"
+import { getSelectedResumeTemplate } from "./template-store"
 
 export const RESUME_BUILDER_LOCAL_STORAGE_KEY =
   "crestpoint_resume_builder_draft"
@@ -88,7 +93,10 @@ export function clearResumeDraftLocally() {
   window.localStorage.removeItem(RESUME_BUILDER_LOCAL_STORAGE_KEY)
 }
 
-export async function saveResumeDraftToServer(data: ResumeBuilderFormData) {
+export async function saveResumeDraftToServer(
+  data: ResumeBuilderFormData,
+  selectedTemplate?: ResumeTemplateType
+) {
   const response = await fetch("/api/resume/save", {
     method: "POST",
     headers: {
@@ -97,6 +105,7 @@ export async function saveResumeDraftToServer(data: ResumeBuilderFormData) {
     body: JSON.stringify({
       title: "Primary Resume",
       status: "draft",
+      selectedTemplate: selectedTemplate || getSelectedResumeTemplate(),
       resumeData: data,
     }),
   })
@@ -130,4 +139,34 @@ export function getFirstLoadedResumeData(
   const firstResume = response.resumes?.[0]
 
   return firstResume?.resume_data || null
+}
+
+export function getFirstLoadedResumeTemplate(
+  serverResponse: unknown
+): ResumeTemplateType | null {
+  if (
+    typeof serverResponse !== "object" ||
+    serverResponse === null ||
+    !("resumes" in serverResponse)
+  ) {
+    return null
+  }
+
+  const response = serverResponse as {
+    resumes?: Array<{
+      selected_template?: ResumeTemplateType
+    }>
+  }
+
+  const template = response.resumes?.[0]?.selected_template
+
+  if (
+    template === "classic" ||
+    template === "modern" ||
+    template === "executive"
+  ) {
+    return template
+  }
+
+  return null
 }

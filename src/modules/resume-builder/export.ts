@@ -1,4 +1,4 @@
-export type ResumeExportFormat = "print" | "pdf"
+export type ResumeExportFormat = "print" | "pdf" | "docx"
 
 export type ResumeExportOption = {
   label: string
@@ -9,7 +9,7 @@ export type ResumeExportOption = {
 
 export const resumeExportOptions: ResumeExportOption[] = [
   {
-    label: "Browser Print",
+    label: "Browser Print / Save as PDF",
     format: "print",
     enabled: true,
     description:
@@ -20,6 +20,21 @@ export const resumeExportOptions: ResumeExportOption[] = [
     format: "pdf",
     enabled: false,
     description:
-      "Direct PDF export is planned for a future phase after print layout verification.",
+      "Direct PDF generation will be connected after the print layout is verified.",
+  },
+  {
+    label: "DOCX Export",
+    format: "docx",
+    enabled: false,
+    description:
+      "DOCX export is planned for the next export phase.",
   },
 ]
+
+export function openPrintDialog() {
+  if (typeof window === "undefined") {
+    return
+  }
+
+  window.print()
+}

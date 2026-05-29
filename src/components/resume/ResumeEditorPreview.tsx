@@ -1,9 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type {
   ResumeBuilderFormData,
   ResumeTemplateType,
+} from "@/modules/resume-builder"
+import {
+  getSelectedResumeTemplate,
+  setSelectedResumeTemplate,
 } from "@/modules/resume-builder"
 import {
   ClassicTemplate,
@@ -17,7 +21,17 @@ type ResumeEditorPreviewProps = {
 }
 
 export function ResumeEditorPreview({ data }: ResumeEditorPreviewProps) {
-  const [template, setTemplate] = useState<ResumeTemplateType>("classic")
+  const [template, setTemplate] =
+    useState<ResumeTemplateType>("classic")
+
+  useEffect(() => {
+    setTemplate(getSelectedResumeTemplate())
+  }, [])
+
+  function changeTemplate(nextTemplate: ResumeTemplateType) {
+    setTemplate(nextTemplate)
+    setSelectedResumeTemplate(nextTemplate)
+  }
 
   return (
     <div style={{ display: "grid", gap: "16px" }}>
@@ -34,12 +48,12 @@ export function ResumeEditorPreview({ data }: ResumeEditorPreviewProps) {
         </h3>
 
         <p style={{ marginTop: "6px", color: "#64748b", lineHeight: 1.5 }}>
-          Choose how your resume preview should look. This prepares the resume
-          for future PDF and DOCX export.
+          Choose how your resume preview should look. This same template will
+          be used on the export page.
         </p>
 
         <div style={{ marginTop: "12px" }}>
-          <TemplateSelector value={template} onChange={setTemplate} />
+          <TemplateSelector value={template} onChange={changeTemplate} />
         </div>
       </div>
 

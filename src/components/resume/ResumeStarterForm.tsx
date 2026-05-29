@@ -19,10 +19,12 @@ import {
   analyzeResumeCompletion,
   clearResumeDraftLocally,
   getFirstLoadedResumeData,
+  getFirstLoadedResumeTemplate,
   loadResumeDraftLocally,
   loadResumeDraftsFromServer,
   saveResumeDraftLocally,
   saveResumeDraftToServer,
+  setSelectedResumeTemplate,
   validateResumeData,
 } from "@/modules/resume-builder"
 import type {
@@ -89,6 +91,8 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     setServerMessage("Saving draft to Supabase...")
 
     try {
+      saveResumeDraftLocally(formData)
+
       const result = await saveResumeDraftToServer(formData)
       setServerMessage(result.message || "Server save completed.")
 
@@ -106,6 +110,11 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     try {
       const result = await loadResumeDraftsFromServer()
       const loadedResume = getFirstLoadedResumeData(result)
+      const loadedTemplate = getFirstLoadedResumeTemplate(result)
+
+      if (loadedTemplate) {
+        setSelectedResumeTemplate(loadedTemplate)
+      }
 
       if (loadedResume) {
         setFormData(loadedResume)
@@ -367,7 +376,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
           onSaveServer={saveDraftToServer}
           onLoadServer={loadDraftsFromServer}
           onExport={() => {
-            alert("PDF and Docx export engine will be connected in Phase 148.")
+            window.location.href = "/dashboard/resume/export"
           }}
         />
       }

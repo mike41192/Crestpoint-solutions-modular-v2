@@ -1,23 +1,58 @@
-import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
-import { ResumeExportOptions } from "@/components/resume/ResumeExportOptions"
-import { ResumeExportPreview } from "@/components/resume/ResumeExportPreview"
-import { ResumePrintActions } from "@/components/resume/ResumePrintActions"
-import { getResumeBuilderPreviewData } from "@/modules/resume-builder"
+import { ResumeExportPreview } from "@/components/resume/export/ResumeExportPreview"
+import { ResumePrintActions } from "@/components/resume/export/ResumePrintActions"
 
 export default function ResumeExportPage() {
-  const resumes = getResumeBuilderPreviewData()
-  const primaryResume = resumes[0]
-
   return (
-    <ModulePageLayout
-      title="Resume Export Preview"
-      description="Preview a clean print-friendly resume layout before direct PDF export is fully connected."
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#f1f5f9",
+        padding: "24px",
+      }}
     >
-      <ResumeExportOptions />
+      <div
+        className="export-toolbar"
+        style={{
+          maxWidth: "900px",
+          margin: "0 auto 18px",
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "12px",
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <h1 style={{ fontSize: "24px", fontWeight: 900 }}>
+            Resume Export
+          </h1>
 
-      <ResumePrintActions />
+          <p style={{ marginTop: "4px", color: "#64748b" }}>
+            Review the final resume, then save as PDF.
+          </p>
+        </div>
 
-      {primaryResume.data && <ResumeExportPreview data={primaryResume.data} />}
-    </ModulePageLayout>
+        <ResumePrintActions />
+      </div>
+
+      <ResumeExportPreview />
+
+      <style>{`
+        @media print {
+          body {
+            background: #ffffff !important;
+          }
+
+          .export-toolbar {
+            display: none !important;
+          }
+
+          main {
+            padding: 0 !important;
+            background: #ffffff !important;
+          }
+        }
+      `}</style>
+    </main>
   )
 }
