@@ -20,10 +20,13 @@ import {
   clearResumeDraftLocally,
   getFirstLoadedResumeData,
   getFirstLoadedResumeTemplate,
+  getLoadedResumeData,
+  loadResumeByIdFromServer,
   loadResumeDraftLocally,
   loadResumeDraftsFromServer,
   saveResumeDraftLocally,
   saveResumeDraftToServer,
+  setActiveResumeId,
   setSelectedResumeTemplate,
   validateResumeData,
 } from "@/modules/resume-builder"
@@ -40,6 +43,8 @@ type ResumeStarterFormProps = {
 
 export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   const [formData, setFormData] = useState<ResumeBuilderFormData>(data)
+  const [resumeTitle, setResumeTitle] = useState("Primary Resume")
+  const [activeResumeId, setActiveResumeIdState] = useState<string | null>(null)
   const [saveMessage, setSaveMessage] = useState("")
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [serverMessage, setServerMessage] = useState("")
@@ -52,19 +57,54 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   )
 
   useEffect(() => {
-    try {
-      const savedDraft = loadResumeDraftLocally()
+    async function loadInitialResume() {
+      try {
+        const params = new URLSearchParams(window.location.search)
+        const resumeId = params.get("resumeId")
 
-      if (!savedDraft) {
-        return
+        if (resumeId) {
+          setServerMessage("Loading selected resume...")
+
+          const result = await loadResumeByIdFromServer(resumeId)
+          const loadedResume = getLoadedResumeData(result)
+
+          if (loadedResume?.id && loadedResume.resume_data) {
+            setFormData(loadedResume.resume_data)
+            saveResumeDraftLocally(loadedResume.resume_data)
+            setActiveResumeId(loadedResume.id)
+            setActiveResumeIdState(loadedResume.id)
+
+            if (loadedResume.title) {
+              setResumeTitle(loadedResume.title)
+            }
+
+            if (loadedResume.selected_template) {
+              setSelectedResumeTemplate(loadedResume.selected_template)
+            }
+
+            setHasUnsavedChanges(false)
+            setServerMessage("Selected resume loaded.")
+            return
+          }
+
+          setServerMessage(result.message || "Selected resume could not be loaded.")
+        }
+
+        const savedDraft = loadResumeDraftLocally()
+
+        if (!savedDraft) {
+          return
+        }
+
+        setFormData(savedDraft)
+        setSaveMessage("Loaded saved local draft.")
+        setHasUnsavedChanges(false)
+      } catch {
+        setSaveMessage("Saved local draft could not be loaded.")
       }
-
-      setFormData(savedDraft)
-      setSaveMessage("Loaded saved local draft.")
-      setHasUnsavedChanges(false)
-    } catch {
-      setSaveMessage("Saved local draft could not be loaded.")
     }
+
+    loadInitialResume()
   }, [])
 
   function updateFormData(
@@ -93,7 +133,17 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     try {
       saveResumeDraftLocally(formData)
 
-      const result = await saveResumeDraftToServer(formData)
+      const result = await saveResumeDraftToServer(formData, undefined, activeResumeId)
+
+      if (result.resume?.id) {
+        setActiveResumeId(result.resume.id)
+        setActiveResumeIdState(result.resume.id)
+
+        if (result.resume.title) {
+          setResumeTitle(result.resume.title)
+        }
+      }
+
       setServerMessage(result.message || "Server save completed.")
 
       if (result.status === "success") {
@@ -111,9 +161,19 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
       const result = await loadResumeDraftsFromServer()
       const loadedResume = getFirstLoadedResumeData(result)
       const loadedTemplate = getFirstLoadedResumeTemplate(result)
+      const firstResume = result?.resumes?.[0]
 
       if (loadedTemplate) {
         setSelectedResumeTemplate(loadedTemplate)
+      }
+
+      if (firstResume?.id) {
+        setActiveResumeId(firstResume.id)
+        setActiveResumeIdState(firstResume.id)
+      }
+
+      if (firstResume?.title) {
+        setResumeTitle(firstResume.title)
       }
 
       if (loadedResume) {
@@ -368,7 +428,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     <ResumeWorkspaceShell
       header={
         <ResumeActionBar
-          title="Primary Resume"
+          title={resumeTitle}
           status={hasUnsavedChanges ? "Editing" : "Draft"}
           hasUnsavedChanges={hasUnsavedChanges}
           onSaveLocal={saveDraft}

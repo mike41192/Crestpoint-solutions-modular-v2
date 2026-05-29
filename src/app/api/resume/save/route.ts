@@ -4,9 +4,10 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
 
+    const resumeId = body?.resumeId
     const resumeData = body?.resumeData
     const selectedTemplate = body?.selectedTemplate || "classic"
-    const title = body?.title || "Primary Resume"
+    const title = body?.title || "Untitled Resume"
     const status = body?.status || "draft"
 
     if (!resumeData) {
@@ -36,34 +37,17 @@ export async function POST(request: Request) {
       )
     }
 
-    const { data: existingResume, error: lookupError } = await supabase
-      .from("resumes")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("title", title)
-      .maybeSingle()
-
-    if (lookupError) {
-      return Response.json(
-        {
-          status: "error",
-          message: lookupError.message,
-        },
-        { status: 500 }
-      )
-    }
-
     let savedResume
 
-    if (existingResume?.id) {
+    if (resumeId) {
       const { data, error } = await supabase
         .from("resumes")
         .update({
-          status,
-          selected_template: selectedTemplate,
           resume_data: resumeData,
+          selected_template: selectedTemplate,
+          status,
         })
-        .eq("id", existingResume.id)
+        .eq("id", resumeId)
         .eq("user_id", user.id)
         .select()
         .single()
@@ -122,9 +106,9 @@ export async function POST(request: Request) {
     return Response.json(
       {
         status: "error",
-        message: "Invalid request body.",
+        message: "Save request failed.",
       },
-      { status: 400 }
+      { status: 500 }
     )
   }
 }
