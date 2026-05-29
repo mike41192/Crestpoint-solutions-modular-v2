@@ -36,6 +36,7 @@ import type {
   ResumeExperienceItem,
   ResumeOptimizationSuggestion,
 } from "@/modules/resume-builder"
+import {ResumeVersionHistory} from "@/components/resume/versions/ResumeVersionHistory"
 
 type ResumeStarterFormProps = {
   data: ResumeBuilderFormData
@@ -464,6 +465,16 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
               <ResumeCompletionCard analysis={completionAnalysis} />
               <ResumeValidationPanel issues={validation.issues} />
             </div>
+          </ResumeToolPanel>
+
+          <ResumeToolPanel
+            title="Resume Versions"
+            description="View and restore previous saved versions of this resume."
+          >
+            <ResumeVersionHistory
+              resumeId={activeResumeId}
+              onVersionRestored={loadDraftsFromServer}
+            />
           </ResumeToolPanel>
 
           <ResumeToolPanel

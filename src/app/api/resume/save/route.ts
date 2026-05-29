@@ -4,7 +4,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
 
-    const resumeId = body?.resumeId
+    const resumeId = body?.resumeId || null
     const resumeData = body?.resumeData
     const selectedTemplate = body?.selectedTemplate || "classic"
     const title = body?.title || "Untitled Resume"
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       )
     }
 
-    let savedResume
+    let savedResume = null
 
     if (resumeId) {
       const { data, error } = await supabase
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
         .eq("id", resumeId)
         .eq("user_id", user.id)
         .select()
-        .single()
+        .maybeSingle()
 
       if (error) {
         return Response.json(
@@ -63,7 +63,9 @@ export async function POST(request: Request) {
       }
 
       savedResume = data
-    } else {
+    }
+
+    if (!savedResume) {
       const { data, error } = await supabase
         .from("resumes")
         .insert({
@@ -74,13 +76,13 @@ export async function POST(request: Request) {
           resume_data: resumeData,
         })
         .select()
-        .single()
+        .maybeSingle()
 
-      if (error) {
+      if (error || !data) {
         return Response.json(
           {
             status: "error",
-            message: error.message,
+            message: error?.message || "Resume could not be created.",
           },
           { status: 500 }
         )
