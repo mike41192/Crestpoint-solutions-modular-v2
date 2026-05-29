@@ -59,22 +59,97 @@ export function ResumeLibrary() {
     window.location.href = `/dashboard/resume?resumeId=${id}`
   }
 
-  function createResume() {
-    setMessage(
-      "Create resume action will be connected after the resume create API is added."
-    )
+  async function createResume() {
+    setMessage("Creating resume...")
+
+    try {
+      const response = await fetch("/api/resume/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: `Resume ${resumes.length + 1}`,
+          selectedTemplate: "classic",
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.status !== "success") {
+        setMessage(result.message || "Create resume failed.")
+        return
+      }
+
+      setMessage("Resume created.")
+      await loadResumes()
+    } catch {
+      setMessage("Create resume request failed.")
+    }
   }
 
-  function duplicateResume(id: string) {
-    setMessage(
-      `Duplicate resume ${id} will be connected after the duplicate API is added.`
-    )
+  async function duplicateResume(id: string) {
+    setMessage("Duplicating resume...")
+
+    try {
+      const response = await fetch("/api/resume/duplicate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          resumeId: id,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.status !== "success") {
+        setMessage(result.message || "Duplicate resume failed.")
+        return
+      }
+
+      setMessage("Resume duplicated.")
+      await loadResumes()
+    } catch {
+      setMessage("Duplicate resume request failed.")
+    }
   }
 
-  function deleteResume(id: string) {
-    setMessage(
-      `Delete resume ${id} will be connected after the delete API is added.`
+  async function deleteResume(id: string) {
+    const confirmed = window.confirm(
+      "Delete this resume? This cannot be undone."
     )
+
+    if (!confirmed) {
+      return
+    }
+
+    setMessage("Deleting resume...")
+
+    try {
+      const response = await fetch("/api/resume/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          resumeId: id,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.status !== "success") {
+        setMessage(result.message || "Delete resume failed.")
+        return
+      }
+
+      setMessage("Resume deleted.")
+      await loadResumes()
+    } catch {
+      setMessage("Delete resume request failed.")
+    }
   }
 
   return (
@@ -106,8 +181,7 @@ export function ResumeLibrary() {
               lineHeight: 1.5,
             }}
           >
-            Manage saved resumes, versions, and future job-specific resume
-            copies.
+            Manage saved resumes, versions, and job-specific resume copies.
           </p>
         </div>
 
@@ -156,7 +230,8 @@ export function ResumeLibrary() {
           </h2>
 
           <p style={{ marginTop: "8px", color: "#64748b" }}>
-            Save a resume from the builder to see it here.
+            Save a resume from the builder to see it here, or create a new
+            blank resume.
           </p>
         </div>
       ) : (
