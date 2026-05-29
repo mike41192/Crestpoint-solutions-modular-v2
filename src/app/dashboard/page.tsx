@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/layout/PageHeader"
+import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
 import { SectionCard } from "@/components/layout/SectionCard"
 
 const dashboardModules = [
@@ -50,12 +50,6 @@ const dashboardModules = [
     href: "/dashboard/analytics",
   },
   {
-    title: "Account Settings",
-    description:
-      "Manage profile, membership access, preferences, and account controls.",
-    href: "/dashboard/settings",
-  },
-  {
     title: "Billing",
     description:
       "Review membership access, subscription status, and billing details.",
@@ -65,46 +59,29 @@ const dashboardModules = [
 
 export default function DashboardHomePage() {
   return (
-    <main style={{ padding: "32px" }}>
-      <PageHeader
-        title="Career Dashboard"
-        description="Access all Crestpoint career systems, AI modules, learning tools, and optimization engines."
-      />
-
-      <section
-        style={{
-          display: "grid",
-          gap: "16px",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-        }}
-      >
+    <ModulePageLayout
+      title="Career Dashboard"
+      description="Access all Crestpoint career systems, AI modules, learning tools, and optimization engines."
+    >
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {dashboardModules.map((module) => (
           <a
             key={module.href}
             href={module.href}
-            style={{
-              textDecoration: "none",
-              color: "inherit",
-            }}
+            className="block transition hover:-translate-y-1"
           >
             <SectionCard>
-              <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
+              <h2 className="text-xl font-bold">
                 {module.title}
               </h2>
 
-              <p
-                style={{
-                  marginTop: "8px",
-                  color: "#64748b",
-                  lineHeight: 1.5,
-                }}
-              >
+              <p className="mt-3 text-slate-600">
                 {module.description}
               </p>
             </SectionCard>
           </a>
         ))}
-      </section>
-    </main>
+      </div>
+    </ModulePageLayout>
   )
 }

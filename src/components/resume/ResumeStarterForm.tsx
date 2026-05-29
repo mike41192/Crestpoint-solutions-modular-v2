@@ -1,6 +1,18 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import { motion } from "framer-motion"
+import {
+  Activity,
+  Brain,
+  FileText,
+  History,
+  Import,
+  LayoutTemplate,
+  Save,
+  SearchCheck,
+  Sparkles,
+} from "lucide-react"
 import { ResumeActionBar } from "@/components/resume/ResumeActionBar"
 import { ResumeAutosaveStatus } from "@/components/resume/autosave/ResumeAutosaveStatus"
 import { ResumeCompletionCard } from "@/components/resume/ResumeCompletionCard"
@@ -10,7 +22,6 @@ import { ResumeJobMatchForm } from "@/components/resume/ResumeJobMatchForm"
 import { ResumeOptimizeActions } from "@/components/resume/ResumeOptimizeActions"
 import { ResumeToolPanel } from "@/components/resume/ResumeToolPanel"
 import { ResumeValidationPanel } from "@/components/resume/ResumeValidationPanel"
-import { ResumeWorkspaceShell } from "@/components/resume/ResumeWorkspaceShell"
 import { ContactSection } from "@/components/resume/form-sections/ContactSection"
 import { EducationSection } from "@/components/resume/form-sections/EducationSection"
 import { ExperienceSection } from "@/components/resume/form-sections/ExperienceSection"
@@ -45,6 +56,14 @@ type ResumeStarterFormProps = {
 
 type AutosaveStatus = "idle" | "unsaved" | "saving" | "saved" | "error"
 
+type WorkspacePanel =
+  | "editor"
+  | "health"
+  | "versions"
+  | "import"
+  | "optimize"
+  | "match"
+
 const AUTOSAVE_DELAY_MS = 30000
 
 export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
@@ -56,6 +75,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   const [serverMessage, setServerMessage] = useState("")
   const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>("idle")
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
+  const [activePanel, setActivePanel] = useState<WorkspacePanel>("editor")
   const [autosaveMessage, setAutosaveMessage] = useState(
     "Autosave will run after 30 seconds of inactivity."
   )
@@ -66,7 +86,6 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   const initialLoadCompleteRef = useRef(false)
 
   const validation = useMemo(() => validateResumeData(formData), [formData])
-
   const completionAnalysis = useMemo(
     () => analyzeResumeCompletion(formData),
     [formData]
@@ -100,10 +119,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
             setActiveResumeIdState(loadedResume.id)
             activeResumeIdRef.current = loadedResume.id
 
-            if (loadedResume.title) {
-              setResumeTitle(loadedResume.title)
-            }
-
+            if (loadedResume.title) setResumeTitle(loadedResume.title)
             if (loadedResume.selected_template) {
               setSelectedResumeTemplate(loadedResume.selected_template)
             }
@@ -117,9 +133,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
             return
           }
 
-          setServerMessage(
-            result.message || "Selected resume could not be loaded."
-          )
+          setServerMessage(result.message || "Selected resume could not be loaded.")
         }
 
         const savedDraft = loadResumeDraftLocally()
@@ -134,7 +148,9 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
         setSaveMessage("Loaded saved local draft.")
         setHasUnsavedChanges(false)
         setAutosaveStatus("idle")
-        setAutosaveMessage("Local draft loaded. Save to Supabase to enable cloud autosave.")
+        setAutosaveMessage(
+          "Local draft loaded. Save to Supabase to enable cloud autosave."
+        )
         initialLoadCompleteRef.current = true
       } catch {
         setSaveMessage("Saved local draft could not be loaded.")
@@ -145,20 +161,12 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     loadInitialResume()
 
     return () => {
-      if (autosaveTimerRef.current) {
-        clearTimeout(autosaveTimerRef.current)
-      }
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
     }
   }, [])
 
   useEffect(() => {
-    if (!initialLoadCompleteRef.current) {
-      return
-    }
-
-    if (!hasUnsavedChanges) {
-      return
-    }
+    if (!initialLoadCompleteRef.current || !hasUnsavedChanges) return
 
     if (!activeResumeId) {
       setAutosaveStatus("unsaved")
@@ -169,18 +177,14 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     setAutosaveStatus("unsaved")
     setAutosaveMessage("Autosave scheduled after 30 seconds of inactivity.")
 
-    if (autosaveTimerRef.current) {
-      clearTimeout(autosaveTimerRef.current)
-    }
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
 
     autosaveTimerRef.current = setTimeout(() => {
       autosaveDraft()
     }, AUTOSAVE_DELAY_MS)
 
     return () => {
-      if (autosaveTimerRef.current) {
-        clearTimeout(autosaveTimerRef.current)
-      }
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
     }
   }, [formData, hasUnsavedChanges, activeResumeId])
 
@@ -208,10 +212,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
           setActiveResumeId(result.resume.id)
           setActiveResumeIdState(result.resume.id)
           activeResumeIdRef.current = result.resume.id
-
-          if (result.resume.title) {
-            setResumeTitle(result.resume.title)
-          }
+          if (result.resume.title) setResumeTitle(result.resume.title)
         }
 
         setHasUnsavedChanges(false)
@@ -268,20 +269,13 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     try {
       saveResumeDraftLocally(formData)
 
-      const result = await saveResumeDraftToServer(
-        formData,
-        undefined,
-        activeResumeId
-      )
+      const result = await saveResumeDraftToServer(formData, undefined, activeResumeId)
 
       if (result.resume?.id) {
         setActiveResumeId(result.resume.id)
         setActiveResumeIdState(result.resume.id)
         activeResumeIdRef.current = result.resume.id
-
-        if (result.resume.title) {
-          setResumeTitle(result.resume.title)
-        }
+        if (result.resume.title) setResumeTitle(result.resume.title)
       }
 
       setServerMessage(result.message || "Server save completed.")
@@ -311,9 +305,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
       const loadedTemplate = getFirstLoadedResumeTemplate(result)
       const firstResume = result?.resumes?.[0]
 
-      if (loadedTemplate) {
-        setSelectedResumeTemplate(loadedTemplate)
-      }
+      if (loadedTemplate) setSelectedResumeTemplate(loadedTemplate)
 
       if (firstResume?.id) {
         setActiveResumeId(firstResume.id)
@@ -321,9 +313,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
         activeResumeIdRef.current = firstResume.id
       }
 
-      if (firstResume?.title) {
-        setResumeTitle(firstResume.title)
-      }
+      if (firstResume?.title) setResumeTitle(firstResume.title)
 
       if (loadedResume) {
         setFormData(loadedResume)
@@ -353,9 +343,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     setSaveMessage("Imported resume data applied.")
   }
 
-  function applyOptimizationSuggestion(
-    suggestion: ResumeOptimizationSuggestion
-  ) {
+  function applyOptimizationSuggestion(suggestion: ResumeOptimizationSuggestion) {
     if (!suggestion.suggestedText) {
       setSaveMessage("Suggestion reviewed. No direct text was provided.")
       return
@@ -366,7 +354,6 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
         ...current,
         summary: suggestion.suggestedText || current.summary,
       }))
-
       setSaveMessage("AI summary suggestion applied.")
       return
     }
@@ -375,13 +362,9 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
       updateFormData((current) => ({
         ...current,
         skills: suggestion.suggestedText
-          ? suggestion.suggestedText
-              .split(",")
-              .map((skill) => skill.trim())
-              .filter(Boolean)
+          ? suggestion.suggestedText.split(",").map((skill) => skill.trim()).filter(Boolean)
           : current.skills,
       }))
-
       setSaveMessage("AI skills suggestion applied.")
       return
     }
@@ -389,10 +372,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     if (suggestion.category === "experience") {
       updateFormData((current) => {
         const firstExperience = current.experience[0]
-
-        if (!firstExperience) {
-          return current
-        }
+        if (!firstExperience) return current
 
         return {
           ...current,
@@ -423,27 +403,18 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   ) {
     updateFormData((current) => ({
       ...current,
-      contact: {
-        ...current.contact,
-        [field]: value,
-      },
+      contact: { ...current.contact, [field]: value },
     }))
   }
 
   function updateSummary(value: string) {
-    updateFormData((current) => ({
-      ...current,
-      summary: value,
-    }))
+    updateFormData((current) => ({ ...current, summary: value }))
   }
 
   function updateListField(field: "skills" | "certifications", value: string) {
     updateFormData((current) => ({
       ...current,
-      [field]: value
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
+      [field]: value.split(",").map((item) => item.trim()).filter(Boolean),
     }))
   }
 
@@ -455,12 +426,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     updateFormData((current) => ({
       ...current,
       experience: current.experience.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              [field]: value,
-            }
-          : item
+        item.id === id ? { ...item, [field]: value } : item
       ),
     }))
   }
@@ -485,12 +451,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     updateFormData((current) => ({
       ...current,
       experience: current.experience.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              bullets: [...item.bullets, ""],
-            }
-          : item
+        item.id === id ? { ...item, bullets: [...item.bullets, ""] } : item
       ),
     }))
   }
@@ -504,9 +465,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
               ...item,
               bullets:
                 item.bullets.length > 1
-                  ? item.bullets.filter(
-                      (_, bulletIndex) => bulletIndex !== index
-                    )
+                  ? item.bullets.filter((_, bulletIndex) => bulletIndex !== index)
                   : [""],
             }
           : item
@@ -547,12 +506,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     updateFormData((current) => ({
       ...current,
       education: current.education.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              [field]: value,
-            }
-          : item
+        item.id === id ? { ...item, [field]: value } : item
       ),
     }))
   }
@@ -580,9 +534,18 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     }))
   }
 
+  const panels = [
+    { id: "editor", label: "Editor", icon: FileText },
+    { id: "health", label: "Health", icon: Activity },
+    { id: "versions", label: "Versions", icon: History },
+    { id: "import", label: "Import", icon: Import },
+    { id: "optimize", label: "AI Tools", icon: Brain },
+    { id: "match", label: "Job Match", icon: SearchCheck },
+  ] as const
+
   return (
-    <ResumeWorkspaceShell
-      header={
+    <div className="grid gap-5">
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
         <ResumeActionBar
           title={resumeTitle}
           status={hasUnsavedChanges ? "Editing" : "Draft"}
@@ -595,132 +558,154 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
             window.location.href = "/dashboard/resume/export"
           }}
         />
-      }
-      editor={
-        <>
-          <ResumeToolPanel
-            title="Autosave"
-            description="Your resume saves automatically after 30 seconds of inactivity once it has a Supabase record."
-          >
-            <ResumeAutosaveStatus
-              status={autosaveStatus}
-              lastSavedAt={lastSavedAt}
-              message={autosaveMessage}
-            />
-          </ResumeToolPanel>
+      </motion.div>
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">
+        <main className="min-w-0 space-y-5">
+          <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:grid-cols-3 lg:grid-cols-6">
+            {panels.map((panel) => {
+              const Icon = panel.icon
+              const active = activePanel === panel.id
+
+              return (
+                <motion.button
+                  key={panel.id}
+                  type="button"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setActivePanel(panel.id)}
+                  className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-extrabold transition ${
+                    active
+                      ? "border-blue-600 bg-blue-50 text-blue-700"
+                      : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-white"
+                  }`}
+                >
+                  <Icon size={16} />
+                  {panel.label}
+                </motion.button>
+              )
+            })}
+          </div>
 
           {(saveMessage || serverMessage) && (
-            <ResumeToolPanel title="System Messages">
-              <div style={{ display: "grid", gap: "8px" }}>
-                {saveMessage && (
-                  <p style={{ color: "#64748b" }}>{saveMessage}</p>
-                )}
-
-                {serverMessage && (
-                  <p style={{ color: "#334155" }}>{serverMessage}</p>
-                )}
-              </div>
-            </ResumeToolPanel>
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-sm"
+            >
+              {saveMessage && <p className="text-slate-500">{saveMessage}</p>}
+              {serverMessage && <p className="mt-1 text-slate-700">{serverMessage}</p>}
+            </motion.div>
           )}
 
-          <ResumeToolPanel
-            title="Resume Health"
-            description="Track completion, validation, and readiness before exporting."
-          >
-            <div style={{ display: "grid", gap: "14px" }}>
-              <ResumeCompletionCard analysis={completionAnalysis} />
-              <ResumeValidationPanel issues={validation.issues} />
-            </div>
-          </ResumeToolPanel>
+          {activePanel === "editor" && (
+            <WorkspaceCard icon={FileText} title="Resume Editor" description="Edit your resume in clean, organized sections.">
+              <div className="grid gap-5">
+                <ContactSection contact={formData.contact} onChange={updateContactField} />
+                <SummarySection summary={formData.summary} onChange={updateSummary} />
+                <ExperienceSection
+                  experience={formData.experience}
+                  onFieldChange={updateExperienceField}
+                  onBulletChange={updateExperienceBullet}
+                  onAddBullet={addExperienceBullet}
+                  onRemoveBullet={removeExperienceBullet}
+                  onAddExperience={addExperienceItem}
+                  onRemoveExperience={removeExperienceItem}
+                />
+                <EducationSection
+                  education={formData.education}
+                  onFieldChange={updateEducationField}
+                  onAddEducation={addEducationItem}
+                  onRemoveEducation={removeEducationItem}
+                />
+                <SkillsCertificationsSection
+                  skills={formData.skills}
+                  certifications={formData.certifications}
+                  onSkillsChange={(value) => updateListField("skills", value)}
+                  onCertificationsChange={(value) => updateListField("certifications", value)}
+                />
+              </div>
+            </WorkspaceCard>
+          )}
 
-          <ResumeToolPanel
-            title="Resume Versions"
-            description="View and restore previous saved versions of this resume."
-          >
-            <ResumeVersionHistory
-              resumeId={activeResumeId}
-              onVersionRestored={loadDraftsFromServer}
-            />
-          </ResumeToolPanel>
+          {activePanel === "health" && (
+            <WorkspaceCard icon={Activity} title="Resume Health" description="Track autosave, completion, validation, and readiness.">
+              <div className="grid gap-4">
+                <ResumeAutosaveStatus status={autosaveStatus} lastSavedAt={lastSavedAt} message={autosaveMessage} />
+                <ResumeCompletionCard analysis={completionAnalysis} />
+                <ResumeValidationPanel issues={validation.issues} />
+              </div>
+            </WorkspaceCard>
+          )}
 
-          <ResumeToolPanel
-            title="Import Resume"
-            description="Import TXT or DOCX resumes into the builder. PDFs safely fall back when text extraction is unsupported."
-          >
-            <ResumeImportPanel onApplyImportedResume={applyImportedResume} />
-          </ResumeToolPanel>
+          {activePanel === "versions" && (
+            <WorkspaceCard icon={History} title="Resume Versions" description="View and restore previous saved versions.">
+              <ResumeVersionHistory resumeId={activeResumeId} onVersionRestored={loadDraftsFromServer} />
+            </WorkspaceCard>
+          )}
 
-          <ResumeToolPanel
-            title="AI Optimization"
-            description="Generate structured optimization suggestions and apply them to your resume."
-          >
-            <ResumeOptimizeActions
-              data={formData}
-              onApplySuggestion={applyOptimizationSuggestion}
-            />
-          </ResumeToolPanel>
+          {activePanel === "import" && (
+            <WorkspaceCard icon={Import} title="Import Resume" description="Import TXT or DOCX resumes into the builder.">
+              <ResumeImportPanel onApplyImportedResume={applyImportedResume} />
+            </WorkspaceCard>
+          )}
 
-          <ResumeToolPanel
-            title="ATS Job Match"
-            description="Paste a job description and compare your resume against target keywords."
-          >
-            <ResumeJobMatchForm data={formData} />
-          </ResumeToolPanel>
+          {activePanel === "optimize" && (
+            <WorkspaceCard icon={Sparkles} title="AI Optimization" description="Generate structured optimization suggestions.">
+              <ResumeOptimizeActions data={formData} onApplySuggestion={applyOptimizationSuggestion} />
+            </WorkspaceCard>
+          )}
 
-          <ResumeToolPanel
-            title="Resume Editor"
-            description="Edit your resume in clean, organized sections."
-          >
-            <div style={{ display: "grid", gap: "20px" }}>
-              <ContactSection
-                contact={formData.contact}
-                onChange={updateContactField}
-              />
+          {activePanel === "match" && (
+            <WorkspaceCard icon={SearchCheck} title="ATS Job Match" description="Compare your resume against a target job description.">
+              <ResumeJobMatchForm data={formData} />
+            </WorkspaceCard>
+          )}
+        </main>
 
-              <SummarySection
-                summary={formData.summary}
-                onChange={updateSummary}
-              />
-
-              <ExperienceSection
-                experience={formData.experience}
-                onFieldChange={updateExperienceField}
-                onBulletChange={updateExperienceBullet}
-                onAddBullet={addExperienceBullet}
-                onRemoveBullet={removeExperienceBullet}
-                onAddExperience={addExperienceItem}
-                onRemoveExperience={removeExperienceItem}
-              />
-
-              <EducationSection
-                education={formData.education}
-                onFieldChange={updateEducationField}
-                onAddEducation={addEducationItem}
-                onRemoveEducation={removeEducationItem}
-              />
-
-              <SkillsCertificationsSection
-                skills={formData.skills}
-                certifications={formData.certifications}
-                onSkillsChange={(value) => updateListField("skills", value)}
-                onCertificationsChange={(value) =>
-                  updateListField("certifications", value)
-                }
-              />
-            </div>
-          </ResumeToolPanel>
-        </>
-      }
-      preview={
-        <div style={{ display: "grid", gap: "16px" }}>
-          <ResumeToolPanel
-            title="Resume Designer"
-            description="Choose a professional template and preview the final resume."
-          >
+        <aside className="min-w-0 xl:sticky xl:top-6 xl:h-fit">
+          <WorkspaceCard icon={LayoutTemplate} title="Live Preview" description="Template and preview stay visible while editing.">
             <ResumeEditorPreview data={formData} />
-          </ResumeToolPanel>
+          </WorkspaceCard>
+        </aside>
+      </div>
+    </div>
+  )
+}
+
+type WorkspaceCardProps = {
+  icon: React.ComponentType<{ size?: number }>
+  title: string
+  description?: string
+  children: React.ReactNode
+}
+
+function WorkspaceCard({
+  icon: Icon,
+  title,
+  description,
+  children,
+}: WorkspaceCardProps) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+    >
+      <div className="mb-4 flex items-start gap-3 border-b border-slate-100 pb-4">
+        <div className="rounded-2xl bg-blue-50 p-2 text-blue-700">
+          <Icon size={18} />
         </div>
-      }
-    />
+
+        <div>
+          <h2 className="text-lg font-black text-slate-950">{title}</h2>
+          {description && (
+            <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+          )}
+        </div>
+      </div>
+
+      {children}
+    </motion.section>
   )
 }

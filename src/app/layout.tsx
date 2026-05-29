@@ -1,7 +1,8 @@
 import "./globals.css"
+import type { Metadata } from "next"
 import type { ReactNode } from "react"
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Crestpoint Solutions",
   description: "Crestpoint Modular V2 Career Operating System",
 }
@@ -13,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="bg-slate-100 text-slate-950 antialiased">
+        {children}
+      </body>
     </html>
   )
 }

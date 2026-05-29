@@ -1,6 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { motion } from "framer-motion"
+import {
+  CheckCircle2,
+  Clock,
+  Download,
+  FileText,
+  RotateCcw,
+  Save,
+  Trash2,
+} from "lucide-react"
 
 type ResumeActionBarProps = {
   title: string
@@ -17,183 +26,77 @@ export function ResumeActionBar({
   title,
   status,
   hasUnsavedChanges,
-  onSaveLocal,
   onClearLocal,
   onSaveServer,
   onLoadServer,
   onExport,
 }: ResumeActionBarProps) {
-  const [menuOpen, setMenuOpen] = useState(false)
-
   return (
-    <section
-      style={{
-        border: "1px solid #e2e8f0",
-        borderRadius: "18px",
-        padding: "12px 16px",
-        background:
-          "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%)",
-        boxShadow: "0 8px 22px rgba(15,23,42,.05)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "16px",
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <p
-            style={{
-              color: "#2563eb",
-              fontWeight: 900,
-              fontSize: "12px",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-            }}
-          >
-            Resume Workspace
-          </p>
+    <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+      <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-5 py-6 text-white sm:px-7">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+          <div className="min-w-0">
+            <div className="mb-3 flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-blue-100">
+              <FileText size={14} />
+              Resume Workspace
+            </div>
 
-          <h1
-            style={{
-              marginTop: "3px",
-              fontSize: "22px",
-              fontWeight: 900,
-              color: "#0f172a",
-            }}
-          >
-            {title}
-          </h1>
+            <h1 className="truncate text-2xl font-black tracking-tight sm:text-3xl">
+              {title}
+            </h1>
 
-          <p
-            style={{
-              marginTop: "4px",
-              color: "#64748b",
-              fontSize: "14px",
-            }}
-          >
-            Status:{" "}
-            <strong
-              style={{
-                color: hasUnsavedChanges
-                  ? "#92400e"
-                  : "#166534",
-              }}
-            >
-              {hasUnsavedChanges
-                ? "Unsaved Changes"
-                : status}
-            </strong>
-          </p>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            alignItems: "center",
-          }}
-        >
-          <button
-            type="button"
-            onClick={onExport}
-            style={{
-              border: "0",
-              borderRadius: "999px",
-              padding: "10px 18px",
-              background: "#2563eb",
-              color: "#ffffff",
-              fontWeight: 800,
-              cursor: "pointer",
-              boxShadow:
-                "0 6px 16px rgba(37,99,235,.20)",
-            }}
-          >
-            Export Resume
-          </button>
-
-          <div
-            style={{
-              position: "relative",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() =>
-                setMenuOpen((current) => !current)
-              }
-              style={{
-                border: "1px solid #bfdbfe",
-                borderRadius: "999px",
-                padding: "10px 16px",
-                background: "#eff6ff",
-                color: "#1d4ed8",
-                fontWeight: 850,
-                cursor: "pointer",
-                minWidth: "165px",
-              }}
-            >
-              Actions ▾
-            </button>
-
-            {menuOpen && (
-              <div
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  top: "115%",
-                  width: "230px",
-                  background: "#ffffff",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "14px",
-                  boxShadow:
-                    "0 14px 34px rgba(15,23,42,.14)",
-                  overflow: "hidden",
-                  zIndex: 100,
-                }}
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-200">
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-bold ${
+                  hasUnsavedChanges
+                    ? "bg-amber-400/15 text-amber-200"
+                    : "bg-emerald-400/15 text-emerald-200"
+                }`}
               >
-                <DropdownButton
-                  label="Save Local Draft"
-                  helper="Save in this browser"
-                  onClick={() => {
-                    onSaveLocal()
-                    setMenuOpen(false)
-                  }}
-                />
+                {hasUnsavedChanges ? (
+                  <Clock size={14} />
+                ) : (
+                  <CheckCircle2 size={14} />
+                )}
+                {hasUnsavedChanges ? "Unsaved Changes" : status}
+              </span>
 
-                <DropdownButton
-                  label="Save to Supabase"
-                  helper="Save to your account"
-                  onClick={() => {
-                    onSaveServer()
-                    setMenuOpen(false)
-                  }}
-                />
+              <span className="hidden text-slate-400 sm:inline">•</span>
 
-                <DropdownButton
-                  label="Load from Supabase"
-                  helper="Restore saved version"
-                  onClick={() => {
-                    onLoadServer()
-                    setMenuOpen(false)
-                  }}
-                />
+              <span className="text-slate-300">
+                Edit, preview, save, and export from one clean workspace.
+              </span>
+            </div>
+          </div>
 
-                <DropdownButton
-                  danger
-                  label="Clear Draft"
-                  helper="Reset local editor"
-                  onClick={() => {
-                    onClearLocal()
-                    setMenuOpen(false)
-                  }}
-                />
-              </div>
-            )}
+          <div className="grid gap-2 sm:grid-cols-2 xl:flex xl:items-center">
+            <HeaderButton
+              icon={Save}
+              label="Save"
+              onClick={onSaveServer}
+              variant="secondary"
+            />
+
+            <HeaderButton
+              icon={Download}
+              label="Export Resume"
+              onClick={onExport}
+              variant="primary"
+            />
+
+            <HeaderButton
+              icon={RotateCcw}
+              label="Load"
+              onClick={onLoadServer}
+              variant="secondary"
+            />
+
+            <HeaderButton
+              icon={Trash2}
+              label="Clear"
+              onClick={onClearLocal}
+              variant="danger"
+            />
           </div>
         </div>
       </div>
@@ -201,55 +104,36 @@ export function ResumeActionBar({
   )
 }
 
-type DropdownButtonProps = {
+type HeaderButtonProps = {
   label: string
-  helper: string
   onClick: () => void
-  danger?: boolean
+  icon: React.ComponentType<{ size?: number }>
+  variant: "primary" | "secondary" | "danger"
 }
 
-function DropdownButton({
+function HeaderButton({
   label,
-  helper,
   onClick,
-  danger = false,
-}: DropdownButtonProps) {
+  icon: Icon,
+  variant,
+}: HeaderButtonProps) {
+  const className =
+    variant === "primary"
+      ? "bg-blue-500 text-white shadow-lg shadow-blue-950/30 hover:bg-blue-400"
+      : variant === "danger"
+        ? "border border-red-300/30 bg-red-500/15 text-red-100 hover:bg-red-500/25"
+        : "border border-white/15 bg-white/10 text-white hover:bg-white/15"
+
   return (
-    <button
+    <motion.button
       type="button"
       onClick={onClick}
-      style={{
-        width: "100%",
-        textAlign: "left",
-        padding: "12px 14px",
-        border: "none",
-        borderBottom: "1px solid #f1f5f9",
-        background: "#ffffff",
-        cursor: "pointer",
-      }}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.97 }}
+      className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-extrabold transition xl:w-auto ${className}`}
     >
-      <span
-        style={{
-          display: "block",
-          color: danger
-            ? "#dc2626"
-            : "#0f172a",
-          fontWeight: 800,
-        }}
-      >
-        {label}
-      </span>
-
-      <span
-        style={{
-          display: "block",
-          marginTop: "2px",
-          color: "#64748b",
-          fontSize: "12px",
-        }}
-      >
-        {helper}
-      </span>
-    </button>
+      <Icon size={16} />
+      {label}
+    </motion.button>
   )
 }

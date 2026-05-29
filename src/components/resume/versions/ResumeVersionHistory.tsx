@@ -52,9 +52,7 @@ export function ResumeVersionHistory({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          resumeId,
-        }),
+        body: JSON.stringify({ resumeId }),
       })
 
       const result = await response.json()
@@ -78,9 +76,7 @@ export function ResumeVersionHistory({
       "Restore this version? Your current resume will be replaced, but a restore snapshot will be created."
     )
 
-    if (!confirmed) {
-      return
-    }
+    if (!confirmed) return
 
     setMessage("Restoring version...")
 
@@ -90,9 +86,7 @@ export function ResumeVersionHistory({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          versionId,
-        }),
+        body: JSON.stringify({ versionId }),
       })
 
       const result = await response.json()
@@ -117,113 +111,51 @@ export function ResumeVersionHistory({
   }, [open])
 
   return (
-    <section
-      style={{
-        border: "1px solid #e2e8f0",
-        borderRadius: "16px",
-        padding: "14px",
-        background: "#ffffff",
-      }}
-    >
+    <section className="rounded-2xl border border-slate-200 bg-white p-4">
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        style={{
-          width: "100%",
-          border: "0",
-          background: "transparent",
-          display: "flex",
-          justifyContent: "space-between",
-          gap: "12px",
-          alignItems: "center",
-          textAlign: "left",
-          cursor: "pointer",
-          padding: 0,
-        }}
+        className="flex w-full flex-col gap-3 text-left sm:flex-row sm:items-center sm:justify-between"
       >
-        <div>
-          <h3
-            style={{
-              fontSize: "18px",
-              fontWeight: 900,
-              color: "#0f172a",
-            }}
-          >
+        <div className="min-w-0">
+          <h3 className="text-lg font-black text-slate-950">
             Version History
           </h3>
 
-          <p
-            style={{
-              marginTop: "4px",
-              color: "#64748b",
-              fontSize: "14px",
-            }}
-          >
+          <p className="mt-1 text-sm text-slate-500">
             View and restore previous saved versions.
           </p>
         </div>
 
-        <span
-          style={{
-            border: "1px solid #bfdbfe",
-            borderRadius: "999px",
-            padding: "6px 10px",
-            color: "#1d4ed8",
-            background: "#eff6ff",
-            fontWeight: 800,
-            fontSize: "13px",
-          }}
-        >
+        <span className="w-fit rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-extrabold text-blue-700">
           {open ? "Hide" : "Show"}
         </span>
       </button>
 
       {open && (
-        <div
-          style={{
-            marginTop: "14px",
-            borderTop: "1px solid #e2e8f0",
-            paddingTop: "14px",
-            display: "grid",
-            gap: "10px",
-          }}
-        >
+        <div className="mt-4 grid gap-3 border-t border-slate-200 pt-4">
           {message && (
-            <p style={{ color: "#334155", fontWeight: 700 }}>{message}</p>
+            <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
+              {message}
+            </p>
           )}
 
           {loading ? (
-            <p style={{ color: "#64748b" }}>Loading versions...</p>
+            <p className="text-sm text-slate-500">Loading versions...</p>
           ) : versions.length === 0 ? (
-            <p style={{ color: "#64748b" }}>No versions found yet.</p>
+            <p className="text-sm text-slate-500">No versions found yet.</p>
           ) : (
             versions.map((version) => (
               <div
                 key={version.id}
-                style={{
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "14px",
-                  padding: "12px",
-                  background: "#f8fafc",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: "12px",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                }}
+                className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div>
-                  <strong style={{ color: "#0f172a" }}>
+                <div className="min-w-0">
+                  <strong className="block truncate text-sm font-black text-slate-950">
                     {version.version_label}
                   </strong>
 
-                  <p
-                    style={{
-                      marginTop: "4px",
-                      color: "#64748b",
-                      fontSize: "13px",
-                    }}
-                  >
+                  <p className="mt-1 break-words text-xs leading-5 text-slate-500">
                     {formatDateTime(version.created_at)} •{" "}
                     {version.selected_template} template
                   </p>
@@ -232,15 +164,7 @@ export function ResumeVersionHistory({
                 <button
                   type="button"
                   onClick={() => restoreVersion(version.id)}
-                  style={{
-                    border: "1px solid #bfdbfe",
-                    borderRadius: "12px",
-                    padding: "9px 12px",
-                    background: "#eff6ff",
-                    color: "#1d4ed8",
-                    fontWeight: 800,
-                    cursor: "pointer",
-                  }}
+                  className="w-full rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-extrabold text-blue-700 hover:bg-blue-100 sm:w-auto"
                 >
                   Restore
                 </button>
