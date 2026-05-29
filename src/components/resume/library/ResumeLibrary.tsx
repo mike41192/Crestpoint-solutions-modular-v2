@@ -1,8 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { CreateResumeButton } from "@/components/resume/library/CreateResumeButton"
+import { RenameResumeModal } from "@/components/resume/library/RenameResumeModal"
 import { ResumeCard } from "@/components/resume/library/ResumeCard"
+import { ResumeLibraryToolbar } from "@/components/resume/library/ResumeLibraryToolbar"
 
 type ResumeLibraryItem = {
   id: string
@@ -28,6 +30,30 @@ export function ResumeLibrary() {
   const [resumes, setResumes] = useState<ResumeLibraryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState("")
+  const [search, setSearch] = useState("")
+  const [sort, setSort] = useState<"updated" | "title">("updated")
+  const [renameOpen, setRenameOpen] = useState(false)
+  const [renameResumeId, setRenameResumeId] = useState("")
+  const [renameTitle, setRenameTitle] = useState("")
+
+  const filteredResumes = useMemo(() => {
+    const searchValue = search.trim().toLowerCase()
+
+    return resumes
+      .filter((resume) =>
+        resume.title.toLowerCase().includes(searchValue)
+      )
+      .sort((a, b) => {
+        if (sort === "title") {
+          return a.title.localeCompare(b.title)
+        }
+
+        return (
+          new Date(b.updated_at).getTime() -
+          new Date(a.updated_at).getTime()
+        )
+      })
+  }, [resumes, search, sort])
 
   async function loadResumes() {
     setLoading(true)
@@ -85,6 +111,44 @@ export function ResumeLibrary() {
       await loadResumes()
     } catch {
       setMessage("Create resume request failed.")
+    }
+  }
+
+  function openRenameModal(id: string, title: string) {
+    setRenameResumeId(id)
+    setRenameTitle(title)
+    setRenameOpen(true)
+  }
+
+  async function renameResume(title: string) {
+    setMessage("Renaming resume...")
+
+    try {
+      const response = await fetch("/api/resume/rename", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          resumeId: renameResumeId,
+          title,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.status !== "success") {
+        setMessage(result.message || "Rename resume failed.")
+        return
+      }
+
+      setRenameOpen(false)
+      setRenameResumeId("")
+      setRenameTitle("")
+      setMessage("Resume renamed.")
+      await loadResumes()
+    } catch {
+      setMessage("Rename resume request failed.")
     }
   }
 
@@ -154,6 +218,13 @@ export function ResumeLibrary() {
 
   return (
     <div style={{ display: "grid", gap: "18px" }}>
+      <RenameResumeModal
+        open={renameOpen}
+        currentTitle={renameTitle}
+        onClose={() => setRenameOpen(false)}
+        onRename={renameResume}
+      />
+
       <div
         style={{
           display: "flex",
@@ -187,6 +258,14 @@ export function ResumeLibrary() {
 
         <CreateResumeButton onCreate={createResume} />
       </div>
+
+      <ResumeLibraryToolbar
+        search={search}
+        sort={sort}
+        totalCount={filteredResumes.length}
+        onSearchChange={setSearch}
+        onSortChange={setSort}
+      />
 
       {message && (
         <div
@@ -234,6 +313,24 @@ export function ResumeLibrary() {
             blank resume.
           </p>
         </div>
+      ) : filteredResumes.length === 0 ? (
+        <div
+          style={{
+            border: "1px solid #e2e8f0",
+            borderRadius: "18px",
+            padding: "24px",
+            background: "#ffffff",
+            textAlign: "center",
+          }}
+        >
+          <h2 style={{ fontSize: "22px", fontWeight: 900 }}>
+            No matching resumes
+          </h2>
+
+          <p style={{ marginTop: "8px", color: "#64748b" }}>
+            Try a different search term.
+          </p>
+        </div>
       ) : (
         <div
           style={{
@@ -242,7 +339,7 @@ export function ResumeLibrary() {
             gap: "16px",
           }}
         >
-          {resumes.map((resume) => (
+          {filteredResumes.map((resume) => (
             <ResumeCard
               key={resume.id}
               id={resume.id}
@@ -251,6 +348,7 @@ export function ResumeLibrary() {
               selectedTemplate={resume.selected_template}
               updatedAt={formatDate(resume.updated_at)}
               onOpen={openResume}
+              onRename={openRenameModal}
               onDuplicate={duplicateResume}
               onDelete={deleteResume}
             />
