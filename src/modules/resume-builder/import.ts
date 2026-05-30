@@ -1,5 +1,6 @@
 import type {
   ResumeBuilderFormData,
+  ResumeEducationItem,
   ResumeExperienceItem,
 } from "./types"
 import { starterResumeData } from "./service"
@@ -12,23 +13,49 @@ export type ResumeImportParseResult = {
   detectedSections: string[]
 }
 
+const sectionHeaders = {
+  summary: ["professional summary", "summary", "profile", "career summary"],
+  experience: [
+    "professional experience",
+    "work experience",
+    "experience",
+    "employment history",
+    "work history",
+  ],
+  education: ["education", "academic background"],
+  skills: ["skills", "technical skills", "core skills", "competencies"],
+  certifications: ["certifications", "licenses", "credentials"],
+}
+
+const allHeaders = Object.values(sectionHeaders).flat()
+
 const actionVerbPattern =
-  /\b(achieved|administered|aided|analyzed|assisted|built|calibrated|collaborated|completed|conducted|coordinated|created|delivered|developed|diagnosed|directed|ensured|executed|implemented|improved|installed|kept|led|maintained|managed|monitored|operated|organized|performed|prepared|provided|reduced|repaired|responded|scheduled|served|streamlined|supported|took part|trained|troubleshot|used|worked)\b/i
+  /\b(achieved|administered|analyzed|assisted|built|calibrated|collaborated|completed|conducted|coordinated|created|delivered|developed|diagnosed|directed|ensured|executed|implemented|improved|installed|led|maintained|managed|monitored|operated|organized|performed|prepared|provided|reduced|repaired|responded|scheduled|served|streamlined|supported|trained|troubleshot|used|worked)\b/i
 
 const dateRangePattern =
   /(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|january|february|march|april|june|july|august|september|october|november|december|\d{4}).*(present|\d{4}|jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|january|february|march|april|june|july|august|september|october|november|december)/i
 
-const locationPattern =
-  /[A-Za-z\s]+,\s?[A-Z]{2}(\s\d{5})?/i
+const locationPattern = /[A-Za-z\s]+,\s?[A-Z]{2}(\s\d{5})?/i
 
 function normalizeText(text: string) {
   return text
     .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
     .replace(/\u2022/g, "\n• ")
+    .replace(/[•]{2,}/g, "•")
     .replace(/\t/g, " ")
     .replace(/[ ]{2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
 }
 
+function cleanText(text: string) {
+  return normalizeText(text)
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+}
+ 
 function cleanLines(text: string) {
   return normalizeText(text)
     .split("\n")
@@ -44,6 +71,7 @@ function splitListText(text: string) {
   return text
     .split(/\n|,|•/)
     .map((item) => cleanBullet(item))
+    .map((item) => item.replace(/\s+/g, " ").trim())
     .filter(Boolean)
 }
 
@@ -74,14 +102,18 @@ function detectName(text: string) {
   const lines = cleanLines(text)
 
   return (
-    lines.find(
-      (line) =>
+    lines.find((line) => {
+      const lower = line.toLowerCase()
+
+      return (
         !line.includes("@") &&
         !line.match(/\d{3}/) &&
-        !line.toLowerCase().includes("resume") &&
-        !line.toLowerCase().includes("professional summary") &&
-        line.length <= 80
-    ) || ""
+        !lower.includes("resume") &&
+        !allHeaders.some((header) => lower === header) &&
+        line.length >= 3 &&
+        line.length <= 60
+      )
+    }) || ""
   )
 }
 
@@ -104,9 +136,7 @@ function getSectionText(
 
     const match = normalizedText.match(sectionPattern)
 
-    if (!match || match.index === undefined) {
-      continue
-    }
+    if (!match || match.index === undefined) continue
 
     const startIndex = match.index + match[0].length
     const afterSection = normalizedText.slice(startIndex)
@@ -146,7 +176,7 @@ function looksLikeDutyLine(line: string) {
     line.trim().startsWith("•") ||
     line.trim().startsWith("-") ||
     actionVerbPattern.test(cleanedLine) ||
-    cleanedLine.length > 100
+    cleanedLine.length > 90
   )
 }
 
@@ -166,7 +196,7 @@ function isLikelyCompany(line: string) {
     cleanedLine.length <= 90 &&
     Boolean(
       cleanedLine.match(
-        /\b(inc|llc|ltd|company|corporation|corp|industries|services|school|hospital|university|college|glass|maintenance|systems|solutions|group|center|centre|department|properties|vacations|resorts|plastics|air)\b/i
+        /\b(inc|llc|ltd|company|corporation|corp|industries|services|school|hospital|university|college|glass|maintenance|systems|solutions|group|center|department|properties|vacations|resorts|plastics|air|rivers|grede|rivian)\b/i
       )
     )
   )
@@ -188,7 +218,7 @@ function isLikelyRole(line: string) {
     cleanedLine.length <= 90 &&
     Boolean(
       cleanedLine.match(
-        /\b(manager|technician|engineer|specialist|assistant|associate|coordinator|director|supervisor|lead|operator|representative|consultant|analyst|clerk|administrator|maintenance|mechanic|electrician|plumber|handler|soldier)\b/i
+        /\b(manager|technician|engineer|specialist|assistant|associate|coordinator|director|supervisor|lead|operator|representative|consultant|analyst|clerk|administrator|maintenance|mechanic|electrician|plumber|handler|soldier|forklift)\b/i
       )
     )
   )
@@ -214,14 +244,11 @@ function extractCleanLocationAndDate(line: string) {
     dateRange = looksLikeDateRange(line) ? line.replace(location, "").trim() : ""
   }
 
-  return {
-    location,
-    dateRange,
-  }
+  return { location, dateRange }
 }
 
 function hasNearbyJobEvidence(lines: string[], index: number) {
-  const nearbyLines = lines.slice(index + 1, index + 4)
+  const nearbyLines = lines.slice(index + 1, index + 5)
 
   return nearbyLines.some(
     (line) =>
@@ -264,17 +291,7 @@ function parseExperienceItems(experienceText: string): ResumeExperienceItem[] {
   const lines = cleanLines(experienceText)
 
   if (lines.length === 0) {
-    return [
-      {
-        id: "experience-1",
-        company: "",
-        role: "",
-        location: "",
-        startDate: "",
-        endDate: "",
-        bullets: [""],
-      },
-    ]
+    return starterResumeData.experience
   }
 
   const jobs: ResumeExperienceItem[] = []
@@ -300,19 +317,14 @@ function parseExperienceItems(experienceText: string): ResumeExperienceItem[] {
   }
 
   function ensureJob() {
-    if (!currentJob) {
-      startJob()
-    }
-
+    if (!currentJob) startJob()
     return currentJob as ResumeExperienceItem
   }
 
   lines.forEach((rawLine, index) => {
     const line = cleanBullet(rawLine)
 
-    if (!line) {
-      return
-    }
+    if (!line) return
 
     const roleCandidate = isLikelyRole(line) && hasNearbyJobEvidence(lines, index)
     const companyCandidate = isLikelyCompany(line)
@@ -325,15 +337,11 @@ function parseExperienceItems(experienceText: string): ResumeExperienceItem[] {
           currentJob.startDate ||
           currentJob.bullets.some(Boolean))
 
-      if (shouldStartNewJob) {
-        currentJob = null
-      }
+      if (shouldStartNewJob) currentJob = null
 
       pendingRole = line
 
-      if (pendingCompany) {
-        startJob()
-      }
+      if (pendingCompany) startJob()
 
       return
     }
@@ -348,9 +356,7 @@ function parseExperienceItems(experienceText: string): ResumeExperienceItem[] {
 
       const job = ensureJob()
 
-      if (!job.company) {
-        job.company = line
-      }
+      if (!job.company) job.company = line
 
       return
     }
@@ -359,13 +365,8 @@ function parseExperienceItems(experienceText: string): ResumeExperienceItem[] {
       const job = ensureJob()
       const parsed = extractCleanLocationAndDate(line)
 
-      if (parsed.location && !job.location) {
-        job.location = parsed.location
-      }
-
-      if (parsed.dateRange && !job.startDate) {
-        job.startDate = parsed.dateRange
-      }
+      if (parsed.location && !job.location) job.location = parsed.location
+      if (parsed.dateRange && !job.startDate) job.startDate = parsed.dateRange
 
       return
     }
@@ -387,34 +388,14 @@ function parseExperienceItems(experienceText: string): ResumeExperienceItem[] {
 
   const finalizedJobs = finalizeJobs(jobs)
 
-  return finalizedJobs.length > 0
-    ? finalizedJobs
-    : [
-        {
-          id: "experience-1",
-          company: "",
-          role: "",
-          location: "",
-          startDate: "",
-          endDate: "",
-          bullets: [""],
-        },
-      ]
+  return finalizedJobs.length > 0 ? finalizedJobs : starterResumeData.experience
 }
 
-function parseEducation(educationText: string) {
+function parseEducation(educationText: string): ResumeEducationItem[] {
   const lines = cleanLines(educationText)
 
   if (lines.length === 0) {
-    return [
-      {
-        id: "education-1",
-        school: "",
-        degree: "",
-        field: "",
-        graduationDate: "",
-      },
-    ]
+    return starterResumeData.education
   }
 
   const school =
@@ -424,11 +405,12 @@ function parseEducation(educationText: string) {
 
   const degree =
     lines.find((line) =>
-      line.match(/\b(bachelor|associate|master|degree|diploma|certificate)\b/i)
+      line.match(
+        /\b(bachelor|associate|master|degree|diploma|certificate|certification)\b/i
+      )
     ) || ""
 
-  const graduationDate =
-    lines.find((line) => line.match(/\b(19|20)\d{2}\b/)) || ""
+  const graduationDate = lines.find((line) => line.match(/\b(19|20)\d{2}\b/)) || ""
 
   return [
     {
@@ -441,86 +423,80 @@ function parseEducation(educationText: string) {
   ]
 }
 
-export function parseTextResume(rawText: string): ResumeImportParseResult {
-  const text = normalizeText(rawText).trim()
+function detectSections(text: string) {
+  const lowerText = text.toLowerCase()
+  const detected: string[] = []
 
-  if (!text) {
-    return {
-      status: "error",
-      message: "No resume text was found.",
-      parsedData: starterResumeData,
-      rawText,
-      detectedSections: [],
+  Object.entries(sectionHeaders).forEach(([key, names]) => {
+    if (names.some((name) => lowerText.includes(name))) {
+      detected.push(key)
     }
-  }
+  })
 
-  const sectionNames = {
-    summary: ["summary", "professional summary", "profile", "objective"],
-    experience: [
-      "experience",
-      "work experience",
-      "employment",
-      "employment history",
-      "professional experience",
-      "work history",
-    ],
-    education: ["education", "academic background"],
-    skills: ["skills", "core skills", "technical skills", "competencies"],
-    certifications: ["certifications", "licenses", "certificates"],
-  }
+  return detected
+}
 
-  const allSectionNames = Object.values(sectionNames).flat()
+export function parseTextResume(text: string): ResumeImportParseResult {
+  const normalizedText = normalizeText(text)
+  const detectedSections = detectSections(normalizedText)
 
-  const summaryText = getSectionText(text, sectionNames.summary, allSectionNames)
+  const summaryText = getSectionText(
+    normalizedText,
+    sectionHeaders.summary,
+    allHeaders
+  )
+
   const experienceText = getSectionText(
-    text,
-    sectionNames.experience,
-    allSectionNames
-  )
-  const educationText = getSectionText(
-    text,
-    sectionNames.education,
-    allSectionNames
-  )
-  const skillsText = getSectionText(text, sectionNames.skills, allSectionNames)
-  const certificationsText = getSectionText(
-    text,
-    sectionNames.certifications,
-    allSectionNames
+    normalizedText,
+    sectionHeaders.experience,
+    allHeaders
   )
 
-  const detectedSections = [
-    summaryText ? "summary" : "",
-    experienceText ? "experience" : "",
-    educationText ? "education" : "",
-    skillsText ? "skills" : "",
-    certificationsText ? "certifications" : "",
-  ].filter(Boolean)
+  const educationText = getSectionText(
+    normalizedText,
+    sectionHeaders.education,
+    allHeaders
+  )
+
+  const skillsText = getSectionText(normalizedText, sectionHeaders.skills, allHeaders)
+
+  const certificationsText = getSectionText(
+    normalizedText,
+    sectionHeaders.certifications,
+    allHeaders
+  )
 
   const parsedData: ResumeBuilderFormData = {
+    ...starterResumeData,
     contact: {
-      fullName: detectName(text),
-      email: detectEmail(text),
-      phone: detectPhone(text),
-      location: detectLocation(text),
-      linkedIn: detectLinkedIn(text),
-      website: detectWebsite(text),
+      ...starterResumeData.contact,
+      fullName: detectName(normalizedText),
+      email: detectEmail(normalizedText),
+      phone: detectPhone(normalizedText),
+      location: detectLocation(normalizedText),
+      linkedIn: detectLinkedIn(normalizedText),
+      website: detectWebsite(normalizedText),
     },
-    summary: summaryText,
+    summary: cleanText(summaryText),
     experience: parseExperienceItems(experienceText),
     education: parseEducation(educationText),
-    skills: skillsText ? splitListText(skillsText) : [],
-    certifications: certificationsText ? splitListText(certificationsText) : [],
+    skills: splitListText(skillsText),
+    certifications: splitListText(certificationsText),
   }
 
+  const hasUsefulData =
+    parsedData.contact.fullName ||
+    parsedData.contact.email ||
+    parsedData.experience.some((item) => item.role || item.company) ||
+    parsedData.skills.length > 0
+
   return {
-    status: detectedSections.length > 0 ? "success" : "warning",
-    message:
-      detectedSections.length > 0
-        ? "Resume text was parsed into structured fields."
-        : "Resume text was received, but no clear section headings were detected.",
+    status: hasUsefulData ? "success" : "warning",
+    message: hasUsefulData
+      ? "Resume imported and structured successfully."
+      : "Resume text was extracted, but limited structured data was detected.",
     parsedData,
-    rawText,
+    rawText: normalizedText,
     detectedSections,
   }
 }

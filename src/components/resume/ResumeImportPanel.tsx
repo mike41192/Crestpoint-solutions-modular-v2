@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { CheckCircle2, FileUp, Loader2, Sparkles, Upload } from "lucide-react"
 import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 
 type ResumeImportPanelProps = {
@@ -19,12 +20,10 @@ export function ResumeImportPanel({
     null
   )
 
-  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
 
-    if (!file) {
-      return
-    }
+    if (!file) return
 
     setFileName(file.name)
     setMessage("")
@@ -84,106 +83,98 @@ export function ResumeImportPanel({
   }
 
   return (
-    <div
-      style={{
-        border: "1px solid #e2e8f0",
-        borderRadius: "12px",
-        padding: "14px",
-        background: "#f8fafc",
-      }}
-    >
-      <h3 style={{ fontSize: "18px", fontWeight: 700 }}>Resume Import</h3>
+    <section className="w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className="mb-5 flex items-start gap-3 border-b border-slate-100 pb-4">
+        <div className="rounded-2xl bg-blue-50 p-2 text-blue-700">
+          <FileUp size={18} />
+        </div>
 
-      <p style={{ marginTop: "6px", color: "#64748b", lineHeight: 1.5 }}>
-        Upload a plain text resume to import structured resume fields. PDF and
-        DOCX parsing will be added after the text import flow is verified.
-      </p>
+        <div>
+          <h3 className="text-lg font-black text-slate-950">Resume Import</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-500">
+            Upload TXT, DOCX, or PDF resumes and convert them into structured
+            builder fields.
+          </p>
+        </div>
+      </div>
 
-      <form
-        onSubmit={uploadResume}
-        style={{ display: "grid", gap: "12px", marginTop: "14px" }}
-      >
-        <input
-          name="resumeFile"
-          type="file"
-          accept=".txt,.pdf,.doc,.docx"
-          onChange={handleFileChange}
-        />
+      <form onSubmit={uploadResume} className="grid gap-4">
+        <label className="flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center transition hover:border-blue-300 hover:bg-blue-50">
+          <Upload className="text-blue-600" size={26} />
+
+          <span className="mt-3 text-sm font-black text-slate-900">
+            Choose resume file
+          </span>
+
+          <span className="mt-1 text-xs font-semibold text-slate-500">
+            Supports .txt, .doc, .docx, and .pdf
+          </span>
+
+          <input
+            name="resumeFile"
+            type="file"
+            accept=".txt,.pdf,.doc,.docx"
+            onChange={handleFileChange}
+            className="sr-only"
+          />
+        </label>
 
         {fileName && (
-          <p style={{ color: "#334155" }}>
-            Selected file: <strong>{fileName}</strong>
-          </p>
+          <div className="rounded-2xl border border-blue-100 bg-blue-50 p-3 text-sm font-bold text-blue-800">
+            Selected file: {fileName}
+          </div>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          style={{
-            border: "0",
-            borderRadius: "12px",
-            padding: "12px 16px",
-            background: loading ? "#94a3b8" : "#2563eb",
-            color: "#ffffff",
-            fontWeight: 700,
-            cursor: loading ? "not-allowed" : "pointer",
-            width: "fit-content",
-          }}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-100 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-fit"
         >
-          {loading ? "Importing..." : "Import Resume"}
+          {loading ? (
+            <>
+              <Loader2 className="animate-spin" size={16} />
+              Importing...
+            </>
+          ) : (
+            <>
+              <Sparkles size={16} />
+              Import Resume
+            </>
+          )}
         </button>
       </form>
 
       {message && (
-        <p style={{ marginTop: "12px", color: "#334155" }}>{message}</p>
+        <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm font-semibold leading-6 text-slate-700">
+          {message}
+        </p>
       )}
 
       {detectedSections.length > 0 && (
-        <div
-          style={{
-            marginTop: "12px",
-            border: "1px solid #bbf7d0",
-            borderRadius: "10px",
-            padding: "12px",
-            background: "#f0fdf4",
-            color: "#166534",
-          }}
-        >
-          <strong>Detected Sections</strong>
+        <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+          <strong className="flex items-center gap-2 font-black">
+            <CheckCircle2 size={16} />
+            Detected Sections
+          </strong>
 
-          <p style={{ marginTop: "6px" }}>{detectedSections.join(", ")}</p>
+          <p className="mt-2 font-semibold">{detectedSections.join(", ")}</p>
         </div>
       )}
 
       {parsedData && (
-        <div
-          style={{
-            marginTop: "12px",
-            border: "1px solid #bfdbfe",
-            borderRadius: "10px",
-            padding: "12px",
-            background: "#eff6ff",
-          }}
-        >
-          <strong>Structured Import Ready</strong>
+        <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+          <strong className="font-black text-blue-950">
+            Structured Import Ready
+          </strong>
 
-          <p style={{ marginTop: "6px", color: "#334155" }}>
+          <p className="mt-2 text-sm leading-6 text-slate-700">
             Parsed resume fields are ready to apply to the editor.
           </p>
 
           <button
             type="button"
             onClick={applyImportedResume}
-            style={{
-              marginTop: "10px",
-              border: "0",
-              borderRadius: "12px",
-              padding: "10px 14px",
-              background: "#2563eb",
-              color: "#ffffff",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
+            className="mt-3 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white transition hover:bg-blue-700"
           >
             Apply Imported Resume
           </button>
@@ -191,29 +182,14 @@ export function ResumeImportPanel({
       )}
 
       {preview && (
-        <div
-          style={{
-            marginTop: "12px",
-            border: "1px solid #e2e8f0",
-            borderRadius: "10px",
-            padding: "12px",
-            background: "#ffffff",
-          }}
-        >
-          <strong>Import Preview</strong>
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <strong className="font-black text-slate-950">Import Preview</strong>
 
-          <pre
-            style={{
-              marginTop: "8px",
-              whiteSpace: "pre-wrap",
-              color: "#475569",
-              fontFamily: "inherit",
-            }}
-          >
+          <pre className="mt-3 max-h-[320px] overflow-auto whitespace-pre-wrap rounded-2xl bg-white p-4 text-sm leading-6 text-slate-600">
             {preview}
           </pre>
         </div>
       )}
-    </div>
+    </section>
   )
 }
