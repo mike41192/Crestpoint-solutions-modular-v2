@@ -5,6 +5,8 @@ export const runtime = "nodejs"
 const MAX_FILE_SIZE_MB = 8
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
+const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp"]
+
 function normalizeExtractedText(value: string) {
   return value
     .replace(/\r/g, "\n")
@@ -12,6 +14,19 @@ function normalizeExtractedText(value: string) {
     .replace(/[ ]{2,}/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim()
+}
+
+function isPdfFile(file: File) {
+  return file.name.toLowerCase().endsWith(".pdf") || file.type === "application/pdf"
+}
+
+function isImageFile(file: File) {
+  const fileName = file.name.toLowerCase()
+
+  return (
+    IMAGE_EXTENSIONS.some((extension) => fileName.endsWith(extension)) ||
+    file.type.startsWith("image/")
+  )
 }
 
 async function extractTextFromDocx(fileBuffer: ArrayBuffer) {
@@ -35,6 +50,18 @@ async function extractTextFromPdf(fileBuffer: ArrayBuffer) {
   return normalizeExtractedText(result.text || "")
 }
 
+async function extractTextFromImage(fileBuffer: ArrayBuffer) {
+  const { createWorker } = await import("tesseract.js")
+  const worker = await createWorker("eng")
+
+  try {
+    const result = await worker.recognize(Buffer.from(fileBuffer))
+    return normalizeExtractedText(result.data.text || "")
+  } finally {
+    await worker.terminate()
+  }
+}
+
 async function extractResumeText(file: File) {
   const fileName = file.name.toLowerCase()
   const fileType = file.type
@@ -44,15 +71,15 @@ async function extractResumeText(file: File) {
     return await extractTextFromDocx(fileBuffer)
   }
 
-  if (fileName.endsWith(".pdf") || fileType === "application/pdf") {
+  if (isPdfFile(file)) {
     return await extractTextFromPdf(fileBuffer)
   }
 
-  return normalizeExtractedText(await file.text())
-}
+  if (isImageFile(file)) {
+    return await extractTextFromImage(fileBuffer)
+  }
 
-function isPdfFile(file: File) {
-  return file.name.toLowerCase().endsWith(".pdf") || file.type === "application/pdf"
+  return normalizeExtractedText(await file.text())
 }
 
 export async function POST(request: Request) {
@@ -83,7 +110,7 @@ export async function POST(request: Request) {
       return Response.json({
         status: "warning",
         message: isPdfFile(file)
-          ? "This PDF appears to be scanned or image-based. Text-based PDFs, DOCX, and TXT files import automatically. OCR support is the next import upgrade."
+          ? "This PDF appears to be scanned or image-based. Text-based PDFs, DOCX, TXT, and image uploads import automatically. Full scanned PDF OCR is the next import upgrade."
           : "Readable text could not be extracted from this file.",
         fileName: file.name,
         fileType: file.type,
@@ -93,8 +120,8 @@ export async function POST(request: Request) {
         parsedData: null,
         needsOcr: isPdfFile(file),
         recommendedAction: isPdfFile(file)
-          ? "Upload a text-based PDF or DOCX version for now, or continue to the OCR upgrade phase."
-          : "Try uploading a TXT, DOCX, or text-based PDF version.",
+          ? "For now, upload a text-based PDF, DOCX, TXT, or an image scan such as PNG/JPG."
+          : "Try uploading a TXT, DOCX, text-based PDF, PNG, JPG, JPEG, or WEBP version.",
       })
     }
 
@@ -128,8 +155,9 @@ export async function GET() {
   return Response.json({
     status: "ok",
     route: "resume_import",
-    supportedFormats: [".txt", ".docx", ".pdf"],
+    supportedFormats: [".txt", ".docx", ".pdf", ".png", ".jpg", ".jpeg", ".webp"],
     maxFileSizeMb: MAX_FILE_SIZE_MB,
-    ocrStatus: "planned",
+    ocrStatus: "image_upload_supported",
+    scannedPdfOcrStatus: "planned",
   })
 }

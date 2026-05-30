@@ -8,21 +8,16 @@ type ResumeImportPanelProps = {
   onApplyImportedResume: (data: ResumeBuilderFormData) => void
 }
 
-export function ResumeImportPanel({
-  onApplyImportedResume,
-}: ResumeImportPanelProps) {
+export function ResumeImportPanel({ onApplyImportedResume }: ResumeImportPanelProps) {
   const [fileName, setFileName] = useState("")
   const [message, setMessage] = useState("")
   const [preview, setPreview] = useState("")
   const [loading, setLoading] = useState(false)
   const [detectedSections, setDetectedSections] = useState<string[]>([])
-  const [parsedData, setParsedData] = useState<ResumeBuilderFormData | null>(
-    null
-  )
+  const [parsedData, setParsedData] = useState<ResumeBuilderFormData | null>(null)
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
-
     if (!file) return
 
     setFileName(file.name)
@@ -92,8 +87,7 @@ export function ResumeImportPanel({
         <div>
           <h3 className="text-lg font-black text-slate-950">Resume Import</h3>
           <p className="mt-1 text-sm leading-6 text-slate-500">
-            Upload TXT, DOCX, or PDF resumes and convert them into structured
-            builder fields.
+            Upload TXT, DOCX, text-based PDF, or image scans and convert them into structured builder fields.
           </p>
         </div>
       </div>
@@ -107,13 +101,13 @@ export function ResumeImportPanel({
           </span>
 
           <span className="mt-1 text-xs font-semibold text-slate-500">
-            Supports .txt, .doc, .docx, and .pdf
+            Supports .txt, .doc, .docx, .pdf, .png, .jpg, .jpeg, and .webp
           </span>
 
           <input
             name="resumeFile"
             type="file"
-            accept=".txt,.pdf,.doc,.docx"
+            accept=".txt,.pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
             onChange={handleFileChange}
             className="sr-only"
           />
@@ -156,17 +150,13 @@ export function ResumeImportPanel({
             <CheckCircle2 size={16} />
             Detected Sections
           </strong>
-
           <p className="mt-2 font-semibold">{detectedSections.join(", ")}</p>
         </div>
       )}
 
       {parsedData && (
         <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4">
-          <strong className="font-black text-blue-950">
-            Structured Import Ready
-          </strong>
-
+          <strong className="font-black text-blue-950">Structured Import Ready</strong>
           <p className="mt-2 text-sm leading-6 text-slate-700">
             Parsed resume fields are ready to apply to the editor.
           </p>
