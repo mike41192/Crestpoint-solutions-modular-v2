@@ -51,6 +51,10 @@ async function extractResumeText(file: File) {
   return normalizeExtractedText(await file.text())
 }
 
+function isPdfFile(file: File) {
+  return file.name.toLowerCase().endsWith(".pdf") || file.type === "application/pdf"
+}
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData()
@@ -78,15 +82,19 @@ export async function POST(request: Request) {
     if (!fileText.trim()) {
       return Response.json({
         status: "warning",
-        message:
-          "This PDF appears to be scanned/image-based. Text-based PDFs, DOCX, and TXT files import automatically. OCR support is needed for scanned PDFs.",
+        message: isPdfFile(file)
+          ? "This PDF appears to be scanned or image-based. Text-based PDFs, DOCX, and TXT files import automatically. OCR support is the next import upgrade."
+          : "Readable text could not be extracted from this file.",
         fileName: file.name,
         fileType: file.type,
         characterCount: 0,
         preview: "",
         detectedSections: [],
         parsedData: null,
-        needsOcr: true,
+        needsOcr: isPdfFile(file),
+        recommendedAction: isPdfFile(file)
+          ? "Upload a text-based PDF or DOCX version for now, or continue to the OCR upgrade phase."
+          : "Try uploading a TXT, DOCX, or text-based PDF version.",
       })
     }
 
@@ -122,5 +130,6 @@ export async function GET() {
     route: "resume_import",
     supportedFormats: [".txt", ".docx", ".pdf"],
     maxFileSizeMb: MAX_FILE_SIZE_MB,
+    ocrStatus: "planned",
   })
 }
