@@ -1,38 +1,74 @@
 "use client"
 
+import { Download, Printer } from "lucide-react"
+import { motion } from "framer-motion"
+
 export function ResumePrintActions() {
   function printResume() {
     window.print()
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: "12px",
-        flexWrap: "wrap",
-        marginBottom: "16px",
-      }}
-    >
-      <button
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <motion.button
         type="button"
         onClick={printResume}
-        style={{
-          border: "0",
-          borderRadius: "12px",
-          padding: "12px 16px",
-          background: "#2563eb",
-          color: "#ffffff",
-          fontWeight: 700,
-          cursor: "pointer",
-        }}
+        whileHover={{ y: -2 }}
+        whileTap={{ scale: 0.98 }}
+        className="
+          inline-flex
+          items-center
+          justify-center
+          gap-2
+          rounded-full
+          bg-blue-600
+          px-5
+          py-3
+          text-sm
+          font-black
+          text-white
+          shadow-lg
+          shadow-blue-100
+          transition
+          hover:bg-blue-700
+        "
       >
+        <Printer size={16} />
         Print Resume
-      </button>
+      </motion.button>
 
-      <p style={{ color: "#64748b", alignSelf: "center" }}>
-        Use your browser print dialog to save as PDF for now.
-      </p>
+      <motion.button
+        type="button"
+        onClick={printResume}
+        whileHover={{ y: -2 }}
+        whileTap={{ scale: 0.98 }}
+        className="
+          inline-flex
+          items-center
+          justify-center
+          gap-2
+          rounded-full
+          border
+          border-slate-300
+          bg-white
+          px-5
+          py-3
+          text-sm
+          font-black
+          text-slate-700
+          transition
+          hover:border-blue-300
+          hover:text-blue-700
+        "
+      >
+        <Download size={16} />
+        Save PDF
+      </motion.button>
+
+      <div className="text-xs font-semibold leading-5 text-slate-500 sm:max-w-[220px]">
+        Opens your browser print dialog. Choose{" "}
+        <strong>Save as PDF</strong> to download a professional PDF copy.
+      </div>
     </div>
   )
 }
