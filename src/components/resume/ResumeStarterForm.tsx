@@ -9,7 +9,6 @@ import {
   History,
   Import,
   LayoutTemplate,
-  Save,
   SearchCheck,
   Sparkles,
 } from "lucide-react"
@@ -20,7 +19,6 @@ import { ResumeEditorPreview } from "@/components/resume/ResumeEditorPreview"
 import { ResumeImportPanel } from "@/components/resume/ResumeImportPanel"
 import { ResumeJobMatchForm } from "@/components/resume/ResumeJobMatchForm"
 import { ResumeOptimizeActions } from "@/components/resume/ResumeOptimizeActions"
-import { ResumeToolPanel } from "@/components/resume/ResumeToolPanel"
 import { ResumeValidationPanel } from "@/components/resume/ResumeValidationPanel"
 import { ContactSection } from "@/components/resume/form-sections/ContactSection"
 import { EducationSection } from "@/components/resume/form-sections/EducationSection"
@@ -58,6 +56,7 @@ type AutosaveStatus = "idle" | "unsaved" | "saving" | "saved" | "error"
 
 type WorkspacePanel =
   | "editor"
+  | "preview"
   | "health"
   | "versions"
   | "import"
@@ -536,6 +535,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
 
   const panels = [
     { id: "editor", label: "Editor", icon: FileText },
+    { id: "preview", label: "Preview", icon: LayoutTemplate },
     { id: "health", label: "Health", icon: Activity },
     { id: "versions", label: "Versions", icon: History },
     { id: "import", label: "Import", icon: Import },
@@ -562,29 +562,31 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">
         <main className="min-w-0 space-y-5">
-          <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:grid-cols-3 lg:grid-cols-6">
-            {panels.map((panel) => {
-              const Icon = panel.icon
-              const active = activePanel === panel.id
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+            <div className="grid min-w-max grid-cols-7 gap-3 xl:min-w-0">
+              {panels.map((panel) => {
+                const Icon = panel.icon
+                const active = activePanel === panel.id
 
-              return (
-                <motion.button
-                  key={panel.id}
-                  type="button"
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setActivePanel(panel.id)}
-                  className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-extrabold transition ${
-                    active
-                      ? "border-blue-600 bg-blue-50 text-blue-700"
-                      : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-white"
-                  }`}
-                >
-                  <Icon size={16} />
-                  {panel.label}
-                </motion.button>
-              )
-            })}
+                return (
+                  <motion.button
+                    key={panel.id}
+                    type="button"
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setActivePanel(panel.id)}
+                    className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-extrabold transition ${
+                      active
+                        ? "border-blue-600 bg-blue-50 text-blue-700"
+                        : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-white"
+                    }`}
+                  >
+                    <Icon size={16} />
+                    {panel.label}
+                  </motion.button>
+                )
+              })}
+            </div>
           </div>
 
           {(saveMessage || serverMessage) && (
@@ -628,6 +630,14 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
             </WorkspaceCard>
           )}
 
+          {activePanel === "preview" && (
+            <div className="xl:hidden">
+              <WorkspaceCard icon={LayoutTemplate} title="Live Preview" description="Preview your selected template on mobile and tablet.">
+                <ResumeEditorPreview data={formData} />
+              </WorkspaceCard>
+            </div>
+          )}
+
           {activePanel === "health" && (
             <WorkspaceCard icon={Activity} title="Resume Health" description="Track autosave, completion, validation, and readiness.">
               <div className="grid gap-4">
@@ -663,7 +673,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
           )}
         </main>
 
-        <aside className="min-w-0 xl:sticky xl:top-6 xl:h-fit">
+        <aside className="hidden min-w-0 xl:sticky xl:top-6 xl:block xl:h-fit">
           <WorkspaceCard icon={LayoutTemplate} title="Live Preview" description="Template and preview stay visible while editing.">
             <ResumeEditorPreview data={formData} />
           </WorkspaceCard>

@@ -49,8 +49,8 @@ export function ModulePageLayout({
 
   return (
     <div className="min-h-screen bg-slate-100">
-      <div className="mx-auto grid w-full max-w-[1700px] gap-6 px-4 py-5 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-6">
-        <aside className="hidden lg:block">
+      <div className="mx-auto grid w-full max-w-[1700px] gap-6 px-3 py-5 sm:px-4 xl:grid-cols-[280px_minmax(0,1fr)] xl:px-6">
+        <aside className="hidden xl:block">
           <div className="sticky top-5 rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
             <div className="mb-5 rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-5 text-white">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-200">
@@ -75,7 +75,7 @@ export function ModulePageLayout({
                     href={item.href}
                     className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-extrabold transition ${
                       active
-                        ? "bg-blue-50 text-blue-700"
+                        ? "border border-blue-200 bg-blue-50 text-blue-700"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
                     }`}
                   >
@@ -93,14 +93,16 @@ export function ModulePageLayout({
             <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">
               Crestpoint Solutions
             </p>
+
             <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-4xl">
               {title}
             </h1>
+
             <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500 sm:text-base">
               {description}
             </p>
 
-            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:hidden">
+            <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:hidden">
               {navItems.slice(0, 6).map((item) => {
                 const Icon = item.icon
                 const active =

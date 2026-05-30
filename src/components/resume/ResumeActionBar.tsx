@@ -32,12 +32,12 @@ export function ResumeActionBar({
   onExport,
 }: ResumeActionBarProps) {
   return (
-    <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-      <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-5 py-6 text-white sm:px-7">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+    <section className="w-full overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+      <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-4 py-5 text-white sm:px-7 sm:py-6">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
           <div className="min-w-0">
-            <div className="mb-3 flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-blue-100">
-              <FileText size={14} />
+            <div className="mb-3 flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-blue-100 sm:text-xs">
+              <FileText size={13} />
               Resume Workspace
             </div>
 
@@ -63,13 +63,13 @@ export function ResumeActionBar({
 
               <span className="hidden text-slate-400 sm:inline">•</span>
 
-              <span className="text-slate-300">
+              <span className="hidden text-slate-300 sm:inline">
                 Edit, preview, save, and export from one clean workspace.
               </span>
             </div>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 xl:flex xl:items-center">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
             <HeaderButton
               icon={Save}
               label="Save"
@@ -79,7 +79,9 @@ export function ResumeActionBar({
 
             <HeaderButton
               icon={Download}
-              label="Export Resume"
+              label="Export"
+              mobileLabel="Export"
+              desktopLabel="Export Resume"
               onClick={onExport}
               variant="primary"
             />
@@ -109,6 +111,8 @@ type HeaderButtonProps = {
   onClick: () => void
   icon: React.ComponentType<{ size?: number }>
   variant: "primary" | "secondary" | "danger"
+  mobileLabel?: string
+  desktopLabel?: string
 }
 
 function HeaderButton({
@@ -116,6 +120,8 @@ function HeaderButton({
   onClick,
   icon: Icon,
   variant,
+  mobileLabel,
+  desktopLabel,
 }: HeaderButtonProps) {
   const className =
     variant === "primary"
@@ -130,10 +136,18 @@ function HeaderButton({
       onClick={onClick}
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.97 }}
-      className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-extrabold transition xl:w-auto ${className}`}
+      className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-extrabold transition sm:w-auto sm:rounded-full sm:px-5 ${className}`}
     >
       <Icon size={16} />
-      {label}
+
+      {mobileLabel || desktopLabel ? (
+        <>
+          <span className="sm:hidden">{mobileLabel || label}</span>
+          <span className="hidden sm:inline">{desktopLabel || label}</span>
+        </>
+      ) : (
+        label
+      )}
     </motion.button>
   )
 }
