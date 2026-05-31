@@ -7,6 +7,37 @@ export const runtime = "nodejs"
 
 type PdfDoc = any
 
+const PAGE_BOTTOM_MARGIN = 720
+const PAGE_TOP_AFTER_BREAK = 60
+
+function ensurePageSpace(doc: PdfDoc, requiredHeight = 80) {
+  if (doc.y + requiredHeight > PAGE_BOTTOM_MARGIN) {
+    doc.addPage()
+    doc.y = PAGE_TOP_AFTER_BREAK
+    doc.x = 50
+  }
+}
+
+function estimateBulletHeight(text: string) {
+  const length = text?.length || 0
+
+  if (length < 80) return 22
+  if (length < 160) return 38
+  if (length < 240) return 54
+
+  return 76
+}
+
+function estimateParagraphHeight(text: string) {
+  const length = text?.length || 0
+
+  if (length < 200) return 45
+  if (length < 400) return 75
+  if (length < 700) return 120
+
+  return 160
+}
+
 function stripHtml(value: string) {
   return value.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim()
 }
@@ -20,6 +51,8 @@ function joinText(values: Array<string | undefined>) {
 }
 
 function sectionTitle(doc: PdfDoc, title: string, template: ResumeTemplateType) {
+  ensurePageSpace(doc, 70)
+
   const isModern = template === "modern"
   const isExecutive = template === "executive"
 
@@ -43,17 +76,29 @@ function sectionTitle(doc: PdfDoc, title: string, template: ResumeTemplateType) 
   doc.moveDown(0.6)
 }
 
-function bullet(doc: PdfDoc, text: string) {
-  if (!text.trim()) return
+function paragraph(doc: PdfDoc, text: string, color = "#374151") {
+  const cleaned = cleanText(text)
 
-  doc
-    .font("Helvetica")
-    .fontSize(10)
-    .fillColor("#374151")
-    .text(`• ${cleanText(text)}`, {
-      indent: 10,
-      lineGap: 2,
-    })
+  ensurePageSpace(doc, estimateParagraphHeight(cleaned))
+
+  doc.font("Helvetica").fontSize(10).fillColor(color).text(cleaned, {
+    lineGap: 2,
+    width: 500,
+  })
+}
+
+function bullet(doc: PdfDoc, text: string) {
+  const cleaned = cleanText(text)
+
+  if (!cleaned) return
+
+  ensurePageSpace(doc, estimateBulletHeight(cleaned))
+
+  doc.font("Helvetica").fontSize(10).fillColor("#374151").text(`• ${cleaned}`, {
+    indent: 10,
+    lineGap: 2,
+    width: 500,
+  })
 }
 
 function drawClassic(doc: PdfDoc, data: ResumeBuilderFormData) {
@@ -73,11 +118,7 @@ function drawClassic(doc: PdfDoc, data: ResumeBuilderFormData) {
     .fontSize(9.5)
     .fillColor("#374151")
     .text(
-      joinText([
-        data.contact.email,
-        data.contact.phone,
-        data.contact.location,
-      ]),
+      joinText([data.contact.email, data.contact.phone, data.contact.location]),
       { align: "center" }
     )
 
@@ -97,18 +138,13 @@ function drawClassic(doc: PdfDoc, data: ResumeBuilderFormData) {
     .stroke()
 
   sectionTitle(doc, "Professional Summary", "classic")
-
-  doc
-    .font("Helvetica")
-    .fontSize(10)
-    .fillColor("#374151")
-    .text(cleanText(data.summary) || "Professional summary not added yet.", {
-      lineGap: 2,
-    })
+  paragraph(doc, cleanText(data.summary) || "Professional summary not added yet.")
 
   sectionTitle(doc, "Work Experience", "classic")
 
   data.experience.forEach((job) => {
+    ensurePageSpace(doc, 120)
+
     doc
       .font("Helvetica-Bold")
       .fontSize(10.5)
@@ -129,6 +165,8 @@ function drawClassic(doc: PdfDoc, data: ResumeBuilderFormData) {
   sectionTitle(doc, "Education", "classic")
 
   data.education.forEach((edu) => {
+    ensurePageSpace(doc, 60)
+
     doc
       .font("Helvetica-Bold")
       .fontSize(10)
@@ -149,24 +187,15 @@ function drawClassic(doc: PdfDoc, data: ResumeBuilderFormData) {
   })
 
   sectionTitle(doc, "Skills", "classic")
-
-  doc
-    .font("Helvetica")
-    .fontSize(10)
-    .fillColor("#374151")
-    .text(data.skills.length ? data.skills.join(", ") : "Skills not added yet.")
+  paragraph(doc, data.skills.length ? data.skills.join(", ") : "Skills not added yet.")
 
   sectionTitle(doc, "Certifications", "classic")
-
-  doc
-    .font("Helvetica")
-    .fontSize(10)
-    .fillColor("#374151")
-    .text(
-      data.certifications.length
-        ? data.certifications.join(", ")
-        : "Certifications not added yet."
-    )
+  paragraph(
+    doc,
+    data.certifications.length
+      ? data.certifications.join(", ")
+      : "Certifications not added yet."
+  )
 }
 
 function drawModern(doc: PdfDoc, data: ResumeBuilderFormData) {
@@ -183,11 +212,7 @@ function drawModern(doc: PdfDoc, data: ResumeBuilderFormData) {
     .fontSize(9)
     .fillColor("#cbd5e1")
     .text(
-      joinText([
-        data.contact.email,
-        data.contact.phone,
-        data.contact.location,
-      ]),
+      joinText([data.contact.email, data.contact.phone, data.contact.location]),
       50,
       62
     )
@@ -202,18 +227,13 @@ function drawModern(doc: PdfDoc, data: ResumeBuilderFormData) {
   doc.y = 125
 
   sectionTitle(doc, "Professional Summary", "modern")
-
-  doc
-    .font("Helvetica")
-    .fontSize(10)
-    .fillColor("#334155")
-    .text(cleanText(data.summary) || "Professional summary not added yet.", {
-      lineGap: 2,
-    })
+  paragraph(doc, cleanText(data.summary) || "Professional summary not added yet.", "#334155")
 
   sectionTitle(doc, "Work Experience", "modern")
 
   data.experience.forEach((job) => {
+    ensurePageSpace(doc, 120)
+
     doc
       .font("Helvetica-Bold")
       .fontSize(11)
@@ -232,18 +252,17 @@ function drawModern(doc: PdfDoc, data: ResumeBuilderFormData) {
   })
 
   sectionTitle(doc, "Skills", "modern")
-
-  doc
-    .font("Helvetica")
-    .fontSize(10)
-    .fillColor("#075985")
-    .text(data.skills.length ? data.skills.join(" • ") : "Skills not added yet.", {
-      lineGap: 2,
-    })
+  paragraph(
+    doc,
+    data.skills.length ? data.skills.join(" • ") : "Skills not added yet.",
+    "#075985"
+  )
 
   sectionTitle(doc, "Education", "modern")
 
   data.education.forEach((edu) => {
+    ensurePageSpace(doc, 60)
+
     doc
       .font("Helvetica-Bold")
       .fontSize(10)
@@ -264,16 +283,13 @@ function drawModern(doc: PdfDoc, data: ResumeBuilderFormData) {
   })
 
   sectionTitle(doc, "Certifications", "modern")
-
-  doc
-    .font("Helvetica")
-    .fontSize(10)
-    .fillColor("#334155")
-    .text(
-      data.certifications.length
-        ? data.certifications.join(", ")
-        : "Certifications not added yet."
-    )
+  paragraph(
+    doc,
+    data.certifications.length
+      ? data.certifications.join(", ")
+      : "Certifications not added yet.",
+    "#334155"
+  )
 }
 
 function drawExecutive(doc: PdfDoc, data: ResumeBuilderFormData) {
@@ -290,11 +306,7 @@ function drawExecutive(doc: PdfDoc, data: ResumeBuilderFormData) {
     .fontSize(9)
     .fillColor("#d1d5db")
     .text(
-      joinText([
-        data.contact.email,
-        data.contact.phone,
-        data.contact.location,
-      ]),
+      joinText([data.contact.email, data.contact.phone, data.contact.location]),
       50,
       68
     )
@@ -309,18 +321,13 @@ function drawExecutive(doc: PdfDoc, data: ResumeBuilderFormData) {
   doc.y = 135
 
   sectionTitle(doc, "Executive Summary", "executive")
-
-  doc
-    .font("Helvetica")
-    .fontSize(10.5)
-    .fillColor("#374151")
-    .text(cleanText(data.summary) || "Executive summary not added yet.", {
-      lineGap: 3,
-    })
+  paragraph(doc, cleanText(data.summary) || "Executive summary not added yet.")
 
   sectionTitle(doc, "Professional Experience", "executive")
 
   data.experience.forEach((job) => {
+    ensurePageSpace(doc, 130)
+
     doc
       .font("Helvetica-Bold")
       .fontSize(11.5)
@@ -345,6 +352,8 @@ function drawExecutive(doc: PdfDoc, data: ResumeBuilderFormData) {
   sectionTitle(doc, "Education", "executive")
 
   data.education.forEach((edu) => {
+    ensurePageSpace(doc, 60)
+
     doc
       .font("Helvetica-Bold")
       .fontSize(10)
@@ -365,24 +374,15 @@ function drawExecutive(doc: PdfDoc, data: ResumeBuilderFormData) {
   })
 
   sectionTitle(doc, "Skills", "executive")
-
-  doc
-    .font("Helvetica")
-    .fontSize(10)
-    .fillColor("#374151")
-    .text(data.skills.length ? data.skills.join(", ") : "Skills not added yet.")
+  paragraph(doc, data.skills.length ? data.skills.join(", ") : "Skills not added yet.")
 
   sectionTitle(doc, "Certifications", "executive")
-
-  doc
-    .font("Helvetica")
-    .fontSize(10)
-    .fillColor("#374151")
-    .text(
-      data.certifications.length
-        ? data.certifications.join(", ")
-        : "Certifications not added yet."
-    )
+  paragraph(
+    doc,
+    data.certifications.length
+      ? data.certifications.join(", ")
+      : "Certifications not added yet."
+  )
 }
 
 function drawResume(
@@ -412,13 +412,8 @@ export async function POST(request: Request) {
 
     if (!data) {
       return Response.json(
-        {
-          status: "error",
-          message: "Resume data missing.",
-        },
-        {
-          status: 400,
-        }
+        { status: "error", message: "Resume data missing." },
+        { status: 400 }
       )
     }
 
@@ -445,7 +440,6 @@ export async function POST(request: Request) {
     })
 
     drawResume(doc, data, template)
-
     doc.end()
 
     const pdfBytes = await pdfPromise
@@ -464,9 +458,7 @@ export async function POST(request: Request) {
         status: "error",
         message: String(error),
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     )
   }
 }
