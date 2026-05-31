@@ -1,6 +1,7 @@
 import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 import type { ATSResult, ATSSectionScore } from "./types"
 import { getATSGrade } from "./ats-grade"
+import { matchResumeKeywords } from "./keyword-matcher"
 import {
   scoreContactSection,
   scoreEducationSection,
@@ -18,7 +19,20 @@ function average(scores: number[]) {
   return Math.round(total / scores.length)
 }
 
-export function calculateATSScore(data: ResumeBuilderFormData): ATSResult {
+function weightedScore(sectionScore: number, keywordScore: number) {
+  if (keywordScore === 0) {
+    return sectionScore
+  }
+
+  return Math.round(sectionScore * 0.7 + keywordScore * 0.3)
+}
+
+export function calculateATSScore(
+  data: ResumeBuilderFormData,
+  jobDescription = ""
+): ATSResult {
+  const keywordResult = matchResumeKeywords(data, jobDescription)
+
   const sectionScores: ATSSectionScore[] = [
     {
       name: "Contact Information",
@@ -47,17 +61,35 @@ export function calculateATSScore(data: ResumeBuilderFormData): ATSResult {
     },
   ]
 
-  const overallScore = average(sectionScores.map((section) => section.score))
+  const sectionAverage = average(sectionScores.map((section) => section.score))
+  const overallScore = weightedScore(
+    sectionAverage,
+    keywordResult.keywordMatchPercent
+  )
+
   const grade = getATSGrade(overallScore)
-  const recommendations = generateATSRecommendations(data, sectionScores)
+
+  const recommendations = generateATSRecommendations(
+    data,
+    sectionScores,
+    keywordResult.missingKeywords
+  )
 
   const strengths = sectionScores
     .filter((section) => section.score >= 75)
     .map((section) => `${section.name} is strong.`)
 
+  if (keywordResult.keywordMatchPercent >= 75) {
+    strengths.push("Keyword alignment is strong.")
+  }
+
   const weaknesses = sectionScores
     .filter((section) => section.score < 75)
     .map((section) => `${section.name} needs improvement.`)
+
+  if (keywordResult.totalKeywords > 0 && keywordResult.keywordMatchPercent < 75) {
+    weaknesses.push("Keyword alignment needs improvement.")
+  }
 
   return {
     overallScore,
@@ -66,8 +98,8 @@ export function calculateATSScore(data: ResumeBuilderFormData): ATSResult {
     recommendations,
     strengths,
     weaknesses,
-    missingKeywords: [],
-    keywordMatchPercent: 0,
-    matchedKeywords: [],
+    missingKeywords: keywordResult.missingKeywords,
+    keywordMatchPercent: keywordResult.keywordMatchPercent,
+    matchedKeywords: keywordResult.matchedKeywords,
   }
 }

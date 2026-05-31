@@ -1,11 +1,10 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { Target } from "lucide-react"
 import { ResumeATSPanel } from "@/components/resume/ResumeATSPanel"
-import {
-  analyzeResumeAgainstJobDescription,
-  type ResumeBuilderFormData,
-} from "@/modules/resume-builder"
+import type { ResumeBuilderFormData } from "@/modules/resume-builder"
+import { generateATSReport } from "@/modules/ats-engine"
 
 type ResumeJobMatchFormProps = {
   data: ResumeBuilderFormData
@@ -15,57 +14,38 @@ export function ResumeJobMatchForm({ data }: ResumeJobMatchFormProps) {
   const [jobDescription, setJobDescription] = useState("")
 
   const atsResult = useMemo(
-    () => analyzeResumeAgainstJobDescription(data, jobDescription),
+    () => generateATSReport(data, jobDescription),
     [data, jobDescription]
   )
 
   return (
-    <div
-      style={{
-        border: "1px solid #ddd6fe",
-        borderRadius: "12px",
-        padding: "14px",
-        background: "#f5f3ff",
-        display: "grid",
-        gap: "14px",
-      }}
-    >
-      <div>
-        <h3 style={{ fontSize: "18px", fontWeight: 700 }}>
-          ATS Job Match
-        </h3>
+    <section className="grid gap-4 rounded-3xl border border-violet-200 bg-violet-50 p-4 shadow-sm sm:p-5">
+      <div className="flex items-start gap-3">
+        <div className="rounded-2xl bg-white p-2 text-violet-700 shadow-sm">
+          <Target size={18} />
+        </div>
 
-        <p style={{ marginTop: "6px", color: "#475569", lineHeight: 1.5 }}>
-          Paste a job description to compare your resume against target role
-          keywords and receive an ATS compatibility score.
-        </p>
+        <div>
+          <h3 className="text-lg font-black text-slate-950">ATS Job Match</h3>
+
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Paste a job description to compare your resume against target role
+            keywords, missing skills, section strength, and ATS compatibility.
+          </p>
+        </div>
       </div>
 
-      <label
-        style={{
-          display: "block",
-          fontWeight: 700,
-          color: "#334155",
-        }}
-      >
+      <label className="block text-sm font-black text-slate-700">
         Job Description
         <textarea
           value={jobDescription}
           onChange={(event) => setJobDescription(event.target.value)}
           placeholder="Paste job description here..."
-          style={{
-            width: "100%",
-            marginTop: "8px",
-            minHeight: "180px",
-            resize: "vertical",
-            padding: "10px 12px",
-            border: "1px solid #c4b5fd",
-            borderRadius: "10px",
-          }}
+          className="mt-2 min-h-[190px] w-full resize-y rounded-2xl border border-violet-200 bg-white p-4 text-sm leading-6 text-slate-700 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
         />
       </label>
 
       <ResumeATSPanel result={atsResult} />
-    </div>
+    </section>
   )
 }

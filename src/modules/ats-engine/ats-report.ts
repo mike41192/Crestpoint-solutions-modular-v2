@@ -3,7 +3,8 @@ import type { ATSResult } from "./types"
 import { calculateATSScore } from "./ats-score"
 
 export function generateATSReport(
-  data: ResumeBuilderFormData
+  data: ResumeBuilderFormData,
+  jobDescription = ""
 ): ATSResult {
-  return calculateATSScore(data)
+  return calculateATSScore(data, jobDescription)
 }

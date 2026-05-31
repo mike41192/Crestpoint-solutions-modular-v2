@@ -1,18 +1,14 @@
 import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 import type { ATSRecommendation, ATSSectionScore } from "./types"
 
-function findSectionScore(
-  sectionScores: ATSSectionScore[],
-  name: string
-) {
-  return (
-    sectionScores.find((section) => section.name === name)?.score || 0
-  )
+function findSectionScore(sectionScores: ATSSectionScore[], name: string) {
+  return sectionScores.find((section) => section.name === name)?.score || 0
 }
 
 export function generateATSRecommendations(
   data: ResumeBuilderFormData,
-  sectionScores: ATSSectionScore[]
+  sectionScores: ATSSectionScore[],
+  missingKeywords: string[] = []
 ): ATSRecommendation[] {
   const recommendations: ATSRecommendation[] = []
 
@@ -68,7 +64,9 @@ export function generateATSRecommendations(
   }
 
   const hasQuantifiedBullet = data.experience.some((job) =>
-    job.bullets.some((bullet) => /\d|%|\$|hours?|days?|weeks?|months?|years?/i.test(bullet))
+    job.bullets.some((bullet) =>
+      /\d|%|\$|hours?|days?|weeks?|months?|years?/i.test(bullet)
+    )
   )
 
   if (!hasQuantifiedBullet) {
@@ -77,6 +75,16 @@ export function generateATSRecommendations(
       title: "Add measurable achievements",
       description:
         "Use numbers, percentages, time savings, production improvements, cost reductions, or team size to make your bullet points stronger.",
+    })
+  }
+
+  if (missingKeywords.length > 0) {
+    recommendations.push({
+      severity: "high",
+      title: "Add missing job keywords",
+      description: `Consider naturally adding relevant terms such as: ${missingKeywords
+        .slice(0, 8)
+        .join(", ")}.`,
     })
   }
 
