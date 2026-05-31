@@ -36,6 +36,7 @@ import { ExperienceSection } from "@/components/resume/form-sections/ExperienceS
 import { SkillsCertificationsSection } from "@/components/resume/form-sections/SkillsCertificationsSection"
 import { SummarySection } from "@/components/resume/form-sections/SummarySection"
 import { ResumeVersionHistory } from "@/components/resume/versions/ResumeVersionHistory"
+import { ResumeRewriteHistoryPanel } from "@/components/resume/ResumeRewriteHistoryPanel"
 
 // =====================================================
 // BLOCK: Resume Builder Service Imports
@@ -56,6 +57,10 @@ import {
   setSelectedResumeTemplate,
   validateResumeData,
 } from "@/modules/resume-builder"
+import {
+  clearRewriteHistory,
+  loadRewriteHistory,
+} from "@/modules/rewrite-history"
 
 // =====================================================
 // BLOCK: Resume Builder Type Imports
@@ -67,6 +72,12 @@ import type {
   ResumeExperienceItem,
   ResumeOptimizationSuggestion,
 } from "@/modules/resume-builder"
+
+// =====================================================
+// BLOCK: Rewrite History Type Imports
+// =====================================================
+
+import type { RewriteHistoryItem } from "@/modules/rewrite-history"
 
 // =====================================================
 // BLOCK: Local Types
@@ -114,6 +125,10 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   const [autosaveMessage, setAutosaveMessage] = useState(
     "Autosave will run after 30 seconds of inactivity."
   )
+  const [rewriteHistoryItems, setRewriteHistoryItems] = useState<
+  RewriteHistoryItem[]
+>([])
+
 
   // =====================================================
   // BLOCK: Refs For Autosave / Async Safety
@@ -146,6 +161,16 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   useEffect(() => {
     activeResumeIdRef.current = activeResumeId
   }, [activeResumeId])
+
+// =====================================================
+// BLOCK: Rewrite History Initial Load
+// Loads rewrite history from local browser storage.
+// =====================================================
+
+useEffect(() => {
+  setRewriteHistoryItems(loadRewriteHistory().items)
+}, [])
+
 
   // =====================================================
   // BLOCK: Initial Resume Load
@@ -429,80 +454,100 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   }
 
   // =====================================================
-  // BLOCK: Import / Optimization / Rewrite Apply Actions
-  // =====================================================
+// BLOCK: Import / Optimization / Rewrite Apply Actions
+// =====================================================
 
-  function applyImportedResume(importedData: ResumeBuilderFormData) {
-    setFormData(importedData)
-    formDataRef.current = importedData
-    saveResumeDraftLocally(importedData)
-    setHasUnsavedChanges(true)
-    setAutosaveStatus("unsaved")
-    setAutosaveMessage("Imported resume data has unsaved changes.")
-    setSaveMessage("Imported resume data applied.")
+function applyImportedResume(importedData: ResumeBuilderFormData) {
+  setFormData(importedData)
+  formDataRef.current = importedData
+  saveResumeDraftLocally(importedData)
+  setHasUnsavedChanges(true)
+  setAutosaveStatus("unsaved")
+  setAutosaveMessage("Imported resume data has unsaved changes.")
+  setSaveMessage("Imported resume data applied.")
+}
+
+function applyOptimizationSuggestion(suggestion: ResumeOptimizationSuggestion) {
+  if (!suggestion.suggestedText) {
+    setSaveMessage("Suggestion reviewed. No direct text was provided.")
+    return
   }
 
-  function applyOptimizationSuggestion(suggestion: ResumeOptimizationSuggestion) {
-    if (!suggestion.suggestedText) {
-      setSaveMessage("Suggestion reviewed. No direct text was provided.")
-      return
-    }
+  if (suggestion.category === "summary") {
+    updateFormData((current) => ({
+      ...current,
+      summary: suggestion.suggestedText || current.summary,
+    }))
 
-    if (suggestion.category === "summary") {
-      updateFormData((current) => ({
-        ...current,
-        summary: suggestion.suggestedText || current.summary,
-      }))
-
-      setSaveMessage("AI summary suggestion applied.")
-      return
-    }
-
-    if (suggestion.category === "skills") {
-      updateFormData((current) => ({
-        ...current,
-        skills: suggestion.suggestedText
-          ? suggestion.suggestedText
-              .split(",")
-              .map((skill) => skill.trim())
-              .filter(Boolean)
-          : current.skills,
-      }))
-
-      setSaveMessage("AI skills suggestion applied.")
-      return
-    }
-
-    if (suggestion.category === "experience") {
-      updateFormData((current) => {
-        const firstExperience = current.experience[0]
-
-        if (!firstExperience) {
-          return current
-        }
-
-        return {
-          ...current,
-          experience: current.experience.map((item, index) =>
-            index === 0
-              ? {
-                  ...item,
-                  bullets: [
-                    suggestion.suggestedText || "",
-                    ...item.bullets.filter(Boolean),
-                  ],
-                }
-              : item
-          ),
-        }
-      })
-
-      setSaveMessage("AI experience suggestion added to first role.")
-      return
-    }
-
-    setSaveMessage("Suggestion reviewed for future formatting or ATS logic.")
+    setSaveMessage("AI summary suggestion applied.")
+    return
   }
+
+  if (suggestion.category === "skills") {
+    updateFormData((current) => ({
+      ...current,
+      skills: suggestion.suggestedText
+        ? suggestion.suggestedText
+            .split(",")
+            .map((skill) => skill.trim())
+            .filter(Boolean)
+        : current.skills,
+    }))
+
+    setSaveMessage("AI skills suggestion applied.")
+    return
+  }
+
+  if (suggestion.category === "experience") {
+    updateFormData((current) => {
+      const firstExperience = current.experience[0]
+
+      if (!firstExperience) {
+        return current
+      }
+
+      return {
+        ...current,
+        experience: current.experience.map((item, index) =>
+          index === 0
+            ? {
+                ...item,
+                bullets: [
+                  suggestion.suggestedText || "",
+                  ...item.bullets.filter(Boolean),
+                ],
+              }
+            : item
+        ),
+      }
+    })
+
+    setSaveMessage("AI experience suggestion added to first role.")
+    return
+  }
+
+  setSaveMessage("Suggestion reviewed for future formatting or ATS logic.")
+}
+
+// =====================================================
+// BLOCK: Rewrite History Actions
+// =====================================================
+
+function refreshRewriteHistory() {
+  setRewriteHistoryItems(loadRewriteHistory().items)
+}
+
+function restoreRewriteHistoryResume(restoredResume: ResumeBuilderFormData) {
+  updateFormData(() => restoredResume)
+  setSaveMessage("Rewrite history restored.")
+}
+
+function clearStoredRewriteHistory() {
+  clearRewriteHistory()
+  setRewriteHistoryItems([])
+  setSaveMessage("Rewrite history cleared.")
+}
+
 
   // =====================================================
   // BLOCK: Contact / Summary / Skills Update Handlers
@@ -898,10 +943,18 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
                 <ResumeRewritePanel
                   data={formData}
                   onResumeUpdate={(updatedResume) => {
-                    updateFormData(() => updatedResume)
-                    setSaveMessage("AI rewrite applied.")
+                     updateFormData(() => updatedResume)
+                      setSaveMessage("AI rewrite applied.")
                   }}
+                  onHistoryUpdated={refreshRewriteHistory}
                 />
+
+                <ResumeRewriteHistoryPanel
+                  items={rewriteHistoryItems}
+                  onRestore={restoreRewriteHistoryResume}
+                  onClear={clearStoredRewriteHistory}
+                />
+
               </div>
             </WorkspaceCard>
           )}

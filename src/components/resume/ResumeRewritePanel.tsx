@@ -1,14 +1,24 @@
 "use client"
 
+// =====================================================
+// BLOCK: Imports
+// =====================================================
+
 import { useState } from "react"
 import { CheckCircle2, FilePenLine, RefreshCw, Sparkles } from "lucide-react"
 import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 import type { RewriteResult } from "@/modules/ai-rewriter"
 import { AIRewriteEngine } from "@/modules/ai-rewriter"
+import { addRewriteHistoryItem, createRewriteHistoryItem } from "@/modules/rewrite-history"
+
+// =====================================================
+// BLOCK: Component Types
+// =====================================================
 
 type ResumeRewritePanelProps = {
   data: ResumeBuilderFormData
   onResumeUpdate: (data: ResumeBuilderFormData) => void
+  onHistoryUpdated?: () => void
 }
 
 type ActiveRewrite = {
@@ -16,17 +26,35 @@ type ActiveRewrite = {
   result: RewriteResult
 }
 
+// =====================================================
+// BLOCK: Component
+// =====================================================
+
 export function ResumeRewritePanel({
   data,
   onResumeUpdate,
+  onHistoryUpdated,
 }: ResumeRewritePanelProps) {
+  // =====================================================
+  // BLOCK: Local State
+  // =====================================================
+
   const [activeRewrite, setActiveRewrite] = useState<ActiveRewrite | null>(null)
+
+  // =====================================================
+  // BLOCK: Derived Data
+  // =====================================================
 
   const firstExperience = data.experience[0]
   const firstBullet = firstExperience?.bullets?.find(Boolean) || ""
 
+  // =====================================================
+  // BLOCK: Rewrite Actions
+  // =====================================================
+
   function rewriteSummary() {
     const result = AIRewriteEngine.rewriteSummary(data.summary)
+
     setActiveRewrite({
       type: "summary",
       result,
@@ -35,45 +63,74 @@ export function ResumeRewritePanel({
 
   function rewriteFirstBullet() {
     const result = AIRewriteEngine.rewriteBullet(firstBullet)
+
     setActiveRewrite({
       type: "bullet",
       result,
     })
   }
 
+  // =====================================================
+  // BLOCK: Apply Rewrite + Save Rewrite History
+  // =====================================================
+
   function applyRewrite() {
     if (!activeRewrite) return
 
     if (activeRewrite.type === "summary") {
-      onResumeUpdate({
+      const updatedResume: ResumeBuilderFormData = {
         ...data,
         summary: activeRewrite.result.rewrittenText,
-      })
+      }
 
+      addRewriteHistoryItem(
+        createRewriteHistoryItem({
+          rewriteType: "summary",
+          result: activeRewrite.result,
+          resumeBefore: data,
+          resumeAfter: updatedResume,
+        })
+      )
+
+      onResumeUpdate(updatedResume)
+      onHistoryUpdated?.()
       setActiveRewrite(null)
       return
     }
 
     if (activeRewrite.type === "bullet" && firstExperience) {
-      onResumeUpdate({
+      const updatedResume: ResumeBuilderFormData = {
         ...data,
         experience: data.experience.map((job, jobIndex) =>
           jobIndex === 0
             ? {
                 ...job,
                 bullets: job.bullets.map((bullet, bulletIndex) =>
-                  bulletIndex === 0
-                    ? activeRewrite.result.rewrittenText
-                    : bullet
+                  bulletIndex === 0 ? activeRewrite.result.rewrittenText : bullet
                 ),
               }
             : job
         ),
-      })
+      }
 
+      addRewriteHistoryItem(
+        createRewriteHistoryItem({
+          rewriteType: "bullet",
+          result: activeRewrite.result,
+          resumeBefore: data,
+          resumeAfter: updatedResume,
+        })
+      )
+
+      onResumeUpdate(updatedResume)
+      onHistoryUpdated?.()
       setActiveRewrite(null)
     }
   }
+
+  // =====================================================
+  // BLOCK: Render
+  // =====================================================
 
   return (
     <section className="grid gap-4 rounded-3xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm sm:p-5">
