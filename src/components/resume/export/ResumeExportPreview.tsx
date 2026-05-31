@@ -13,6 +13,7 @@ import {
   starterResumeData,
 } from "@/modules/resume-builder"
 import {
+  ATSTemplate,
   ClassicTemplate,
   ExecutiveTemplate,
   ModernTemplate,
@@ -28,9 +29,11 @@ export function ResumeExportPreview() {
       const savedDraft = loadResumeDraftLocally()
       const savedTemplate = getSelectedResumeTemplate()
 
-      if (savedDraft) setData(savedDraft)
+      if (savedDraft) {
+        setData(savedDraft)
+      }
 
-      setTemplate(savedTemplate)
+      setTemplate(savedTemplate || "classic")
     } catch {
       setData(starterResumeData)
       setTemplate("classic")
@@ -40,6 +43,22 @@ export function ResumeExportPreview() {
   function changeTemplate(nextTemplate: ResumeTemplateType) {
     setTemplate(nextTemplate)
     setSelectedResumeTemplate(nextTemplate)
+  }
+
+  function renderPreview() {
+    if (template === "modern") {
+      return <ModernTemplate data={data} />
+    }
+
+    if (template === "executive") {
+      return <ExecutiveTemplate data={data} />
+    }
+
+    if (template === "ats") {
+      return <ATSTemplate data={data} />
+    }
+
+    return <ClassicTemplate data={data} />
   }
 
   return (
@@ -67,9 +86,7 @@ export function ResumeExportPreview() {
 
       <section className="resume-export-frame mx-auto w-full max-w-[980px] overflow-x-auto rounded-[28px] border border-slate-200 bg-slate-200 p-3 shadow-sm sm:p-5">
         <div className="resume-export-document mx-auto w-[8.5in] max-w-full bg-white shadow-2xl shadow-slate-400/30">
-          {template === "classic" && <ClassicTemplate data={data} />}
-          {template === "modern" && <ModernTemplate data={data} />}
-          {template === "executive" && <ExecutiveTemplate data={data} />}
+          {renderPreview()}
         </div>
       </section>
 
@@ -143,11 +160,6 @@ export function ResumeExportPreview() {
             box-shadow: none !important;
           }
 
-          /*
-            CRITICAL:
-            Reset all forced page-break avoidance from template inline styles.
-            These were causing summary/header sections to be pushed onto their own pages.
-          */
           .resume-export-document header,
           .resume-export-document section,
           .resume-export-document main,
@@ -162,10 +174,6 @@ export function ResumeExportPreview() {
             page-break-after: auto !important;
           }
 
-          /*
-            Keep only headings attached to the next line.
-            Do NOT keep whole sections together.
-          */
           .resume-export-document h1,
           .resume-export-document h2,
           .resume-export-document h3 {
@@ -173,18 +181,11 @@ export function ResumeExportPreview() {
             page-break-after: avoid !important;
           }
 
-          /*
-            Keep individual bullets from splitting, but allow the overall section to flow.
-          */
           .resume-export-document li {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
           }
 
-          /*
-            Modern template grid can fragment badly in print.
-            Force stacked print flow so the header/sidebar do not get isolated.
-          */
           .resume-export-document article > div {
             display: block !important;
           }

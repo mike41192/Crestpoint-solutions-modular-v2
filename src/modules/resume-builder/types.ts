@@ -16,6 +16,7 @@ export type ResumeTemplateType =
   | "classic"
   | "modern"
   | "executive"
+  | "ats"
 
 export type ResumeContactInfo = {
   fullName: string

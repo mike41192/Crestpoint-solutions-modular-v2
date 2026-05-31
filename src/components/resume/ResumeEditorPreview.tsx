@@ -13,6 +13,7 @@ import {
   ClassicTemplate,
   ExecutiveTemplate,
   ModernTemplate,
+  ATSTemplate,
   TemplateSelector,
 } from "@/components/resume/templates"
 
@@ -62,6 +63,8 @@ export function ResumeEditorPreview({ data }: ResumeEditorPreviewProps) {
       {template === "modern" && <ModernTemplate data={data} />}
 
       {template === "executive" && <ExecutiveTemplate data={data} />}
+
+      {template === "ats" && <ATSTemplate data={data} />}
     </div>
   )
 }

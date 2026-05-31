@@ -6,6 +6,7 @@ import type { PdfDoc } from "./types"
 import { drawClassic } from "./classic-template"
 import { drawModern } from "./modern-template"
 import { drawExecutive } from "./executive-template"
+import { drawATS } from "./ats-template"
 
 export function drawResume(
   doc: PdfDoc,
@@ -19,6 +20,11 @@ export function drawResume(
 
   if (template === "executive") {
     drawExecutive(doc, data)
+    return
+  }
+
+  if (template === "ats") {
+    drawClassic(doc, data)
     return
   }
 
@@ -55,6 +61,8 @@ export async function buildResumePdfBuffer(
 
   drawResume(doc, data, template)
   doc.end()
+
+
 
   return await pdfPromise
 }

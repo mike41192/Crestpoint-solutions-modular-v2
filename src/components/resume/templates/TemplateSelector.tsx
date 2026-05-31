@@ -15,6 +15,7 @@ export function TemplateSelector({
     "classic",
     "modern",
     "executive",
+    "ats",
   ]
 
   return (
@@ -54,6 +55,9 @@ export function TemplateSelector({
 
               {template === "executive" &&
                 "Leadership-focused executive presentation"}
+
+              {template === "ats" &&
+                "Optimized for Applicant Tracking Systems (ATS)"}
             </div>
           </button>
         )

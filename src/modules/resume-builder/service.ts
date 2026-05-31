@@ -206,7 +206,8 @@ export function getFirstLoadedResumeTemplate(
   if (
     template === "classic" ||
     template === "modern" ||
-    template === "executive"
+    template === "executive" ||
+    template === "ats"
   ) {
     return template
   }
