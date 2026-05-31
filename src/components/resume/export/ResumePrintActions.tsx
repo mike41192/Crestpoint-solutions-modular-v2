@@ -1,126 +1,92 @@
 "use client"
 
 import { useState } from "react"
+import { Download, Loader2, Printer } from "lucide-react"
+import { motion } from "framer-motion"
 import {
   getSelectedResumeTemplate,
   loadResumeDraftLocally,
+  starterResumeData,
 } from "@/modules/resume-builder"
-import { openPrintDialog } from "@/modules/resume-builder/export"
 
 export function ResumePrintActions() {
-  const [downloadingDocx, setDownloadingDocx] = useState(false)
-  const [message, setMessage] = useState("")
+  const [downloading, setDownloading] = useState(false)
 
-  async function downloadDocx() {
-    setDownloadingDocx(true)
-    setMessage("Preparing DOCX export...")
+  function printResume() {
+    window.print()
+  }
+
+  async function downloadPdf() {
+    setDownloading(true)
 
     try {
-      const resumeData = loadResumeDraftLocally()
-      const selectedTemplate = getSelectedResumeTemplate()
+      const data = loadResumeDraftLocally() || starterResumeData
+      const template = getSelectedResumeTemplate()
 
-      if (!resumeData) {
-        setMessage("No local resume draft found. Save or load a resume first.")
-        setDownloadingDocx(false)
-        return
-      }
-
-      const response = await fetch("/api/resume/export-docx", {
+      const response = await fetch("/api/resume/export-pdf", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          resumeData,
-          selectedTemplate,
+          data,
+          template,
         }),
       })
 
       if (!response.ok) {
-        setMessage("DOCX export failed.")
-        setDownloadingDocx(false)
-        return
+        const result = await response.json()
+        throw new Error(result.message || "PDF export failed.")
       }
 
       const blob = await response.blob()
-      const downloadUrl = window.URL.createObjectURL(blob)
+      const url = window.URL.createObjectURL(blob)
       const link = document.createElement("a")
 
-      link.href = downloadUrl
-      link.download = "resume.docx"
+      link.href = url
+      link.download = `crestpoint-resume-${template}.pdf`
+
       document.body.appendChild(link)
       link.click()
       link.remove()
 
-      window.URL.revokeObjectURL(downloadUrl)
-
-      setMessage("DOCX downloaded.")
-    } catch {
-      setMessage("DOCX export request failed.")
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      alert(String(error))
+    } finally {
+      setDownloading(false)
     }
-
-    setDownloadingDocx(false)
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gap: "8px",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          gap: "12px",
-          flexWrap: "wrap",
-        }}
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <motion.button
+        type="button"
+        onClick={downloadPdf}
+        disabled={downloading}
+        whileHover={{ y: -2 }}
+        whileTap={{ scale: 0.98 }}
+        className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-100 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
-        <button
-          type="button"
-          onClick={openPrintDialog}
-          style={{
-            border: 0,
-            borderRadius: "12px",
-            padding: "12px 18px",
-            background: "#2563eb",
-            color: "#ffffff",
-            fontWeight: 800,
-            cursor: "pointer",
-          }}
-        >
-          Save as PDF
-        </button>
+        {downloading ? (
+          <Loader2 className="animate-spin" size={16} />
+        ) : (
+          <Download size={16} />
+        )}
 
-        <button
-          type="button"
-          onClick={downloadDocx}
-          disabled={downloadingDocx}
-          style={{
-            border: "1px solid #bfdbfe",
-            borderRadius: "12px",
-            padding: "12px 18px",
-            background: downloadingDocx ? "#dbeafe" : "#eff6ff",
-            color: "#1d4ed8",
-            fontWeight: 800,
-            cursor: downloadingDocx ? "not-allowed" : "pointer",
-          }}
-        >
-          {downloadingDocx ? "Preparing DOCX..." : "Download DOCX"}
-        </button>
-      </div>
+        {downloading ? "Generating..." : "Download PDF"}
+      </motion.button>
 
-      {message && (
-        <p
-          style={{
-            color: "#475569",
-            fontSize: "13px",
-            fontWeight: 700,
-          }}
-        >
-          {message}
-        </p>
-      )}
+      <motion.button
+        type="button"
+        onClick={printResume}
+        whileHover={{ y: -2 }}
+        whileTap={{ scale: 0.98 }}
+        className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+      >
+        <Printer size={16} />
+        Print
+      </motion.button>
     </div>
   )
 }
