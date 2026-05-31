@@ -3,8 +3,10 @@
 import { useMemo, useState } from "react"
 import { Target } from "lucide-react"
 import { ResumeATSPanel } from "@/components/resume/ResumeATSPanel"
+import { ResumeOptimizationPanel } from "@/components/resume/ResumeOptimizationPanel"
 import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 import { generateATSReport } from "@/modules/ats-engine"
+import { generateResumeOptimizationReport } from "@/modules/resume-optimizer"
 
 type ResumeJobMatchFormProps = {
   data: ResumeBuilderFormData
@@ -16,6 +18,16 @@ export function ResumeJobMatchForm({ data }: ResumeJobMatchFormProps) {
   const atsResult = useMemo(
     () => generateATSReport(data, jobDescription),
     [data, jobDescription]
+  )
+
+  const optimizationResult = useMemo(
+    () =>
+      generateResumeOptimizationReport({
+        resume: data,
+        jobDescription,
+        atsResult,
+      }),
+    [data, jobDescription, atsResult]
   )
 
   return (
@@ -46,6 +58,8 @@ export function ResumeJobMatchForm({ data }: ResumeJobMatchFormProps) {
       </label>
 
       <ResumeATSPanel result={atsResult} />
+
+      <ResumeOptimizationPanel result={optimizationResult} />
     </section>
   )
 }
