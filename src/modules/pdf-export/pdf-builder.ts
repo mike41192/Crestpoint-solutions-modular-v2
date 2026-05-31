@@ -44,11 +44,13 @@ export async function buildResumePdfBuffer(
     chunks.push(chunk)
   })
 
-  const pdfPromise = new Promise<Uint8Array>((resolve) => {
+  const pdfPromise = new Promise<Uint8Array>((resolve, reject) => {
     doc.on("end", () => {
       const merged = Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)))
       resolve(new Uint8Array(merged))
     })
+
+    doc.on("error", reject)
   })
 
   drawResume(doc, data, template)
