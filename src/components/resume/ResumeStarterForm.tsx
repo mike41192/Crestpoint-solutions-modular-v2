@@ -668,7 +668,13 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
 
           {activePanel === "match" && (
             <WorkspaceCard icon={SearchCheck} title="ATS Job Match" description="Compare your resume against a target job description.">
-              <ResumeJobMatchForm data={formData} />
+              <ResumeJobMatchForm 
+                data={formData} 
+                onResumeUpdate={(updateResume) => {
+                  updateFormData(() => updateResume)
+                  setSaveMessage("Optimization suggestion applied.")
+                }}
+              />
             </WorkspaceCard>
           )}
         </main>

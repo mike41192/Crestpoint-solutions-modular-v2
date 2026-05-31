@@ -5,10 +5,14 @@ import {
   Sparkles,
   Target,
 } from "lucide-react"
-import type { ResumeOptimizationResult } from "@/modules/resume-optimizer"
+import type {
+  ResumeOptimizationResult,
+  ResumeOptimizationSuggestion,
+} from "@/modules/resume-optimizer"
 
 type ResumeOptimizationPanelProps = {
   result: ResumeOptimizationResult
+  onApplySuggestion?: (suggestion: ResumeOptimizationSuggestion) => void
 }
 
 function getImpactClass(impact: "high" | "medium" | "low") {
@@ -25,6 +29,7 @@ function getImpactClass(impact: "high" | "medium" | "low") {
 
 export function ResumeOptimizationPanel({
   result,
+  onApplySuggestion,
 }: ResumeOptimizationPanelProps) {
   return (
     <section className="grid gap-4 rounded-3xl border border-blue-200 bg-blue-50 p-4 shadow-sm sm:p-5">
@@ -39,8 +44,8 @@ export function ResumeOptimizationPanel({
           </h3>
 
           <p className="mt-1 text-sm leading-6 text-slate-600">
-            Review the highest-impact improvements based on ATS score,
-            keywords, achievements, and resume structure.
+            Review high-impact improvements based on ATS score, keywords,
+            achievements, and resume structure.
           </p>
         </div>
       </div>
@@ -131,6 +136,16 @@ export function ResumeOptimizationPanel({
                 <Lightbulb size={15} className="mt-0.5 shrink-0" />
                 <p className="leading-6">{suggestion.reason}</p>
               </div>
+
+              {onApplySuggestion && (
+                <button
+                  type="button"
+                  onClick={() => onApplySuggestion(suggestion)}
+                  className="mt-4 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white transition hover:bg-blue-700"
+                >
+                  Apply Suggestion
+                </button>
+              )}
             </article>
           ))
         ) : (

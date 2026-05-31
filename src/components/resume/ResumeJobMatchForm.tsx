@@ -6,13 +6,21 @@ import { ResumeATSPanel } from "@/components/resume/ResumeATSPanel"
 import { ResumeOptimizationPanel } from "@/components/resume/ResumeOptimizationPanel"
 import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 import { generateATSReport } from "@/modules/ats-engine"
-import { generateResumeOptimizationReport } from "@/modules/resume-optimizer"
+import {
+  applyOptimizationSuggestion,
+  generateResumeOptimizationReport,
+} from "@/modules/resume-optimizer"
+import type { ResumeOptimizationSuggestion } from "@/modules/resume-optimizer"
 
 type ResumeJobMatchFormProps = {
   data: ResumeBuilderFormData
+  onResumeUpdate?: (data: ResumeBuilderFormData) => void
 }
 
-export function ResumeJobMatchForm({ data }: ResumeJobMatchFormProps) {
+export function ResumeJobMatchForm({
+  data,
+  onResumeUpdate,
+}: ResumeJobMatchFormProps) {
   const [jobDescription, setJobDescription] = useState("")
 
   const atsResult = useMemo(
@@ -29,6 +37,15 @@ export function ResumeJobMatchForm({ data }: ResumeJobMatchFormProps) {
       }),
     [data, jobDescription, atsResult]
   )
+
+  function handleApplySuggestion(suggestion: ResumeOptimizationSuggestion) {
+    if (!onResumeUpdate) {
+      return
+    }
+
+    const updatedResume = applyOptimizationSuggestion(data, suggestion)
+    onResumeUpdate(updatedResume)
+  }
 
   return (
     <section className="grid gap-4 rounded-3xl border border-violet-200 bg-violet-50 p-4 shadow-sm sm:p-5">
@@ -59,7 +76,10 @@ export function ResumeJobMatchForm({ data }: ResumeJobMatchFormProps) {
 
       <ResumeATSPanel result={atsResult} />
 
-      <ResumeOptimizationPanel result={optimizationResult} />
+      <ResumeOptimizationPanel
+        result={optimizationResult}
+        onApplySuggestion={handleApplySuggestion}
+      />
     </section>
   )
 }
