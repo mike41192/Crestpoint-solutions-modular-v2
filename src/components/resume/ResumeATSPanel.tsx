@@ -1,10 +1,15 @@
 import {
   AlertTriangle,
+  BriefcaseBusiness,
   CheckCircle2,
   Gauge,
+  GraduationCap,
   Lightbulb,
   SearchCheck,
+  ShieldAlert,
   ShieldCheck,
+  Sparkles,
+  Target,
   XCircle,
 } from "lucide-react"
 import type { ATSResult } from "@/modules/ats-engine"
@@ -50,7 +55,11 @@ export function ResumeATSPanel({ result }: ResumeATSPanelProps) {
             ATS Score
           </div>
 
-          <div className={`mt-4 text-5xl font-black ${getScoreColorClass(result.overallScore)}`}>
+          <div
+            className={`mt-4 text-5xl font-black ${getScoreColorClass(
+              result.overallScore
+            )}`}
+          >
             {result.overallScore}
           </div>
 
@@ -60,13 +69,15 @@ export function ResumeATSPanel({ result }: ResumeATSPanelProps) {
 
           <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-200">
             <div
-              className={`h-full rounded-full ${getScoreBarClass(result.overallScore)}`}
+              className={`h-full rounded-full ${getScoreBarClass(
+                result.overallScore
+              )}`}
               style={{ width: `${result.overallScore}%` }}
             />
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             icon={<SearchCheck size={17} />}
             label="Keyword Match"
@@ -75,12 +86,42 @@ export function ResumeATSPanel({ result }: ResumeATSPanelProps) {
           />
 
           <MetricCard
-            icon={<ShieldCheck size={17} />}
-            label="Missing Keywords"
-            value={String(result.missingKeywords.length)}
-            helper="Terms to consider adding naturally"
+            icon={<Sparkles size={17} />}
+            label="Readability"
+            value={`${result.readabilityScore}`}
+            helper="Resume clarity and length"
+          />
+
+          <MetricCard
+            icon={<Target size={17} />}
+            label="Achievements"
+            value={`${result.achievementScore}`}
+            helper="Action verbs and measurable impact"
+          />
+
+          <MetricCard
+            icon={<ShieldAlert size={17} />}
+            label="Risk Flags"
+            value={String(result.riskFlags.length)}
+            helper="Issues that may reduce ATS readiness"
           />
         </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <InfoCard
+          icon={<BriefcaseBusiness size={17} />}
+          label="Detected Industry"
+          value={result.detectedIndustry}
+          helper="Estimated from resume wording, roles, and skills."
+        />
+
+        <InfoCard
+          icon={<GraduationCap size={17} />}
+          label="Detected Target Role"
+          value={result.detectedTargetRole}
+          helper="Estimated from the job description or your most recent role."
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -117,62 +158,11 @@ export function ResumeATSPanel({ result }: ResumeATSPanelProps) {
         />
       </div>
 
-      <div>
-        <div className="mb-3 flex items-center gap-2 text-sm font-black text-slate-800">
-          <Lightbulb size={17} />
-          Recommendations
-        </div>
+      <RiskFlagsPanel result={result} />
 
-        <div className="grid gap-3">
-          {result.recommendations.length > 0 ? (
-            result.recommendations.map((recommendation) => (
-              <div
-                key={`${recommendation.title}-${recommendation.description}`}
-                className={`rounded-2xl border p-3 text-sm ${getSeverityClass(
-                  recommendation.severity
-                )}`}
-              >
-                <div className="flex items-start gap-2">
-                  <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+      <RecommendationsPanel result={result} />
 
-                  <div>
-                    <p className="font-black">{recommendation.title}</p>
-                    <p className="mt-1 leading-6">{recommendation.description}</p>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500">
-              No recommendations yet.
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-sm font-black text-slate-800">Section Scores</p>
-
-        <div className="mt-3 grid gap-3">
-          {result.sectionScores.map((section) => (
-            <div key={section.name}>
-              <div className="mb-1 flex items-center justify-between text-xs font-bold text-slate-600">
-                <span>{section.name}</span>
-                <span>
-                  {section.score}/{section.maxScore}
-                </span>
-              </div>
-
-              <div className="h-2 overflow-hidden rounded-full bg-slate-200">
-                <div
-                  className={getScoreBarClass(section.score)}
-                  style={{ width: `${section.score}%`, height: "100%" }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <SectionScoresPanel result={result} />
     </div>
   )
 }
@@ -197,6 +187,30 @@ function MetricCard({
 
       <p className="mt-3 text-3xl font-black text-slate-950">{value}</p>
       <p className="mt-1 text-sm font-semibold text-slate-500">{helper}</p>
+    </div>
+  )
+}
+
+function InfoCard({
+  icon,
+  label,
+  value,
+  helper,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  helper: string
+}) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-center gap-2 text-sm font-black text-slate-700">
+        {icon}
+        {label}
+      </div>
+
+      <p className="mt-3 text-lg font-black text-slate-950">{value}</p>
+      <p className="mt-1 text-sm leading-6 text-slate-500">{helper}</p>
     </div>
   )
 }
@@ -268,6 +282,104 @@ function ListPanel({
           <li>{empty}</li>
         )}
       </ul>
+    </div>
+  )
+}
+
+function RiskFlagsPanel({ result }: { result: ATSResult }) {
+  return (
+    <div>
+      <div className="mb-3 flex items-center gap-2 text-sm font-black text-slate-800">
+        <ShieldAlert size={17} />
+        ATS Risk Flags
+      </div>
+
+      <div className="grid gap-3">
+        {result.riskFlags.length > 0 ? (
+          result.riskFlags.map((flag) => (
+            <div
+              key={`${flag.title}-${flag.description}`}
+              className={`rounded-2xl border p-3 text-sm ${getSeverityClass(
+                flag.severity
+              )}`}
+            >
+              <p className="font-black">{flag.title}</p>
+              <p className="mt-1 leading-6">{flag.description}</p>
+            </div>
+          ))
+        ) : (
+          <p className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">
+            No major ATS risk flags detected.
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function RecommendationsPanel({ result }: { result: ATSResult }) {
+  return (
+    <div>
+      <div className="mb-3 flex items-center gap-2 text-sm font-black text-slate-800">
+        <Lightbulb size={17} />
+        Recommendations
+      </div>
+
+      <div className="grid gap-3">
+        {result.recommendations.length > 0 ? (
+          result.recommendations.map((recommendation) => (
+            <div
+              key={`${recommendation.title}-${recommendation.description}`}
+              className={`rounded-2xl border p-3 text-sm ${getSeverityClass(
+                recommendation.severity
+              )}`}
+            >
+              <div className="flex items-start gap-2">
+                <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+
+                <div>
+                  <p className="font-black">{recommendation.title}</p>
+                  <p className="mt-1 leading-6">
+                    {recommendation.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500">
+            No recommendations yet.
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function SectionScoresPanel({ result }: { result: ATSResult }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p className="text-sm font-black text-slate-800">Section Scores</p>
+
+      <div className="mt-3 grid gap-3">
+        {result.sectionScores.map((section) => (
+          <div key={section.name}>
+            <div className="mb-1 flex items-center justify-between text-xs font-bold text-slate-600">
+              <span>{section.name}</span>
+              <span>
+                {section.score}/{section.maxScore}
+              </span>
+            </div>
+
+            <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+              <div
+                className={getScoreBarClass(section.score)}
+                style={{ width: `${section.score}%`, height: "100%" }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
