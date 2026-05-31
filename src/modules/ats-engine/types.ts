@@ -1,4 +1,5 @@
 import type { ATSGrade } from "./ats-grade"
+import type { ATSRiskFlag } from "./risk-flags"
 
 export interface ATSSectionScore {
   name: string
@@ -22,4 +23,10 @@ export interface ATSResult {
   missingKeywords: string[]
   matchedKeywords: string[]
   keywordMatchPercent: number
+
+  readabilityScore: number
+  achievementScore: number
+  riskFlags: ATSRiskFlag[]
+  detectedIndustry: string
+  detectedTargetRole: string
 }

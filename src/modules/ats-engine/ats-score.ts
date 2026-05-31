@@ -1,7 +1,13 @@
 import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 import type { ATSResult, ATSSectionScore } from "./types"
+import { calculateAchievementScore } from "./achievement-score"
 import { getATSGrade } from "./ats-grade"
+import { detectIndustry } from "./industry-detector"
+import { detectTargetJobTitle } from "./job-title-detector"
 import { matchResumeKeywords } from "./keyword-matcher"
+import { calculateReadabilityScore } from "./readability-score"
+import { generateATSRecommendations } from "./recommendations"
+import { detectATSRiskFlags } from "./risk-flags"
 import {
   scoreContactSection,
   scoreEducationSection,
@@ -9,7 +15,6 @@ import {
   scoreSkillsSection,
   scoreSummarySection,
 } from "./section-scoring"
-import { generateATSRecommendations } from "./recommendations"
 
 function average(scores: number[]) {
   if (scores.length === 0) return 0
@@ -32,6 +37,9 @@ export function calculateATSScore(
   jobDescription = ""
 ): ATSResult {
   const keywordResult = matchResumeKeywords(data, jobDescription)
+  const readabilityScore = calculateReadabilityScore(data)
+  const achievementScore = calculateAchievementScore(data)
+  const riskFlags = detectATSRiskFlags(data)
 
   const sectionScores: ATSSectionScore[] = [
     {
@@ -57,6 +65,16 @@ export function calculateATSScore(
     {
       name: "Education",
       score: scoreEducationSection(data),
+      maxScore: 100,
+    },
+    {
+      name: "Readability",
+      score: readabilityScore,
+      maxScore: 100,
+    },
+    {
+      name: "Achievements",
+      score: achievementScore,
       maxScore: 100,
     },
   ]
@@ -91,6 +109,12 @@ export function calculateATSScore(
     weaknesses.push("Keyword alignment needs improvement.")
   }
 
+  riskFlags
+    .filter((flag) => flag.severity === "high")
+    .forEach((flag) => {
+      weaknesses.push(flag.title)
+    })
+
   return {
     overallScore,
     grade,
@@ -101,5 +125,11 @@ export function calculateATSScore(
     missingKeywords: keywordResult.missingKeywords,
     keywordMatchPercent: keywordResult.keywordMatchPercent,
     matchedKeywords: keywordResult.matchedKeywords,
+
+    readabilityScore,
+    achievementScore,
+    riskFlags,
+    detectedIndustry: detectIndustry(data),
+    detectedTargetRole: detectTargetJobTitle(data, jobDescription),
   }
 }
