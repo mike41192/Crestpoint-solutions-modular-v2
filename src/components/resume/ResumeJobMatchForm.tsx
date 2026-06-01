@@ -1,30 +1,57 @@
 "use client"
 
+// =====================================================
+// BLOCK: Imports
+// =====================================================
+
 import { useMemo, useState } from "react"
 import { Target } from "lucide-react"
 import { ResumeATSPanel } from "@/components/resume/ResumeATSPanel"
+import { ResumeGapAnalysisPanel } from "@/components/resume/ResumeGapAnalysisPanel"
 import { ResumeOptimizationPanel } from "@/components/resume/ResumeOptimizationPanel"
-import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 import { generateATSReport } from "@/modules/ats-engine"
+import { analyzeResumeGaps } from "@/modules/gap-analyzer"
+import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 import {
   applyOptimizationSuggestion,
   generateResumeOptimizationReport,
 } from "@/modules/resume-optimizer"
 import type { ResumeOptimizationSuggestion } from "@/modules/resume-optimizer"
 
+// =====================================================
+// BLOCK: Component Types
+// =====================================================
+
 type ResumeJobMatchFormProps = {
   data: ResumeBuilderFormData
   onResumeUpdate?: (data: ResumeBuilderFormData) => void
 }
 
+// =====================================================
+// BLOCK: Component
+// =====================================================
+
 export function ResumeJobMatchForm({
   data,
   onResumeUpdate,
 }: ResumeJobMatchFormProps) {
+  // =====================================================
+  // BLOCK: Local State
+  // =====================================================
+
   const [jobDescription, setJobDescription] = useState("")
+
+  // =====================================================
+  // BLOCK: ATS / Gap / Optimization Analysis
+  // =====================================================
 
   const atsResult = useMemo(
     () => generateATSReport(data, jobDescription),
+    [data, jobDescription]
+  )
+
+  const gapAnalysisResult = useMemo(
+    () => analyzeResumeGaps(data, jobDescription),
     [data, jobDescription]
   )
 
@@ -38,6 +65,10 @@ export function ResumeJobMatchForm({
     [data, jobDescription, atsResult]
   )
 
+  // =====================================================
+  // BLOCK: Apply Optimization Suggestions
+  // =====================================================
+
   function handleApplySuggestion(suggestion: ResumeOptimizationSuggestion) {
     if (!onResumeUpdate) {
       return
@@ -46,6 +77,10 @@ export function ResumeJobMatchForm({
     const updatedResume = applyOptimizationSuggestion(data, suggestion)
     onResumeUpdate(updatedResume)
   }
+
+  // =====================================================
+  // BLOCK: Render
+  // =====================================================
 
   return (
     <section className="grid gap-4 rounded-3xl border border-violet-200 bg-violet-50 p-4 shadow-sm sm:p-5">
@@ -59,7 +94,8 @@ export function ResumeJobMatchForm({
 
           <p className="mt-1 text-sm leading-6 text-slate-600">
             Paste a job description to compare your resume against target role
-            keywords, missing skills, section strength, and ATS compatibility.
+            keywords, missing skills, section strength, gaps, and ATS
+            compatibility.
           </p>
         </div>
       </div>
@@ -75,6 +111,8 @@ export function ResumeJobMatchForm({
       </label>
 
       <ResumeATSPanel result={atsResult} />
+
+      <ResumeGapAnalysisPanel result={gapAnalysisResult} />
 
       <ResumeOptimizationPanel
         result={optimizationResult}
