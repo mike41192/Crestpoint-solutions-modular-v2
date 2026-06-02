@@ -1,23 +1,54 @@
+// =====================================================
+// BLOCK: Supabase Server Imports
+// =====================================================
+
+import { createSupabaseServerClient } from "@/lib/supabase/server"
+
+// =====================================================
+// BLOCK: Resume Optimization Imports
+// =====================================================
+
 import {
   buildResumeOptimizationPrompt,
   getScaffoldedResumeOptimizationSuggestions,
 } from "@/modules/resume-builder"
+import type { ResumeBuilderFormData } from "@/modules/resume-builder"
+
+// =====================================================
+// BLOCK: Resume Optimize Route
+// =====================================================
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createSupabaseServerClient()
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      return Response.json(
+        {
+          status: "unauthorized",
+          message: "You must be signed in to optimize resumes.",
+          suggestions: [],
+        },
+        { status: 401 },
+      )
+    }
+
     const body = await request.json()
-    const resume = body?.resume
+    const resume = body?.resume as ResumeBuilderFormData | undefined
 
     if (!resume) {
       return Response.json(
         {
           status: "error",
-          message: "Resume data is required.",
+          message: "Valid resume data is required.",
           suggestions: [],
         },
-        {
-          status: 400,
-        }
+        { status: 400 },
       )
     }
 
@@ -35,19 +66,10 @@ export async function POST(request: Request) {
     return Response.json(
       {
         status: "error",
-        message: "Invalid request body.",
+        message: "Resume optimization request failed.",
         suggestions: [],
       },
-      {
-        status: 400,
-      }
+      { status: 500 },
     )
   }
-}
-
-export async function GET() {
-  return Response.json({
-    status: "ok",
-    route: "resume_optimize",
-  })
 }

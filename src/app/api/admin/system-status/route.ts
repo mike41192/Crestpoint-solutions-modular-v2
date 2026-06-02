@@ -1,3 +1,13 @@
+// =====================================================
+// BLOCK: Admin Security Imports
+// =====================================================
+
+import { requireAdminUser } from "@/lib/security/admin-auth"
+
+// =====================================================
+// BLOCK: Environment Status Imports
+// =====================================================
+
 import {
   getMissingOpenAIEnvKeys,
   isOpenAIConfigured,
@@ -23,8 +33,19 @@ import {
   isVercelConfigured,
 } from "@/lib/vercel/vercel-env"
 
+// =====================================================
+// BLOCK: Admin System Status Route
+// =====================================================
+
 export async function GET() {
+  const admin = await requireAdminUser()
+
+  if (!admin.ok ) {
+    return admin.response
+  }
+
   return Response.json({
+    status: "success",
     app: {
       configured: isAppEnvConfigured(),
       missingKeys: getMissingAppEnvKeys(),
@@ -49,6 +70,7 @@ export async function GET() {
       configured: isGitHubConfigured(),
       missingKeys: getMissingGitHubEnvKeys(),
     },
+    checkedBy: admin.email,
     timestamp: new Date().toISOString(),
   })
 }

@@ -1,12 +1,58 @@
+// =====================================================
+// BLOCK: Supabase Server Imports
+// =====================================================
+
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+
+// =====================================================
+// BLOCK: Resume Builder Imports
+// =====================================================
+
 import { starterResumeData } from "@/modules/resume-builder"
+
+// =====================================================
+// BLOCK: Constants
+// =====================================================
+
+const MAX_RESUME_TITLE_LENGTH = 120
+
+const ALLOWED_RESUME_TEMPLATES = new Set([
+  "classic",
+  "modern",
+  "executive",
+  "ats",
+])
+
+// =====================================================
+// BLOCK: Validation Helpers
+// =====================================================
+
+function getResumeTitle(value: unknown): string {
+  if (typeof value !== "string" || !value.trim()) {
+    return "Untitled Resume"
+  }
+
+  return value.trim().slice(0, MAX_RESUME_TITLE_LENGTH)
+}
+
+function getSelectedTemplate(value: unknown): string {
+  if (typeof value !== "string") {
+    return "classic"
+  }
+
+  return ALLOWED_RESUME_TEMPLATES.has(value) ? value : "classic"
+}
+
+// =====================================================
+// BLOCK: Resume Create Route
+// =====================================================
 
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}))
 
-    const title = body?.title || "Untitled Resume"
-    const selectedTemplate = body?.selectedTemplate || "classic"
+    const title = getResumeTitle(body?.title)
+    const selectedTemplate = getSelectedTemplate(body?.selectedTemplate)
 
     const supabase = await createSupabaseServerClient()
 
@@ -21,7 +67,7 @@ export async function POST(request: Request) {
           status: "unauthorized",
           message: "You must be signed in to create resumes.",
         },
-        { status: 401 }
+        { status: 401 },
       )
     }
 
@@ -35,7 +81,7 @@ export async function POST(request: Request) {
         resume_data: starterResumeData,
       })
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       return Response.json(
@@ -43,7 +89,17 @@ export async function POST(request: Request) {
           status: "error",
           message: error.message,
         },
-        { status: 500 }
+        { status: 500 },
+      )
+    }
+
+    if (!data) {
+      return Response.json(
+        {
+          status: "error",
+          message: "Resume could not be created.",
+        },
+        { status: 500 },
       )
     }
 
@@ -66,14 +122,7 @@ export async function POST(request: Request) {
         status: "error",
         message: "Create resume request failed.",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
-}
-
-export async function GET() {
-  return Response.json({
-    status: "ok",
-    route: "resume_create",
-  })
 }

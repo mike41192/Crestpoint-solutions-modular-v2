@@ -1,18 +1,26 @@
+// =====================================================
+// BLOCK: Supabase Server Imports
+// =====================================================
+
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+
+// =====================================================
+// BLOCK: Resume Load-One Route
+// =====================================================
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
     const resumeId = body?.resumeId
 
-    if (!resumeId) {
+    if (!resumeId || typeof resumeId !== "string") {
       return Response.json(
         {
           status: "error",
           message: "Resume ID is required.",
           resume: null,
         },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -30,7 +38,7 @@ export async function POST(request: Request) {
           message: "You must be signed in to load this resume.",
           resume: null,
         },
-        { status: 401 }
+        { status: 401 },
       )
     }
 
@@ -45,10 +53,10 @@ export async function POST(request: Request) {
       return Response.json(
         {
           status: "error",
-          message: error?.message || "Resume not found.",
+          message: "Resume not found.",
           resume: null,
         },
-        { status: 404 }
+        { status: 404 },
       )
     }
 
@@ -64,14 +72,7 @@ export async function POST(request: Request) {
         message: "Load resume request failed.",
         resume: null,
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
-}
-
-export async function GET() {
-  return Response.json({
-    status: "ok",
-    route: "resume_load_one",
-  })
 }

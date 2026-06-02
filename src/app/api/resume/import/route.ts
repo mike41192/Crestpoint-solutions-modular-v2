@@ -1,3 +1,4 @@
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { parseTextResume } from "@/modules/resume-builder"
 
 export const runtime = "nodejs"
@@ -40,9 +41,6 @@ async function extractTextFromDocx(fileBuffer: ArrayBuffer) {
 }
 
 async function extractTextFromPdf(fileBuffer: ArrayBuffer) {
-  // pdf-parse root index can try loading ./test/data in Next.
-  // Use the parser implementation directly.
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const pdfParse = require("pdf-parse/lib/pdf-parse.js")
 
   const result = await pdfParse(Buffer.from(fileBuffer))
@@ -64,7 +62,6 @@ async function extractTextFromImage(fileBuffer: ArrayBuffer) {
 
 async function extractResumeText(file: File) {
   const fileName = file.name.toLowerCase()
-  const fileType = file.type
   const fileBuffer = await file.arrayBuffer()
 
   if (fileName.endsWith(".docx")) {
@@ -84,13 +81,30 @@ async function extractResumeText(file: File) {
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createSupabaseServerClient()
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      return Response.json(
+        {
+          status: "unauthorized",
+          message: "You must be signed in to import resumes.",
+        },
+        { status: 401 },
+      )
+    }
+
     const formData = await request.formData()
     const file = formData.get("file")
 
     if (!file || !(file instanceof File)) {
       return Response.json(
         { status: "error", message: "Resume file is required." },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -100,7 +114,7 @@ export async function POST(request: Request) {
           status: "error",
           message: `Resume file is too large. Maximum supported size is ${MAX_FILE_SIZE_MB}MB.`,
         },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -138,26 +152,13 @@ export async function POST(request: Request) {
       parsedData: parsedResult.parsedData,
       needsOcr: false,
     })
-  } catch (error) {
-    console.error("Resume import route error:", error)
-
+  } catch {
     return Response.json(
       {
         status: "error",
-        message: String(error),
+        message: "Resume import failed.",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
-}
-
-export async function GET() {
-  return Response.json({
-    status: "ok",
-    route: "resume_import",
-    supportedFormats: [".txt", ".docx", ".pdf", ".png", ".jpg", ".jpeg", ".webp"],
-    maxFileSizeMb: MAX_FILE_SIZE_MB,
-    ocrStatus: "image_upload_supported",
-    scannedPdfOcrStatus: "planned",
-  })
 }

@@ -1,15 +1,21 @@
+import { requireAdminUser } from "@/lib/security/admin-auth"
+
 import {
   getMissingSupabaseEnvKeys,
   isSupabaseConfigured,
 } from "@/lib/supabase/supabase-env"
 
 export async function GET() {
-  const configured = isSupabaseConfigured()
-  const missingKeys = getMissingSupabaseEnvKeys()
+  const admin = await requireAdminUser()
+
+  if (!admin.ok) {
+    return admin.response
+  }
 
   return Response.json({
-    configured,
-    missingKeys,
+    configured: isSupabaseConfigured(),
+    missingKeys: getMissingSupabaseEnvKeys(),
+    checkedBy: admin.email,
     timestamp: new Date().toISOString(),
   })
 }

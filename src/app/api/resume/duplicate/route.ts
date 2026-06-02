@@ -1,17 +1,25 @@
+// =====================================================
+// BLOCK: Supabase Server Imports
+// =====================================================
+
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+
+// =====================================================
+// BLOCK: Resume Duplicate Route
+// =====================================================
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
     const resumeId = body?.resumeId
 
-    if (!resumeId) {
+    if (!resumeId || typeof resumeId !== "string") {
       return Response.json(
         {
           status: "error",
           message: "Resume ID is required.",
         },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -28,7 +36,7 @@ export async function POST(request: Request) {
           status: "unauthorized",
           message: "You must be signed in to duplicate resumes.",
         },
-        { status: 401 }
+        { status: 401 },
       )
     }
 
@@ -37,15 +45,25 @@ export async function POST(request: Request) {
       .select("*")
       .eq("id", resumeId)
       .eq("user_id", user.id)
-      .single()
+      .maybeSingle()
 
-    if (sourceError || !sourceResume) {
+    if (sourceError) {
       return Response.json(
         {
           status: "error",
-          message: sourceError?.message || "Source resume not found.",
+          message: sourceError.message,
         },
-        { status: 404 }
+        { status: 500 },
+      )
+    }
+
+    if (!sourceResume) {
+      return Response.json(
+        {
+          status: "error",
+          message: "Source resume not found or access denied.",
+        },
+        { status: 404 },
       )
     }
 
@@ -53,13 +71,13 @@ export async function POST(request: Request) {
       .from("resumes")
       .insert({
         user_id: user.id,
-        title: `${sourceResume.title} Copy`,
+        title: `${sourceResume.title || "Untitled Resume"} Copy`,
         status: "draft",
         selected_template: sourceResume.selected_template,
         resume_data: sourceResume.resume_data,
       })
       .select()
-      .single()
+      .maybeSingle()
 
     if (duplicateError) {
       return Response.json(
@@ -67,7 +85,17 @@ export async function POST(request: Request) {
           status: "error",
           message: duplicateError.message,
         },
-        { status: 500 }
+        { status: 500 },
+      )
+    }
+
+    if (!duplicatedResume) {
+      return Response.json(
+        {
+          status: "error",
+          message: "Resume could not be duplicated.",
+        },
+        { status: 500 },
       )
     }
 
@@ -90,14 +118,7 @@ export async function POST(request: Request) {
         status: "error",
         message: "Duplicate resume request failed.",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
-}
-
-export async function GET() {
-  return Response.json({
-    status: "ok",
-    route: "resume_duplicate",
-  })
 }

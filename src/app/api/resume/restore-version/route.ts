@@ -1,17 +1,25 @@
+// =====================================================
+// BLOCK: Supabase Server Imports
+// =====================================================
+
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+
+// =====================================================
+// BLOCK: Resume Version Restore Route
+// =====================================================
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
     const versionId = body?.versionId
 
-    if (!versionId) {
+    if (!versionId || typeof versionId !== "string") {
       return Response.json(
         {
           status: "error",
           message: "Version ID is required.",
         },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -28,7 +36,7 @@ export async function POST(request: Request) {
           status: "unauthorized",
           message: "You must be signed in to restore resume versions.",
         },
-        { status: 401 }
+        { status: 401 },
       )
     }
 
@@ -37,15 +45,25 @@ export async function POST(request: Request) {
       .select("*")
       .eq("id", versionId)
       .eq("user_id", user.id)
-      .single()
+      .maybeSingle()
 
-    if (versionError || !version) {
+    if (versionError) {
       return Response.json(
         {
           status: "error",
-          message: versionError?.message || "Resume version not found.",
+          message: versionError.message,
         },
-        { status: 404 }
+        { status: 500 },
+      )
+    }
+
+    if (!version) {
+      return Response.json(
+        {
+          status: "error",
+          message: "Resume version not found or access denied.",
+        },
+        { status: 404 },
       )
     }
 
@@ -59,7 +77,7 @@ export async function POST(request: Request) {
       .eq("id", version.resume_id)
       .eq("user_id", user.id)
       .select()
-      .single()
+      .maybeSingle()
 
     if (restoreError) {
       return Response.json(
@@ -67,7 +85,17 @@ export async function POST(request: Request) {
           status: "error",
           message: restoreError.message,
         },
-        { status: 500 }
+        { status: 500 },
+      )
+    }
+
+    if (!restoredResume) {
+      return Response.json(
+        {
+          status: "error",
+          message: "Resume not found or access denied.",
+        },
+        { status: 404 },
       )
     }
 
@@ -90,14 +118,7 @@ export async function POST(request: Request) {
         status: "error",
         message: "Restore version request failed.",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
-}
-
-export async function GET() {
-  return Response.json({
-    status: "ok",
-    route: "resume_restore_version",
-  })
 }

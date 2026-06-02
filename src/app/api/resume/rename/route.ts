@@ -1,18 +1,32 @@
+// =====================================================
+// BLOCK: Supabase Server Imports
+// =====================================================
+
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+
+// =====================================================
+// BLOCK: Constants
+// =====================================================
+
+const MAX_RESUME_TITLE_LENGTH = 120
+
+// =====================================================
+// BLOCK: Resume Rename Route
+// =====================================================
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
     const resumeId = body?.resumeId
-    const title = body?.title?.trim()
+    const title = typeof body?.title === "string" ? body.title.trim() : ""
 
-    if (!resumeId) {
+    if (!resumeId || typeof resumeId !== "string") {
       return Response.json(
         {
           status: "error",
           message: "Resume ID is required.",
         },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -22,7 +36,17 @@ export async function POST(request: Request) {
           status: "error",
           message: "Resume title is required.",
         },
-        { status: 400 }
+        { status: 400 },
+      )
+    }
+
+    if (title.length > MAX_RESUME_TITLE_LENGTH) {
+      return Response.json(
+        {
+          status: "error",
+          message: `Resume title must be ${MAX_RESUME_TITLE_LENGTH} characters or fewer.`,
+        },
+        { status: 400 },
       )
     }
 
@@ -39,7 +63,7 @@ export async function POST(request: Request) {
           status: "unauthorized",
           message: "You must be signed in to rename resumes.",
         },
-        { status: 401 }
+        { status: 401 },
       )
     }
 
@@ -51,7 +75,7 @@ export async function POST(request: Request) {
       .eq("id", resumeId)
       .eq("user_id", user.id)
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       return Response.json(
@@ -59,7 +83,17 @@ export async function POST(request: Request) {
           status: "error",
           message: error.message,
         },
-        { status: 500 }
+        { status: 500 },
+      )
+    }
+
+    if (!data) {
+      return Response.json(
+        {
+          status: "error",
+          message: "Resume not found or access denied.",
+        },
+        { status: 404 },
       )
     }
 
@@ -74,14 +108,7 @@ export async function POST(request: Request) {
         status: "error",
         message: "Rename resume request failed.",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
-}
-
-export async function GET() {
-  return Response.json({
-    status: "ok",
-    route: "resume_rename",
-  })
 }

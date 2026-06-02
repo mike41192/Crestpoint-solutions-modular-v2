@@ -1,15 +1,22 @@
+import { requireAdminUser } from "@/lib/security/admin-auth"
+
 import {
   getMissingStripeEnvKeys,
   isStripeConfigured,
 } from "@/lib/stripe/stripe-env"
 
 export async function GET() {
-  const configured = isStripeConfigured()
-  const missingKeys = getMissingStripeEnvKeys()
+  const admin = await requireAdminUser()
+
+  if (admin.ok === false) {
+    return admin.response
+  }
 
   return Response.json({
-    configured,
-    missingKeys,
+    status: "success",
+    configured: isStripeConfigured(),
+    missingKeys: getMissingStripeEnvKeys(),
+    checkedBy: admin.email,
     timestamp: new Date().toISOString(),
   })
 }

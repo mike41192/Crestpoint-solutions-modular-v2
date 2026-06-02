@@ -67,6 +67,8 @@ Achievement Intelligence V1
 Export Systems
 
 - Resume export support
+- PDF export support
+- DOCX export support
 - Resume package generation
 - Document generation workflows
 
@@ -85,6 +87,28 @@ Access Control Foundation
 
 ---
 
+Module Status Matrix
+
+Module| Status| Notes
+Authentication| Production| Stable
+Resume Builder| Production| Stable
+Resume Storage| Production| Stable
+Resume Versioning| Production| Stable
+ATS Scoring| Production| Stable
+ATS Gap Analyzer| Active Development| Precision improvements underway
+Achievement Intelligence| MVP| Expanding capabilities
+Resume Import| Production| OCR enhancements planned
+Resume Export| Production| PDF/DOCX enabled
+AI Optimization| Scaffold / MVP| OpenAI integration pending
+Interview System| Stable Baseline| Restored backup version
+Stripe Billing| Scaffold| Not production ready
+Analytics| Scaffold| Placeholder routes
+User Profile| Scaffold| Placeholder routes
+Usage Tracking| Scaffold| Placeholder routes
+Intelligence Core| Planned| v1.7.0 target
+
+---
+
 Technology Stack
 
 Frontend
@@ -97,11 +121,12 @@ Frontend
 
 Backend
 
-- Supabase
-  - Authentication
-  - PostgreSQL Database
-  - Storage
-  - Row Level Security
+Supabase
+
+- Authentication
+- PostgreSQL Database
+- Storage
+- Row Level Security (RLS)
 
 AI
 
@@ -125,13 +150,14 @@ Modular Architecture
 
 Each major feature is isolated into dedicated modules.
 
+Example:
+
 src/modules/
 
-Examples:
-
-gap-analyzer
-achievement-intelligence
-resume-builder
+- resume-builder
+- gap-analyzer
+- achievement-intelligence
+- interview-system
 
 ---
 
@@ -139,12 +165,13 @@ Centralized Configuration
 
 Application configuration is centralized.
 
+Example:
+
 src/lib/config/
 
-Examples:
-
-pricing.config.ts
-app-env.ts
+- pricing.config.ts
+- app-env.ts
+- feature-flags.ts
 
 ---
 
@@ -228,9 +255,9 @@ MAJOR.MINOR.PATCH
 
 Examples:
 
-1.5.5
-1.6.0
-2.0.0
+- 1.5.5
+- 1.6.0
+- 2.0.0
 
 Refactoring Rule
 
@@ -238,7 +265,88 @@ Large files should be refactored when maintainability begins to decline.
 
 Current candidate:
 
-ResumeStarterForm.tsx
+- ResumeStarterForm.tsx
+
+---
+
+Technical Debt Register
+
+TD-001
+
+Module
+
+ATS Gap Analyzer
+
+Issue
+
+Skill matching occasionally classifies generic workplace terms as skills.
+
+Planned Fix
+
+Expanded taxonomy engine.
+
+Priority
+
+High
+
+---
+
+TD-002
+
+Module
+
+Resume Builder
+
+Issue
+
+ResumeStarterForm.tsx approaching maintainability threshold.
+
+Planned Fix
+
+Component decomposition.
+
+Priority
+
+Medium
+
+---
+
+TD-003
+
+Module
+
+AI Routes
+
+Issue
+
+Several routes remain scaffold placeholders.
+
+Affected Areas
+
+- resume-feedback
+- analytics
+- user/profile
+- user/usage
+
+Priority
+
+Medium
+
+---
+
+TD-004
+
+Module
+
+Stripe
+
+Issue
+
+Checkout, portal, and webhook remain scaffold implementations.
+
+Priority
+
+High
 
 ---
 
@@ -263,6 +371,7 @@ Environment Variables
 Required:
 
 NEXT_PUBLIC_SUPABASE_URL=
+
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 
 SUPABASE_SERVICE_ROLE_KEY=
@@ -270,16 +379,42 @@ SUPABASE_SERVICE_ROLE_KEY=
 OPENAI_API_KEY=
 
 STRIPE_SECRET_KEY=
+
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+
 STRIPE_WEBHOOK_SECRET=
 
 Never expose:
 
-SUPABASE_SERVICE_ROLE_KEY
-OPENAI_API_KEY
-STRIPE_SECRET_KEY
+- SUPABASE_SERVICE_ROLE_KEY
+- OPENAI_API_KEY
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
 
 to client-side code.
+
+---
+
+Stable Recovery Point
+
+Current Stable Tag:
+
+stable/v1.5.5
+
+Recommended Backup Tags:
+
+- v1.5.5-pre-hardening
+- v1.5.5-post-hardening
+
+Recovery Strategy:
+
+Always create a git tag before:
+
+- Major merges
+- AI integrations
+- Stripe integrations
+- Authentication changes
+- Database migrations
 
 ---
 
@@ -313,22 +448,70 @@ Testing
 
 ---
 
+Release Checklist
+
+Before any release:
+
+- [ ] npm run build
+- [ ] npx tsc --noEmit
+- [ ] Route audit completed
+- [ ] Security review completed
+- [ ] README updated
+- [ ] CHANGELOG updated
+- [ ] Stable checkpoint tagged
+- [ ] Environment variables verified
+- [ ] Stripe verification completed
+- [ ] Supabase RLS verified
+
+---
+
+Current Platform Audit
+
+Production Ready
+
+- Authentication
+- Resume Builder
+- Resume Library
+- Resume Version History
+- Resume Import
+- Resume Export
+- ATS Scoring
+- Achievement Intelligence V1
+
+MVP
+
+- ATS Gap Analyzer
+- AI Optimization
+
+Scaffold Only
+
+- Resume Feedback
+- Structured Parser
+- Analytics
+- User Profile
+- Usage Tracking
+- Stripe Checkout
+- Stripe Portal
+- Stripe Webhook
+
+---
+
 Release Status
 
-Current Release:
+Current Release
 
 v1.5.5
 
-Status:
+Status
 
 PASS WITH FIXES
 
-Primary focus before merge:
+Primary Focus Before Merge
 
-Security Hardening
-Route Protection
-Governance Cleanup
-Documentation Updates
+- Security Hardening
+- Route Protection
+- Governance Cleanup
+- Documentation Updates
 
 ---
 
@@ -342,13 +525,37 @@ v1.7.0
 
 Enhanced Intelligence Layer
 
+Planned Systems:
+
+- Prompt Intelligence Core
+- AI Feedback Learning Loop
+- Quality Scoring Engine
+- Prompt Versioning
+- Recommendation Engine
+
 v1.8.0
 
 Career Operating System Expansion
 
+Planned Systems:
+
+- Job Tracker
+- Application Tracker
+- Interview Academy
+- Networking CRM
+- Career Roadmaps
+
 v2.0.0
 
 Platform Ecosystem Release
+
+Planned Systems:
+
+- Employer Portal
+- Hiring Network
+- Marketplace Expansion
+- Talent Discovery
+- Multi-Sided Platform
 
 ---
 
@@ -356,7 +563,9 @@ Maintainers
 
 Crestpoint Solutions
 
-Internal Development Standards:
+---
+
+Internal Development Standards
 
 - Security First
 - Modular Design
@@ -364,3 +573,30 @@ Internal Development Standards:
 - Governance Driven Development
 - Test Before Release
 - Preserve Stable Checkpoints
+- README Updated After Major Changes
+- Refactor Large Files Before They Become Risks
+- Centralized Configuration
+- Production Integrity Reviews Before Releases
+- UI Consistency Across Modules
+- First-Use Tutorials For New Features
+- Feature Gating From Initial Development
+- Stable Backup Before Major Development
+
+---
+
+Project Health Score (v1.5.5)
+
+Category| Score
+Architecture| 9.0 / 10
+Modularity| 9.5 / 10
+Resume Features| 8.5 / 10
+Security| 7.0 / 10
+Documentation| 8.5 / 10
+Production Readiness| 7.5 / 10
+Governance| 9.5 / 10
+
+Overall Score
+
+8.5 / 10
+
+Current focus is preparing the platform for the v1.6.0 Hardening Phase before continuing expansion into the Crestpoint Intelligence Layer and Career Operating System roadmap.

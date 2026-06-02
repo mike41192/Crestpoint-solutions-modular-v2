@@ -1,4 +1,12 @@
+// =====================================================
+// BLOCK: Supabase Server Imports
+// =====================================================
+
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+
+// =====================================================
+// BLOCK: Resume Load Route
+// =====================================================
 
 export async function GET() {
   const supabase = await createSupabaseServerClient()
@@ -15,7 +23,7 @@ export async function GET() {
         message: "You must be signed in to load resumes.",
         resumes: [],
       },
-      { status: 401 }
+      { status: 401 },
     )
   }
 
@@ -32,7 +40,7 @@ export async function GET() {
         message: error.message,
         resumes: [],
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 

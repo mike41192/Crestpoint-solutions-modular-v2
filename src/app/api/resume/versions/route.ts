@@ -1,18 +1,26 @@
+// =====================================================
+// BLOCK: Supabase Server Imports
+// =====================================================
+
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+
+// =====================================================
+// BLOCK: Resume Versions Route
+// =====================================================
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
     const resumeId = body?.resumeId
 
-    if (!resumeId) {
+    if (!resumeId || typeof resumeId !== "string") {
       return Response.json(
         {
           status: "error",
           message: "Resume ID is required.",
           versions: [],
         },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -30,7 +38,36 @@ export async function POST(request: Request) {
           message: "You must be signed in to view resume versions.",
           versions: [],
         },
-        { status: 401 }
+        { status: 401 },
+      )
+    }
+
+    const { data: ownedResume, error: resumeError } = await supabase
+      .from("resumes")
+      .select("id")
+      .eq("id", resumeId)
+      .eq("user_id", user.id)
+      .maybeSingle()
+
+    if (resumeError) {
+      return Response.json(
+        {
+          status: "error",
+          message: resumeError.message,
+          versions: [],
+        },
+        { status: 500 },
+      )
+    }
+
+    if (!ownedResume) {
+      return Response.json(
+        {
+          status: "error",
+          message: "Resume not found or access denied.",
+          versions: [],
+        },
+        { status: 404 },
       )
     }
 
@@ -48,7 +85,7 @@ export async function POST(request: Request) {
           message: error.message,
           versions: [],
         },
-        { status: 500 }
+        { status: 500 },
       )
     }
 
@@ -64,14 +101,7 @@ export async function POST(request: Request) {
         message: "Resume versions request failed.",
         versions: [],
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
-}
-
-export async function GET() {
-  return Response.json({
-    status: "ok",
-    route: "resume_versions",
-  })
 }
