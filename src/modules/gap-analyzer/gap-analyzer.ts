@@ -5,6 +5,7 @@
 import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 import { analyzeIntelligentSkillCoverage } from "@/modules/ats-intelligence"
 import { getStronglyCoveredSkills } from "@/modules/intelligence-core/evidence-strength"
+import { getProjectCoveredSkills } from "@/modules/intelligence-core/project-intelligence"
 import type { ResumeGapAnalysisResult, ResumeGapItem } from "./types"
 
 // =====================================================
@@ -109,6 +110,25 @@ function removeEvidenceCoveredSkills({
   })
 }
 
+// =====================================================
+// BLOCK: Project Intelligence Helper
+// =====================================================
+
+function removeProjectCoveredSkills({
+  resumeText,
+  missingSkills,
+}: {
+  resumeText: string
+  missingSkills: string[]
+}): string[] {
+  const projectCoveredSkills = getProjectCoveredSkills(resumeText)
+  const projectSkillSet = new Set(projectCoveredSkills.map(normalizeAtsKeyword))
+
+  return missingSkills.filter((skill) => {
+    return !projectSkillSet.has(normalizeAtsKeyword(skill))
+  })
+}
+
 function refineMissingSkillsWithIntelligence({
   resumeText,
   missingSkills,
@@ -121,9 +141,14 @@ function refineMissingSkillsWithIntelligence({
     missingSkills,
   })
 
-  return removeEvidenceCoveredSkills({
+  const evidenceFilteredSkills = removeEvidenceCoveredSkills({
     resumeText,
     missingSkills: phraseFilteredSkills,
+  })
+
+  return removeProjectCoveredSkills({
+    resumeText,
+    missingSkills: evidenceFilteredSkills,
   })
 }
 
