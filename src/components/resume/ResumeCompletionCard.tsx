@@ -1,8 +1,22 @@
+// =====================================================
+// BLOCK: Type Imports
+// =====================================================
+
 import type { ResumeCompletionAnalysis } from "@/modules/resume-builder"
+import type { ResumeAchievementReport } from "@/modules/intelligence-core/achievement-intelligence"
+
+// =====================================================
+// BLOCK: Component Types
+// =====================================================
 
 type ResumeCompletionCardProps = {
   analysis: ResumeCompletionAnalysis
+  achievementReport?: ResumeAchievementReport
 }
+
+// =====================================================
+// BLOCK: Helpers
+// =====================================================
 
 function getStrengthColor(strength: string) {
   switch (strength) {
@@ -20,8 +34,21 @@ function getStrengthColor(strength: string) {
   }
 }
 
+function getAchievementColor(score: number) {
+  if (score >= 80) return "#166534"
+  if (score >= 60) return "#1d4ed8"
+  if (score >= 40) return "#92400e"
+
+  return "#991b1b"
+}
+
+// =====================================================
+// BLOCK: Component
+// =====================================================
+
 export function ResumeCompletionCard({
   analysis,
+  achievementReport,
 }: ResumeCompletionCardProps) {
   return (
     <div
@@ -108,6 +135,53 @@ export function ResumeCompletionCard({
           {analysis.validationWarnings} warnings
         </div>
       </div>
+
+      {achievementReport && (
+        <div
+          style={{
+            marginTop: "18px",
+            border: "1px solid #dbeafe",
+            borderRadius: "12px",
+            background: "#eff6ff",
+            padding: "14px",
+          }}
+        >
+          <strong>Achievement Intelligence</strong>
+
+          <div
+            style={{
+              marginTop: "10px",
+              display: "flex",
+              justifyContent: "space-between",
+              gap: "12px",
+              flexWrap: "wrap",
+            }}
+          >
+            <span>Achievement Strength</span>
+
+            <span
+              style={{
+                color: getAchievementColor(achievementReport.overallScore),
+                fontWeight: 800,
+              }}
+            >
+              {achievementReport.overallScore}%
+            </span>
+          </div>
+
+          <div
+            style={{
+              marginTop: "10px",
+              color: "#475569",
+              fontSize: "14px",
+            }}
+          >
+            {achievementReport.strongBullets} strong •{" "}
+            {achievementReport.mediumBullets} medium •{" "}
+            {achievementReport.weakBullets} weak bullets
+          </div>
+        </div>
+      )}
 
       <div style={{ marginTop: "18px" }}>
         <strong>Section Status</strong>

@@ -61,6 +61,7 @@ import {
   clearRewriteHistory,
   loadRewriteHistory,
 } from "@/modules/rewrite-history"
+import { analyzeResumeAchievementStrength } from "@/modules/intelligence-core/achievement-intelligence"
 
 // =====================================================
 // BLOCK: Resume Builder Type Imports
@@ -147,6 +148,11 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
 
   const completionAnalysis = useMemo(
     () => analyzeResumeCompletion(formData),
+    [formData],
+  )
+
+  const achievementReport = useMemo(
+    () => analyzeResumeAchievementStrength(formData),
     [formData],
   )
 
@@ -889,7 +895,10 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
                   lastSavedAt={lastSavedAt}
                   message={autosaveMessage}
                 />
-                <ResumeCompletionCard analysis={completionAnalysis} />
+                <ResumeCompletionCard 
+                analysis={completionAnalysis} 
+                achievementReport={achievementReport}
+                />
                 <ResumeValidationPanel issues={validation.issues} />
               </div>
             </WorkspaceCard>
