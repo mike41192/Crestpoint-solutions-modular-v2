@@ -3,6 +3,8 @@
 // =====================================================
 
 import type { ResumeBuilderFormData } from "@/modules/resume-builder"
+import { analyzeIntelligentSkillCoverage } from "@/modules/ats-intelligence"
+import { getStronglyCoveredSkills } from "@/modules/intelligence-core/evidence-strength"
 import type { ResumeGapAnalysisResult, ResumeGapItem } from "./types"
 
 // =====================================================
@@ -54,9 +56,75 @@ function uniqueKeywords(keywords: string[]): string[] {
 function getMissingFromResume(jobKeywords: string[], resumeKeywords: string[]) {
   const resumeKeywordSet = new Set(resumeKeywords.map(normalizeAtsKeyword))
 
-  return uniqueKeywords(jobKeywords).filter(
-    (keyword) => !resumeKeywordSet.has(normalizeAtsKeyword(keyword)),
+  return uniqueKeywords(jobKeywords).filter((keyword) => {
+    return !resumeKeywordSet.has(normalizeAtsKeyword(keyword))
+  })
+}
+
+// =====================================================
+// BLOCK: Intelligence Helper
+// =====================================================
+
+function removeIntelligentlyDetectedSkills({
+  resumeText,
+  missingSkills,
+}: {
+  resumeText: string
+  missingSkills: string[]
+}): string[] {
+  const intelligentCoverage = analyzeIntelligentSkillCoverage({
+    resumeText,
+    targetSkills: missingSkills,
+  })
+
+  const detectedSkillSet = new Set(
+    intelligentCoverage.detectedSkills.map(normalizeAtsKeyword),
   )
+
+  return missingSkills.filter((skill) => {
+    return !detectedSkillSet.has(normalizeAtsKeyword(skill))
+  })
+}
+
+// =====================================================
+// BLOCK: Evidence Strength Helper
+// =====================================================
+
+function removeEvidenceCoveredSkills({
+  resumeText,
+  missingSkills,
+}: {
+  resumeText: string
+  missingSkills: string[]
+}): string[] {
+  const coveredSkills = getStronglyCoveredSkills({
+    resumeText,
+    targetSkills: missingSkills,
+  })
+
+  const coveredSkillSet = new Set(coveredSkills.map(normalizeAtsKeyword))
+
+  return missingSkills.filter((skill) => {
+    return !coveredSkillSet.has(normalizeAtsKeyword(skill))
+  })
+}
+
+function refineMissingSkillsWithIntelligence({
+  resumeText,
+  missingSkills,
+}: {
+  resumeText: string
+  missingSkills: string[]
+}): string[] {
+  const phraseFilteredSkills = removeIntelligentlyDetectedSkills({
+    resumeText,
+    missingSkills,
+  })
+
+  return removeEvidenceCoveredSkills({
+    resumeText,
+    missingSkills: phraseFilteredSkills,
+  })
 }
 
 // =====================================================
@@ -81,11 +149,16 @@ function getMissingSkills(
     })
     .map((match) => match.keyword)
 
-  const resumeSkills = extractTaxonomyKeywords(resumeText).map(
-    (match) => match.keyword,
-  )
+  const resumeSkills = extractTaxonomyKeywords(resumeText).map((match) => {
+    return match.keyword
+  })
 
-  return getMissingFromResume(jobSkills, resumeSkills).slice(0, 8)
+  const missingSkills = getMissingFromResume(jobSkills, resumeSkills).slice(0, 8)
+
+  return refineMissingSkillsWithIntelligence({
+    resumeText,
+    missingSkills,
+  })
 }
 
 function getMissingCertifications(
@@ -119,10 +192,15 @@ function getExperienceGaps(
     .filter((match) => isExperienceSignalKeyword(match.keyword))
     .map((match) => match.keyword)
 
-  return getMissingFromResume(jobExperienceSignals, resumeExperienceSignals).slice(
-    0,
-    6,
-  )
+  const experienceGaps = getMissingFromResume(
+    jobExperienceSignals,
+    resumeExperienceSignals,
+  ).slice(0, 6)
+
+  return refineMissingSkillsWithIntelligence({
+    resumeText,
+    missingSkills: experienceGaps,
+  })
 }
 
 function getKeywordGaps(
@@ -140,16 +218,21 @@ function getKeywordGaps(
     })
     .map((match) => match.keyword)
 
-  const resumeKeywords = extractTaxonomyKeywords(resumeText).map(
-    (match) => match.keyword,
-  )
+  const resumeKeywords = extractTaxonomyKeywords(resumeText).map((match) => {
+    return match.keyword
+  })
 
-  return getMissingFromResume(
+  const keywordGaps = getMissingFromResume(
     filterValidAtsKeywords(jobKeywords),
     filterValidAtsKeywords(resumeKeywords),
   )
     .filter((keyword) => classifyKeyword(keyword) !== null)
     .slice(0, 8)
+
+  return refineMissingSkillsWithIntelligence({
+    resumeText,
+    missingSkills: keywordGaps,
+  })
 }
 
 // =====================================================

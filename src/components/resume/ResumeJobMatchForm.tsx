@@ -4,7 +4,7 @@
 // BLOCK: Imports
 // =====================================================
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Target } from "lucide-react"
 import { ResumeATSPanel } from "@/components/resume/ResumeATSPanel"
 import { ResumeGapAnalysisPanel } from "@/components/resume/ResumeGapAnalysisPanel"
@@ -24,6 +24,8 @@ import type { ResumeOptimizationSuggestion } from "@/modules/resume-optimizer"
 
 type ResumeJobMatchFormProps = {
   data: ResumeBuilderFormData
+  savedJobDescription?: string
+  onJobDescriptionChange?: (value: string) => void
   onResumeUpdate?: (data: ResumeBuilderFormData) => void
 }
 
@@ -33,13 +35,29 @@ type ResumeJobMatchFormProps = {
 
 export function ResumeJobMatchForm({
   data,
+  savedJobDescription = "",
+  onJobDescriptionChange,
   onResumeUpdate,
 }: ResumeJobMatchFormProps) {
   // =====================================================
   // BLOCK: Local State
   // =====================================================
 
-  const [jobDescription, setJobDescription] = useState("")
+  const [jobDescription, setJobDescription] = useState(savedJobDescription)
+
+  // =====================================================
+  // BLOCK: Keep Parent Job Description Synced
+  // Prevents panel remounts / resume imports from clearing the job text.
+  // =====================================================
+
+  useEffect(() => {
+    setJobDescription(savedJobDescription)
+  }, [savedJobDescription])
+
+  function updateJobDescription(value: string) {
+    setJobDescription(value)
+    onJobDescriptionChange?.(value)
+  }
 
   // =====================================================
   // BLOCK: ATS / Gap / Optimization Analysis
@@ -47,12 +65,12 @@ export function ResumeJobMatchForm({
 
   const atsResult = useMemo(
     () => generateATSReport(data, jobDescription),
-    [data, jobDescription]
+    [data, jobDescription],
   )
 
   const gapAnalysisResult = useMemo(
     () => analyzeResumeGaps(data, jobDescription),
-    [data, jobDescription]
+    [data, jobDescription],
   )
 
   const optimizationResult = useMemo(
@@ -62,7 +80,7 @@ export function ResumeJobMatchForm({
         jobDescription,
         atsResult,
       }),
-    [data, jobDescription, atsResult]
+    [data, jobDescription, atsResult],
   )
 
   // =====================================================
@@ -104,7 +122,7 @@ export function ResumeJobMatchForm({
         Job Description
         <textarea
           value={jobDescription}
-          onChange={(event) => setJobDescription(event.target.value)}
+          onChange={(event) => updateJobDescription(event.target.value)}
           placeholder="Paste job description here..."
           className="mt-2 min-h-[190px] w-full resize-y rounded-2xl border border-violet-200 bg-white p-4 text-sm leading-6 text-slate-700 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
         />

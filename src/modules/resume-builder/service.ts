@@ -1,3 +1,7 @@
+// =====================================================
+// BLOCK: Type Imports
+// =====================================================
+
 import type {
   ResumeBuilderData,
   ResumeBuilderFormData,
@@ -5,11 +9,41 @@ import type {
 } from "./types"
 import { getSelectedResumeTemplate } from "./template-store"
 
+// =====================================================
+// BLOCK: Local Storage Keys
+// =====================================================
+
 export const RESUME_BUILDER_LOCAL_STORAGE_KEY =
   "crestpoint_resume_builder_draft"
 
-export const ACTIVE_RESUME_ID_STORAGE_KEY =
-  "crestpoint_active_resume_id"
+export const ACTIVE_RESUME_ID_STORAGE_KEY = "crestpoint_active_resume_id"
+
+// =====================================================
+// BLOCK: API Response Types
+// =====================================================
+
+type SavedResumeRecord = {
+  id?: string
+  title?: string
+  resume_data?: ResumeBuilderFormData
+  selected_template?: ResumeTemplateType
+}
+
+type SaveResumeResponse = {
+  status?: string
+  message?: string
+  resume?: SavedResumeRecord
+}
+
+type LoadResumesResponse = {
+  status?: string
+  message?: string
+  resumes?: SavedResumeRecord[]
+}
+
+// =====================================================
+// BLOCK: Starter Resume Data
+// =====================================================
 
 export const starterResumeData: ResumeBuilderFormData = {
   contact: {
@@ -45,6 +79,10 @@ export const starterResumeData: ResumeBuilderFormData = {
   certifications: [],
 }
 
+// =====================================================
+// BLOCK: Preview Data
+// =====================================================
+
 export function getResumeBuilderPreviewData(): ResumeBuilderData[] {
   return [
     {
@@ -57,6 +95,10 @@ export function getResumeBuilderPreviewData(): ResumeBuilderData[] {
   ]
 }
 
+// =====================================================
+// BLOCK: Browser Storage Helpers
+// =====================================================
+
 function canUseLocalStorage() {
   return typeof window !== "undefined" && Boolean(window.localStorage)
 }
@@ -68,7 +110,7 @@ export function saveResumeDraftLocally(data: ResumeBuilderFormData) {
 
   window.localStorage.setItem(
     RESUME_BUILDER_LOCAL_STORAGE_KEY,
-    JSON.stringify(data)
+    JSON.stringify(data),
   )
 }
 
@@ -78,7 +120,7 @@ export function loadResumeDraftLocally() {
   }
 
   const savedDraft = window.localStorage.getItem(
-    RESUME_BUILDER_LOCAL_STORAGE_KEY
+    RESUME_BUILDER_LOCAL_STORAGE_KEY,
   )
 
   if (!savedDraft) {
@@ -120,11 +162,48 @@ export function clearActiveResumeId() {
   window.localStorage.removeItem(ACTIVE_RESUME_ID_STORAGE_KEY)
 }
 
+// =====================================================
+// BLOCK: API Response Helpers
+// =====================================================
+
+async function parseApiResponse<T>(response: Response): Promise<T> {
+  const responseText = await response.text()
+
+  let parsedResponse: unknown = null
+
+  try {
+    parsedResponse = responseText ? JSON.parse(responseText) : null
+  } catch {
+    throw new Error(
+      responseText ||
+        "Resume request failed because the server returned invalid JSON.",
+    )
+  }
+
+  if (!response.ok) {
+    const errorMessage =
+      typeof parsedResponse === "object" &&
+      parsedResponse !== null &&
+      "message" in parsedResponse &&
+      typeof parsedResponse.message === "string"
+        ? parsedResponse.message
+        : "Resume request failed."
+
+    throw new Error(errorMessage)
+  }
+
+  return parsedResponse as T
+}
+
+// =====================================================
+// BLOCK: Server Save / Load Services
+// =====================================================
+
 export async function saveResumeDraftToServer(
   data: ResumeBuilderFormData,
   selectedTemplate?: ResumeTemplateType,
-  resumeId?: string | null
-) {
+  resumeId?: string | null,
+): Promise<SaveResumeResponse> {
   const response = await fetch("/api/resume/save", {
     method: "POST",
     headers: {
@@ -139,16 +218,18 @@ export async function saveResumeDraftToServer(
     }),
   })
 
-  return response.json()
+  return parseApiResponse<SaveResumeResponse>(response)
 }
 
-export async function loadResumeDraftsFromServer() {
+export async function loadResumeDraftsFromServer(): Promise<LoadResumesResponse> {
   const response = await fetch("/api/resume/load")
 
-  return response.json()
+  return parseApiResponse<LoadResumesResponse>(response)
 }
 
-export async function loadResumeByIdFromServer(resumeId: string) {
+export async function loadResumeByIdFromServer(
+  resumeId: string,
+): Promise<SaveResumeResponse> {
   const response = await fetch("/api/resume/load-one", {
     method: "POST",
     headers: {
@@ -159,11 +240,15 @@ export async function loadResumeByIdFromServer(resumeId: string) {
     }),
   })
 
-  return response.json()
+  return parseApiResponse<SaveResumeResponse>(response)
 }
 
+// =====================================================
+// BLOCK: Loaded Resume Extraction Helpers
+// =====================================================
+
 export function getFirstLoadedResumeData(
-  serverResponse: unknown
+  serverResponse: unknown,
 ): ResumeBuilderFormData | null {
   if (
     typeof serverResponse !== "object" ||
@@ -173,11 +258,7 @@ export function getFirstLoadedResumeData(
     return null
   }
 
-  const response = serverResponse as {
-    resumes?: Array<{
-      resume_data?: ResumeBuilderFormData
-    }>
-  }
+  const response = serverResponse as LoadResumesResponse
 
   const firstResume = response.resumes?.[0]
 
@@ -185,7 +266,7 @@ export function getFirstLoadedResumeData(
 }
 
 export function getFirstLoadedResumeTemplate(
-  serverResponse: unknown
+  serverResponse: unknown,
 ): ResumeTemplateType | null {
   if (
     typeof serverResponse !== "object" ||
@@ -195,11 +276,7 @@ export function getFirstLoadedResumeTemplate(
     return null
   }
 
-  const response = serverResponse as {
-    resumes?: Array<{
-      selected_template?: ResumeTemplateType
-    }>
-  }
+  const response = serverResponse as LoadResumesResponse
 
   const template = response.resumes?.[0]?.selected_template
 
@@ -224,14 +301,7 @@ export function getLoadedResumeData(serverResponse: unknown) {
     return null
   }
 
-  const response = serverResponse as {
-    resume?: {
-      id?: string
-      resume_data?: ResumeBuilderFormData
-      selected_template?: ResumeTemplateType
-      title?: string
-    }
-  }
+  const response = serverResponse as SaveResumeResponse
 
   return response.resume || null
 }

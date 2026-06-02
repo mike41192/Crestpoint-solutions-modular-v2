@@ -122,13 +122,13 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>("idle")
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
   const [activePanel, setActivePanel] = useState<WorkspacePanel>("editor")
+  const [savedJobDescription, setSavedJobDescription] = useState("")
   const [autosaveMessage, setAutosaveMessage] = useState(
-    "Autosave will run after 30 seconds of inactivity."
+    "Autosave will run after 30 seconds of inactivity.",
   )
   const [rewriteHistoryItems, setRewriteHistoryItems] = useState<
-  RewriteHistoryItem[]
->([])
-
+    RewriteHistoryItem[]
+  >([])
 
   // =====================================================
   // BLOCK: Refs For Autosave / Async Safety
@@ -147,7 +147,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
 
   const completionAnalysis = useMemo(
     () => analyzeResumeCompletion(formData),
-    [formData]
+    [formData],
   )
 
   // =====================================================
@@ -162,19 +162,18 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     activeResumeIdRef.current = activeResumeId
   }, [activeResumeId])
 
-// =====================================================
-// BLOCK: Rewrite History Initial Load
-// Loads rewrite history from local browser storage.
-// =====================================================
+  // =====================================================
+  // BLOCK: Rewrite History Initial Load
+  // =====================================================
 
-useEffect(() => {
-  setRewriteHistoryItems(loadRewriteHistory().items)
-}, [])
-
+  useEffect(() => {
+    setRewriteHistoryItems(loadRewriteHistory().items)
+  }, [])
 
   // =====================================================
   // BLOCK: Initial Resume Load
   // Loads selected resume from URL first, then local draft fallback.
+  // Uses merge-safe updates so Job Match state is not affected.
   // =====================================================
 
   useEffect(() => {
@@ -190,9 +189,18 @@ useEffect(() => {
           const loadedResume = getLoadedResumeData(result)
 
           if (loadedResume?.id && loadedResume.resume_data) {
-            setFormData(loadedResume.resume_data)
-            formDataRef.current = loadedResume.resume_data
-            saveResumeDraftLocally(loadedResume.resume_data)
+            const loadedData = loadedResume.resume_data
+
+            setFormData((current) => ({
+              ...current,
+              ...loadedData,
+            }))
+            formDataRef.current = {
+              ...formDataRef.current,
+              ...loadedData,
+            }
+
+            saveResumeDraftLocally(formDataRef.current)
 
             setActiveResumeId(loadedResume.id)
             setActiveResumeIdState(loadedResume.id)
@@ -225,13 +233,20 @@ useEffect(() => {
           return
         }
 
-        setFormData(savedDraft)
-        formDataRef.current = savedDraft
+        setFormData((current) => ({
+          ...current,
+          ...savedDraft,
+        }))
+        formDataRef.current = {
+          ...formDataRef.current,
+          ...savedDraft,
+        }
+
         setSaveMessage("Loaded saved local draft.")
         setHasUnsavedChanges(false)
         setAutosaveStatus("idle")
         setAutosaveMessage(
-          "Local draft loaded. Save to Supabase to enable cloud autosave."
+          "Local draft loaded. Save to Supabase to enable cloud autosave.",
         )
         initialLoadCompleteRef.current = true
       } catch {
@@ -251,7 +266,6 @@ useEffect(() => {
 
   // =====================================================
   // BLOCK: Autosave Scheduler
-  // Runs after 30 seconds of inactivity if a Supabase resume exists.
   // =====================================================
 
   useEffect(() => {
@@ -301,7 +315,7 @@ useEffect(() => {
       const result = await saveResumeDraftToServer(
         formDataRef.current,
         undefined,
-        activeResumeIdRef.current
+        activeResumeIdRef.current,
       )
 
       if (result.status === "success") {
@@ -332,11 +346,10 @@ useEffect(() => {
 
   // =====================================================
   // BLOCK: Central Resume Update Helper
-  // All resume changes should pass through this to trigger autosave state.
   // =====================================================
 
   function updateFormData(
-    updater: (current: ResumeBuilderFormData) => ResumeBuilderFormData
+    updater: (current: ResumeBuilderFormData) => ResumeBuilderFormData,
   ) {
     setFormData((current) => {
       const updated = updater(current)
@@ -436,9 +449,16 @@ useEffect(() => {
       }
 
       if (loadedResume) {
-        setFormData(loadedResume)
-        formDataRef.current = loadedResume
-        saveResumeDraftLocally(loadedResume)
+        setFormData((current) => ({
+          ...current,
+          ...loadedResume,
+        }))
+        formDataRef.current = {
+          ...formDataRef.current,
+          ...loadedResume,
+        }
+
+        saveResumeDraftLocally(formDataRef.current)
         setHasUnsavedChanges(false)
         setAutosaveStatus("saved")
         setLastSavedAt(new Date())
@@ -454,100 +474,107 @@ useEffect(() => {
   }
 
   // =====================================================
-// BLOCK: Import / Optimization / Rewrite Apply Actions
-// =====================================================
+  // BLOCK: Import / Optimization / Rewrite Apply Actions
+  // =====================================================
 
-function applyImportedResume(importedData: ResumeBuilderFormData) {
-  setFormData(importedData)
-  formDataRef.current = importedData
-  saveResumeDraftLocally(importedData)
-  setHasUnsavedChanges(true)
-  setAutosaveStatus("unsaved")
-  setAutosaveMessage("Imported resume data has unsaved changes.")
-  setSaveMessage("Imported resume data applied.")
-}
-
-function applyOptimizationSuggestion(suggestion: ResumeOptimizationSuggestion) {
-  if (!suggestion.suggestedText) {
-    setSaveMessage("Suggestion reviewed. No direct text was provided.")
-    return
-  }
-
-  if (suggestion.category === "summary") {
-    updateFormData((current) => ({
-      ...current,
-      summary: suggestion.suggestedText || current.summary,
-    }))
-
-    setSaveMessage("AI summary suggestion applied.")
-    return
-  }
-
-  if (suggestion.category === "skills") {
-    updateFormData((current) => ({
-      ...current,
-      skills: suggestion.suggestedText
-        ? suggestion.suggestedText
-            .split(",")
-            .map((skill) => skill.trim())
-            .filter(Boolean)
-        : current.skills,
-    }))
-
-    setSaveMessage("AI skills suggestion applied.")
-    return
-  }
-
-  if (suggestion.category === "experience") {
-    updateFormData((current) => {
-      const firstExperience = current.experience[0]
-
-      if (!firstExperience) {
-        return current
-      }
-
-      return {
+  function applyImportedResume(importedData: ResumeBuilderFormData) {
+    setFormData((current) => {
+      const updated = {
         ...current,
-        experience: current.experience.map((item, index) =>
-          index === 0
-            ? {
-                ...item,
-                bullets: [
-                  suggestion.suggestedText || "",
-                  ...item.bullets.filter(Boolean),
-                ],
-              }
-            : item
-        ),
+        ...importedData,
       }
+
+      formDataRef.current = updated
+      saveResumeDraftLocally(updated)
+      return updated
     })
 
-    setSaveMessage("AI experience suggestion added to first role.")
-    return
+    setHasUnsavedChanges(true)
+    setAutosaveStatus("unsaved")
+    setAutosaveMessage("Imported resume data has unsaved changes.")
+    setSaveMessage("Imported resume data applied.")
   }
 
-  setSaveMessage("Suggestion reviewed for future formatting or ATS logic.")
-}
+  function applyOptimizationSuggestion(suggestion: ResumeOptimizationSuggestion) {
+    if (!suggestion.suggestedText) {
+      setSaveMessage("Suggestion reviewed. No direct text was provided.")
+      return
+    }
 
-// =====================================================
-// BLOCK: Rewrite History Actions
-// =====================================================
+    if (suggestion.category === "summary") {
+      updateFormData((current) => ({
+        ...current,
+        summary: suggestion.suggestedText || current.summary,
+      }))
 
-function refreshRewriteHistory() {
-  setRewriteHistoryItems(loadRewriteHistory().items)
-}
+      setSaveMessage("AI summary suggestion applied.")
+      return
+    }
 
-function restoreRewriteHistoryResume(restoredResume: ResumeBuilderFormData) {
-  updateFormData(() => restoredResume)
-  setSaveMessage("Rewrite history restored.")
-}
+    if (suggestion.category === "skills") {
+      updateFormData((current) => ({
+        ...current,
+        skills: suggestion.suggestedText
+          ? suggestion.suggestedText
+              .split(",")
+              .map((skill) => skill.trim())
+              .filter(Boolean)
+          : current.skills,
+      }))
 
-function clearStoredRewriteHistory() {
-  clearRewriteHistory()
-  setRewriteHistoryItems([])
-  setSaveMessage("Rewrite history cleared.")
-}
+      setSaveMessage("AI skills suggestion applied.")
+      return
+    }
 
+    if (suggestion.category === "experience") {
+      updateFormData((current) => {
+        const firstExperience = current.experience[0]
+
+        if (!firstExperience) {
+          return current
+        }
+
+        return {
+          ...current,
+          experience: current.experience.map((item, index) =>
+            index === 0
+              ? {
+                  ...item,
+                  bullets: [
+                    suggestion.suggestedText || "",
+                    ...item.bullets.filter(Boolean),
+                  ],
+                }
+              : item,
+          ),
+        }
+      })
+
+      setSaveMessage("AI experience suggestion added to first role.")
+      return
+    }
+
+    setSaveMessage("Suggestion reviewed for future formatting or ATS logic.")
+  }
+
+  // =====================================================
+  // BLOCK: Rewrite History Actions
+  // =====================================================
+
+  function refreshRewriteHistory() {
+    setRewriteHistoryItems(loadRewriteHistory().items)
+  }
+
+  function restoreRewriteHistoryResume(restoredResume: ResumeBuilderFormData) {
+    updateFormData(() => restoredResume)
+    setSaveMessage("Rewrite history restored.")
+  }
+
+  function clearStoredRewriteHistory() {
+    clearRewriteHistory()
+    setRewriteHistoryItems([])
+    setSaveMessage("Rewrite history cleared.")
+  }
 
   // =====================================================
   // BLOCK: Contact / Summary / Skills Update Handlers
@@ -555,7 +582,7 @@ function clearStoredRewriteHistory() {
 
   function updateContactField(
     field: keyof ResumeBuilderFormData["contact"],
-    value: string
+    value: string,
   ) {
     updateFormData((current) => ({
       ...current,
@@ -590,7 +617,7 @@ function clearStoredRewriteHistory() {
   function updateExperienceField(
     id: string,
     field: keyof Omit<ResumeExperienceItem, "id" | "bullets">,
-    value: string
+    value: string,
   ) {
     updateFormData((current) => ({
       ...current,
@@ -600,7 +627,7 @@ function clearStoredRewriteHistory() {
               ...item,
               [field]: value,
             }
-          : item
+          : item,
       ),
     }))
   }
@@ -613,10 +640,10 @@ function clearStoredRewriteHistory() {
           ? {
               ...item,
               bullets: item.bullets.map((bullet, bulletIndex) =>
-                bulletIndex === index ? value : bullet
+                bulletIndex === index ? value : bullet,
               ),
             }
-          : item
+          : item,
       ),
     }))
   }
@@ -630,7 +657,7 @@ function clearStoredRewriteHistory() {
               ...item,
               bullets: [...item.bullets, ""],
             }
-          : item
+          : item,
       ),
     }))
   }
@@ -647,7 +674,7 @@ function clearStoredRewriteHistory() {
                   ? item.bullets.filter((_, bulletIndex) => bulletIndex !== index)
                   : [""],
             }
-          : item
+          : item,
       ),
     }))
   }
@@ -684,7 +711,7 @@ function clearStoredRewriteHistory() {
   function updateEducationField(
     id: string,
     field: keyof Omit<ResumeEducationItem, "id">,
-    value: string
+    value: string,
   ) {
     updateFormData((current) => ({
       ...current,
@@ -694,7 +721,7 @@ function clearStoredRewriteHistory() {
               ...item,
               [field]: value,
             }
-          : item
+          : item,
       ),
     }))
   }
@@ -759,10 +786,6 @@ function clearStoredRewriteHistory() {
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">
         <main className="min-w-0 space-y-5">
-          {/* =====================================================
-              BLOCK: Workspace Navigation Tabs
-              ===================================================== */}
-
           <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
             <div className="grid min-w-max grid-cols-7 gap-3 xl:min-w-0">
               {panels.map((panel) => {
@@ -790,10 +813,6 @@ function clearStoredRewriteHistory() {
             </div>
           </div>
 
-          {/* =====================================================
-              BLOCK: Save / Server Messages
-              ===================================================== */}
-
           {(saveMessage || serverMessage) && (
             <motion.div
               initial={{ opacity: 0, y: 6 }}
@@ -807,10 +826,6 @@ function clearStoredRewriteHistory() {
             </motion.div>
           )}
 
-          {/* =====================================================
-              BLOCK: Editor Panel
-              ===================================================== */}
-
           {activePanel === "editor" && (
             <WorkspaceCard
               icon={FileText}
@@ -819,7 +834,6 @@ function clearStoredRewriteHistory() {
             >
               <div className="grid gap-5">
                 <ContactSection contact={formData.contact} onChange={updateContactField} />
-
                 <SummarySection summary={formData.summary} onChange={updateSummary} />
 
                 <ExperienceSection
@@ -851,11 +865,6 @@ function clearStoredRewriteHistory() {
             </WorkspaceCard>
           )}
 
-          {/* =====================================================
-              BLOCK: Mobile / Tablet Preview Panel
-              Hidden on XL because desktop has sticky preview aside.
-              ===================================================== */}
-
           {activePanel === "preview" && (
             <div className="xl:hidden">
               <WorkspaceCard
@@ -867,10 +876,6 @@ function clearStoredRewriteHistory() {
               </WorkspaceCard>
             </div>
           )}
-
-          {/* =====================================================
-              BLOCK: Resume Health Panel
-              ===================================================== */}
 
           {activePanel === "health" && (
             <WorkspaceCard
@@ -884,17 +889,11 @@ function clearStoredRewriteHistory() {
                   lastSavedAt={lastSavedAt}
                   message={autosaveMessage}
                 />
-
                 <ResumeCompletionCard analysis={completionAnalysis} />
-
                 <ResumeValidationPanel issues={validation.issues} />
               </div>
             </WorkspaceCard>
           )}
-
-          {/* =====================================================
-              BLOCK: Resume Versions Panel
-              ===================================================== */}
 
           {activePanel === "versions" && (
             <WorkspaceCard
@@ -909,10 +908,6 @@ function clearStoredRewriteHistory() {
             </WorkspaceCard>
           )}
 
-          {/* =====================================================
-              BLOCK: Resume Import Panel
-              ===================================================== */}
-
           {activePanel === "import" && (
             <WorkspaceCard
               icon={Import}
@@ -922,11 +917,6 @@ function clearStoredRewriteHistory() {
               <ResumeImportPanel onApplyImportedResume={applyImportedResume} />
             </WorkspaceCard>
           )}
-
-          {/* =====================================================
-              BLOCK: AI Optimization / Rewrite Panel
-              Includes existing optimizer actions and new rewrite assistant.
-              ===================================================== */}
 
           {activePanel === "optimize" && (
             <WorkspaceCard
@@ -943,8 +933,8 @@ function clearStoredRewriteHistory() {
                 <ResumeRewritePanel
                   data={formData}
                   onResumeUpdate={(updatedResume) => {
-                     updateFormData(() => updatedResume)
-                      setSaveMessage("AI rewrite applied.")
+                    updateFormData(() => updatedResume)
+                    setSaveMessage("AI rewrite applied.")
                   }}
                   onHistoryUpdated={refreshRewriteHistory}
                 />
@@ -954,14 +944,9 @@ function clearStoredRewriteHistory() {
                   onRestore={restoreRewriteHistoryResume}
                   onClear={clearStoredRewriteHistory}
                 />
-
               </div>
             </WorkspaceCard>
           )}
-
-          {/* =====================================================
-              BLOCK: ATS Job Match / Optimization Panel
-              ===================================================== */}
 
           {activePanel === "match" && (
             <WorkspaceCard
@@ -971,6 +956,8 @@ function clearStoredRewriteHistory() {
             >
               <ResumeJobMatchForm
                 data={formData}
+                savedJobDescription={savedJobDescription}
+                onJobDescriptionChange={setSavedJobDescription}
                 onResumeUpdate={(updatedResume) => {
                   updateFormData(() => updatedResume)
                   setSaveMessage("Optimization suggestion applied.")
@@ -979,10 +966,6 @@ function clearStoredRewriteHistory() {
             </WorkspaceCard>
           )}
         </main>
-
-        {/* =====================================================
-            BLOCK: Desktop Sticky Preview Aside
-            ===================================================== */}
 
         <aside className="hidden min-w-0 xl:sticky xl:top-6 xl:block xl:h-fit">
           <WorkspaceCard

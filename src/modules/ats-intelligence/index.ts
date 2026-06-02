@@ -25,3 +25,18 @@ export {
   analyzeSkillConfidence,
   detectSkillsFromExperience,
 } from "./confidence-engine"
+
+// =====================================================
+// BLOCK: Dev Test Export
+// =====================================================
+
+export { runAtsIntelligenceDevTest } from "./dev-test"
+
+
+// =====================================================
+// BLOCK: Gap Analysis Adapter
+// =====================================================
+
+export {
+  analyzeIntelligentSkillCoverage,
+} from "./gap-analysis-adapter"

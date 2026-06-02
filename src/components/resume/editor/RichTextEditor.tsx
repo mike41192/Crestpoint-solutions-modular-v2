@@ -1,11 +1,30 @@
 "use client"
 
+// =====================================================
+// BLOCK: React Imports
+// =====================================================
+
+import { useEffect, useRef } from "react"
+
+// =====================================================
+// BLOCK: TipTap Imports
+// =====================================================
+
 import Highlight from "@tiptap/extension-highlight"
 import Placeholder from "@tiptap/extension-placeholder"
 import Underline from "@tiptap/extension-underline"
 import { EditorContent, useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
+
+// =====================================================
+// BLOCK: Component Imports
+// =====================================================
+
 import { RichTextToolbar } from "@/components/resume/editor/RichTextToolbar"
+
+// =====================================================
+// BLOCK: Types
+// =====================================================
 
 type RichTextEditorProps = {
   value: string
@@ -14,15 +33,23 @@ type RichTextEditorProps = {
   onChange: (value: string) => void
 }
 
+// =====================================================
+// BLOCK: Component
+// =====================================================
+
 export function RichTextEditor({
   value,
   placeholder = "Start writing...",
   minHeight = "160px",
   onChange,
 }: RichTextEditorProps) {
+  const lastSyncedValueRef = useRef(value || "")
+
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        underline: false,
+      }),
       Underline,
       Highlight,
       Placeholder.configure({
@@ -43,9 +70,36 @@ export function RichTextEditor({
       },
     },
     onUpdate({ editor }) {
-      onChange(editor.getHTML())
+      const html = editor.getHTML()
+      lastSyncedValueRef.current = html
+      onChange(html)
     },
   })
+
+  // =====================================================
+  // BLOCK: External Value Sync
+  // Keeps TipTap content aligned when resume data is loaded,
+  // imported, restored from history, or replaced from server.
+  // =====================================================
+
+  useEffect(() => {
+    if (!editor) return
+
+    const nextValue = value || ""
+    const currentValue = editor.getHTML()
+
+    if (
+      nextValue !== currentValue &&
+      nextValue !== lastSyncedValueRef.current
+    ) {
+      editor.commands.setContent(nextValue, { emitUpdate: false })
+      lastSyncedValueRef.current = nextValue
+    }
+  }, [editor, value])
+
+  // =====================================================
+  // BLOCK: Render
+  // =====================================================
 
   return (
     <div
