@@ -4,7 +4,7 @@
 // BLOCK: Imports
 // =====================================================
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   CheckCircle2,
   FilePenLine,
@@ -61,19 +61,36 @@ export function ResumeRewritePanel({
   const [activeRewrite, setActiveRewrite] = useState<ActiveRewrite | null>(null)
 
   // =====================================================
+  // BLOCK: Keep Selection Valid When Resume Data Changes
+  // =====================================================
+
+  useEffect(() => {
+    const selectedExperienceStillExists = data.experience.some(
+      (experience) => experience.id === selectedExperienceId,
+    )
+
+    if (!selectedExperienceStillExists) {
+      setSelectedExperienceId(data.experience[0]?.id || "")
+      setSelectedBulletIndex(0)
+      setActiveRewrite(null)
+    }
+  }, [data.experience, selectedExperienceId])
+
+  // =====================================================
   // BLOCK: Derived Data
   // =====================================================
 
   const selectedExperience = useMemo(
     () =>
-      data.experience.find((experience) => experience.id === selectedExperienceId) ||
-      data.experience[0],
-    [data.experience, selectedExperienceId]
+      data.experience.find(
+        (experience) => experience.id === selectedExperienceId,
+      ) || data.experience[0],
+    [data.experience, selectedExperienceId],
   )
 
   const availableBullets = useMemo(
     () => selectedExperience?.bullets || [],
-    [selectedExperience]
+    [selectedExperience],
   )
 
   const selectedBullet = availableBullets[selectedBulletIndex] || ""
@@ -81,7 +98,7 @@ export function ResumeRewritePanel({
   const rewriteScore = activeRewrite
     ? scoreRewriteQuality(
         activeRewrite.result.originalText,
-        activeRewrite.result.rewrittenText
+        activeRewrite.result.rewrittenText,
       )
     : null
 
@@ -114,6 +131,8 @@ export function ResumeRewritePanel({
   }
 
   function rewriteSelectedBullet() {
+    if (!selectedBullet.trim()) return
+
     const result = AIRewriteEngine.rewriteBullet(selectedBullet)
 
     setActiveRewrite({
@@ -143,7 +162,7 @@ export function ResumeRewritePanel({
           result: activeRewrite.result,
           resumeBefore: data,
           resumeAfter: updatedResume,
-        })
+        }),
       )
 
       onResumeUpdate(updatedResume)
@@ -166,10 +185,10 @@ export function ResumeRewritePanel({
                 bullets: job.bullets.map((bullet, index) =>
                   index === activeRewrite.bulletIndex
                     ? activeRewrite.result.rewrittenText
-                    : bullet
+                    : bullet,
                 ),
               }
-            : job
+            : job,
         ),
       }
 
@@ -179,7 +198,7 @@ export function ResumeRewritePanel({
           result: activeRewrite.result,
           resumeBefore: data,
           resumeAfter: updatedResume,
-        })
+        }),
       )
 
       onResumeUpdate(updatedResume)
@@ -193,13 +212,13 @@ export function ResumeRewritePanel({
   // =====================================================
 
   return (
-    <section className="grid gap-4 rounded-3xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm sm:p-5">
-      <div className="flex items-start gap-3">
-        <div className="rounded-2xl bg-white p-2 text-indigo-700 shadow-sm">
+    <section className="grid min-w-0 gap-4 rounded-3xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm sm:p-5">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="shrink-0 rounded-2xl bg-white p-2 text-indigo-700 shadow-sm">
           <FilePenLine size={18} />
         </div>
 
-        <div>
+        <div className="min-w-0">
           <h3 className="text-lg font-black text-slate-950">
             AI Rewrite Assistant
           </h3>
@@ -212,14 +231,14 @@ export function ResumeRewritePanel({
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-3xl border border-indigo-100 bg-white p-4 shadow-sm">
-        <div className="grid gap-3 lg:grid-cols-2">
-          <label className="grid gap-2 text-sm font-black text-slate-700">
+      <div className="grid min-w-0 gap-3 rounded-3xl border border-indigo-100 bg-white p-4 shadow-sm">
+        <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2">
+          <label className="grid min-w-0 gap-2 text-sm font-black text-slate-700">
             Experience Entry
             <select
               value={selectedExperience?.id || ""}
               onChange={(event) => handleExperienceChange(event.target.value)}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+              className="block w-full min-w-0 max-w-full truncate rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
             >
               {data.experience.map((experience, index) => (
                 <option key={experience.id} value={experience.id}>
@@ -230,14 +249,14 @@ export function ResumeRewritePanel({
             </select>
           </label>
 
-          <label className="grid gap-2 text-sm font-black text-slate-700">
+          <label className="grid min-w-0 gap-2 text-sm font-black text-slate-700">
             Bullet To Rewrite
             <select
               value={selectedBulletIndex}
               onChange={(event) =>
                 handleBulletChange(Number(event.target.value))
               }
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+              className="block w-full min-w-0 max-w-full truncate rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
             >
               {availableBullets.map((bullet, index) => (
                 <option key={`${selectedExperience?.id}-${index}`} value={index}>
@@ -249,12 +268,12 @@ export function ResumeRewritePanel({
           </label>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+        <div className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50 p-3">
           <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
             Selected Bullet
           </p>
 
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-600">
             {selectedBullet || "No bullet selected."}
           </p>
         </div>
@@ -280,7 +299,7 @@ export function ResumeRewritePanel({
         <button
           type="button"
           onClick={rewriteSelectedBullet}
-          disabled={!selectedBullet}
+          disabled={!selectedBullet.trim()}
           className="rounded-2xl border border-indigo-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <div className="flex items-center gap-2 text-sm font-black text-indigo-700">
@@ -296,24 +315,24 @@ export function ResumeRewritePanel({
       </div>
 
       {activeRewrite && (
-        <div className="grid gap-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div>
+        <div className="grid min-w-0 gap-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="min-w-0">
             <p className="text-sm font-black uppercase tracking-[0.16em] text-slate-500">
               Before
             </p>
 
-            <p className="mt-2 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600">
+            <p className="mt-2 whitespace-pre-wrap break-words rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600">
               {activeRewrite.result.originalText || "No original text found."}
             </p>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <p className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.16em] text-emerald-700">
               <CheckCircle2 size={15} />
               After
             </p>
 
-            <p className="mt-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm leading-6 text-emerald-800">
+            <p className="mt-2 whitespace-pre-wrap break-words rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm leading-6 text-emerald-800">
               {activeRewrite.result.rewrittenText}
             </p>
           </div>

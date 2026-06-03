@@ -13,11 +13,17 @@ export async function createSupabaseServerClient() {
           return cookieStore.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-          })
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch {
+            // Server Components and layouts cannot always modify cookies.
+            // Supabase may attempt to refresh auth cookies during getUser().
+            // Middleware and Route Handlers can safely persist cookie updates.
+          }
         },
       },
-    }
+    },
   )
 }

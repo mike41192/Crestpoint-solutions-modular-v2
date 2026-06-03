@@ -9,7 +9,7 @@ type ExperienceSectionProps = {
   onFieldChange: (
     id: string,
     field: keyof Omit<ResumeExperienceItem, "id" | "bullets">,
-    value: string
+    value: string,
   ) => void
   onBulletChange: (id: string, index: number, value: string) => void
   onAddBullet: (id: string) => void
@@ -18,52 +18,103 @@ type ExperienceSectionProps = {
   onRemoveExperience: (id: string) => void
 }
 
+// =====================================================
+// BLOCK: Bullet Conversion Helpers
+// =====================================================
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+}
+
 function bulletsToHtml(bullets: string[]) {
-  const safeBullets = bullets.filter(Boolean)
+  const safeBullets = bullets.map((bullet) => bullet.trim()).filter(Boolean)
 
   if (safeBullets.length === 0) {
     return "<ul><li></li></ul>"
   }
 
   return `<ul>${safeBullets
-    .map((bullet) => `<li>${bullet}</li>`)
+    .map((bullet) => `<li>${escapeHtml(bullet)}</li>`)
     .join("")}</ul>`
+}
+
+function splitPlainTextIntoBullets(value: string) {
+  return value
+    .split(/\n+/)
+    .map((line) => line.replace(/^[-•*]\s*/, "").trim())
+    .filter(Boolean)
 }
 
 function htmlToBullets(html: string) {
   if (!html.trim()) return [""]
 
-  if (typeof window === "undefined") return [html]
+  if (typeof window === "undefined") return splitPlainTextIntoBullets(html)
 
   const parser = new DOMParser()
   const document = parser.parseFromString(html, "text/html")
 
   const listItems = Array.from(document.querySelectorAll("li"))
     .map((item) => item.textContent?.trim() || "")
+    .flatMap((value) => splitPlainTextIntoBullets(value))
     .filter(Boolean)
 
   if (listItems.length > 0) return listItems
 
   const paragraphs = Array.from(document.querySelectorAll("p"))
     .map((item) => item.textContent?.trim() || "")
+    .flatMap((value) => splitPlainTextIntoBullets(value))
     .filter(Boolean)
 
-  return paragraphs.length > 0 ? paragraphs : [""]
+  if (paragraphs.length > 0) return paragraphs
+
+  const fallbackText = document.body.textContent || ""
+
+  const fallbackBullets = splitPlainTextIntoBullets(fallbackText)
+
+  return fallbackBullets.length > 0 ? fallbackBullets : [""]
 }
+
+// =====================================================
+// BLOCK: Experience Section Component
+// =====================================================
 
 export function ExperienceSection({
   experience,
   onFieldChange,
   onBulletChange,
+  onAddBullet,
+  onRemoveBullet,
   onAddExperience,
   onRemoveExperience,
 }: ExperienceSectionProps) {
-  function updateResponsibilities(id: string, html: string) {
-    const bullets = htmlToBullets(html)
+  // =====================================================
+  // BLOCK: Responsibilities Update Handler
+  // =====================================================
 
-    bullets.forEach((bullet, index) => {
-      onBulletChange(id, index, bullet)
-    })
+  function updateResponsibilities(id: string, existingBullets: string[], html: string) {
+    const nextBullets = htmlToBullets(html)
+
+    const maxLength = Math.max(existingBullets.length, nextBullets.length)
+
+    for (let index = 0; index < maxLength; index += 1) {
+      const nextValue = nextBullets[index] || ""
+
+      if (index < existingBullets.length) {
+        onBulletChange(id, index, nextValue)
+      } else {
+        onAddBullet(id)
+        onBulletChange(id, index, nextValue)
+      }
+    }
+
+    if (nextBullets.length < existingBullets.length) {
+      for (let index = existingBullets.length - 1; index >= nextBullets.length; index -= 1) {
+        onRemoveBullet(id, index)
+      }
+    }
   }
 
   return (
@@ -167,7 +218,9 @@ export function ExperienceSection({
                 value={bulletsToHtml(item.bullets)}
                 minHeight="180px"
                 placeholder="Add responsibilities, achievements, and measurable results..."
-                onChange={(html) => updateResponsibilities(item.id, html)}
+                onChange={(html) =>
+                  updateResponsibilities(item.id, item.bullets, html)
+                }
               />
             </div>
           </article>
@@ -176,6 +229,10 @@ export function ExperienceSection({
     </section>
   )
 }
+
+// =====================================================
+// BLOCK: Reusable Field Component
+// =====================================================
 
 function Field({
   label,

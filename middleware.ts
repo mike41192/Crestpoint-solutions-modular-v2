@@ -9,16 +9,9 @@ import type { NextRequest } from "next/server"
 // BLOCK: Public Route Rules
 // =====================================================
 
-const PUBLIC_ROUTES = new Set([
-  "/",
-  "/login",
-  "/pricing",
-])
+const PUBLIC_ROUTES = new Set(["/", "/login", "/pricing"])
 
-const PUBLIC_ROUTE_PREFIXES = [
-  "/auth",
-  "/api/auth",
-]
+const PUBLIC_ROUTE_PREFIXES = ["/auth", "/api/auth"]
 
 // =====================================================
 // BLOCK: Protected Route Rules
@@ -40,15 +33,11 @@ function isPublicRoute(pathname: string): boolean {
     return true
   }
 
-  return PUBLIC_ROUTE_PREFIXES.some((prefix) => {
-    return pathname.startsWith(prefix)
-  })
+  return PUBLIC_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix))
 }
 
 function isProtectedRoute(pathname: string): boolean {
-  return PROTECTED_ROUTE_PREFIXES.some((prefix) => {
-    return pathname.startsWith(prefix)
-  })
+  return PROTECTED_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix))
 }
 
 function hasSupabaseAuthCookie(request: NextRequest): boolean {
@@ -60,7 +49,7 @@ function hasSupabaseAuthCookie(request: NextRequest): boolean {
 function buildLoginRedirect(request: NextRequest): NextResponse {
   const loginUrl = request.nextUrl.clone()
 
-  loginUrl.pathname = "/login"
+  loginUrl.pathname = "/auth/login"
   loginUrl.searchParams.set("redirectTo", request.nextUrl.pathname)
 
   return NextResponse.redirect(loginUrl)
@@ -70,9 +59,7 @@ function buildLoginRedirect(request: NextRequest): NextResponse {
 // BLOCK: Middleware
 // =====================================================
 
-
 export function middleware(request: NextRequest) {
-  console.log("MIDDLEWARE HIT:", request.nextUrl.pathname)
   const { pathname } = request.nextUrl
 
   if (isPublicRoute(pathname)) {
