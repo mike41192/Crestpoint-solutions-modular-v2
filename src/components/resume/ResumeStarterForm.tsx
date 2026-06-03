@@ -13,7 +13,6 @@ import {
   History,
   Import,
   LayoutTemplate,
-  SearchCheck,
   Sparkles,
 } from "lucide-react"
 
@@ -26,8 +25,8 @@ import { ResumeAutosaveStatus } from "@/components/resume/autosave/ResumeAutosav
 import { ResumeCompletionCard } from "@/components/resume/ResumeCompletionCard"
 import { ResumeEditorPreview } from "@/components/resume/ResumeEditorPreview"
 import { ResumeImportPanel } from "@/components/resume/ResumeImportPanel"
-import { ResumeJobMatchForm } from "@/components/resume/ResumeJobMatchForm"
 import { ResumeOptimizeActions } from "@/components/resume/ResumeOptimizeActions"
+import { ResumeRewriteHistoryPanel } from "@/components/resume/ResumeRewriteHistoryPanel"
 import { ResumeRewritePanel } from "@/components/resume/ResumeRewritePanel"
 import { ResumeValidationPanel } from "@/components/resume/ResumeValidationPanel"
 import { ContactSection } from "@/components/resume/form-sections/ContactSection"
@@ -35,8 +34,14 @@ import { EducationSection } from "@/components/resume/form-sections/EducationSec
 import { ExperienceSection } from "@/components/resume/form-sections/ExperienceSection"
 import { SkillsCertificationsSection } from "@/components/resume/form-sections/SkillsCertificationsSection"
 import { SummarySection } from "@/components/resume/form-sections/SummarySection"
+import { useResumeEditorActions } from "@/components/resume/hooks/useResumeEditorActions"
+import { useResumePersistence } from "@/components/resume/hooks/useResumePersistence"
 import { ResumeVersionHistory } from "@/components/resume/versions/ResumeVersionHistory"
-import { ResumeRewriteHistoryPanel } from "@/components/resume/ResumeRewriteHistoryPanel"
+import { WorkspaceCard } from "@/components/resume/workspace/WorkspaceCard"
+import {
+  WorkspacePanelTabs,
+  type WorkspacePanelId,
+} from "@/components/resume/workspace/WorkspacePanelTabs"
 
 // =====================================================
 // BLOCK: Resume Builder Service Imports
@@ -44,23 +49,17 @@ import { ResumeRewriteHistoryPanel } from "@/components/resume/ResumeRewriteHist
 
 import {
   analyzeResumeCompletion,
-  clearResumeDraftLocally,
-  getFirstLoadedResumeData,
-  getFirstLoadedResumeTemplate,
-  getLoadedResumeData,
-  loadResumeByIdFromServer,
-  loadResumeDraftLocally,
-  loadResumeDraftsFromServer,
   saveResumeDraftLocally,
   saveResumeDraftToServer,
   setActiveResumeId,
-  setSelectedResumeTemplate,
   validateResumeData,
 } from "@/modules/resume-builder"
+
 import {
   clearRewriteHistory,
   loadRewriteHistory,
 } from "@/modules/rewrite-history"
+
 import { analyzeResumeAchievementStrength } from "@/modules/intelligence-core/achievement-intelligence"
 
 // =====================================================
@@ -69,8 +68,6 @@ import { analyzeResumeAchievementStrength } from "@/modules/intelligence-core/ac
 
 import type {
   ResumeBuilderFormData,
-  ResumeEducationItem,
-  ResumeExperienceItem,
   ResumeOptimizationSuggestion,
 } from "@/modules/resume-builder"
 
@@ -90,14 +87,7 @@ type ResumeStarterFormProps = {
 
 type AutosaveStatus = "idle" | "unsaved" | "saving" | "saved" | "error"
 
-type WorkspacePanel =
-  | "editor"
-  | "preview"
-  | "health"
-  | "versions"
-  | "import"
-  | "optimize"
-  | "match"
+type WorkspacePanel = WorkspacePanelId
 
 // =====================================================
 // BLOCK: Constants
@@ -123,7 +113,6 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>("idle")
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
   const [activePanel, setActivePanel] = useState<WorkspacePanel>("editor")
-  const [savedJobDescription, setSavedJobDescription] = useState("")
   const [autosaveMessage, setAutosaveMessage] = useState(
     "Autosave will run after 30 seconds of inactivity.",
   )
@@ -157,6 +146,19 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   )
 
   // =====================================================
+  // BLOCK: Workspace Panel Config
+  // =====================================================
+
+  const panels = [
+    { id: "editor", label: "Editor", icon: FileText },
+    { id: "preview", label: "Preview", icon: LayoutTemplate },
+    { id: "health", label: "Health", icon: Activity },
+    { id: "versions", label: "Versions", icon: History },
+    { id: "import", label: "Import", icon: Import },
+    { id: "optimize", label: "AI Tools", icon: Brain },
+  ] as const
+
+  // =====================================================
   // BLOCK: Keep Refs Synced With State
   // =====================================================
 
@@ -177,90 +179,77 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   }, [])
 
   // =====================================================
+  // BLOCK: Central Resume Update Helper
+  // =====================================================
+
+  function updateFormData(
+    updater: (current: ResumeBuilderFormData) => ResumeBuilderFormData,
+  ) {
+    setFormData((current) => {
+      const updated = updater(current)
+      formDataRef.current = updated
+      return updated
+    })
+
+    setHasUnsavedChanges(true)
+    setAutosaveStatus("unsaved")
+    setAutosaveMessage("Unsaved changes detected.")
+  }
+
+  // =====================================================
+  // BLOCK: Resume Persistence Hook
+  // =====================================================
+
+  const {
+    loadInitialResume,
+    saveDraft,
+    clearDraft,
+    saveDraftToServer,
+    loadDraftsFromServer,
+  } = useResumePersistence({
+    data,
+    formData,
+    formDataRef,
+    activeResumeId,
+    activeResumeIdRef,
+    initialLoadCompleteRef,
+    setFormData,
+    setResumeTitle,
+    setActiveResumeIdState,
+    setSaveMessage,
+    setServerMessage,
+    setHasUnsavedChanges,
+    setAutosaveStatus,
+    setAutosaveMessage,
+    setLastSavedAt,
+  })
+
+  // =====================================================
+  // BLOCK: Resume Editor Action Hook
+  // =====================================================
+
+  const {
+    updateContactField,
+    updateSummary,
+    updateListField,
+    updateExperienceField,
+    updateExperienceBullet,
+    addExperienceBullet,
+    removeExperienceBullet,
+    addExperienceItem,
+    removeExperienceItem,
+    updateEducationField,
+    addEducationItem,
+    removeEducationItem,
+  } = useResumeEditorActions({
+    updateFormData,
+  })
+
+  // =====================================================
   // BLOCK: Initial Resume Load
-  // Loads selected resume from URL first, then local draft fallback.
-  // Uses merge-safe updates so Job Match state is not affected.
   // =====================================================
 
   useEffect(() => {
-    async function loadInitialResume() {
-      try {
-        const params = new URLSearchParams(window.location.search)
-        const resumeId = params.get("resumeId")
-
-        if (resumeId) {
-          setServerMessage("Loading selected resume...")
-
-          const result = await loadResumeByIdFromServer(resumeId)
-          const loadedResume = getLoadedResumeData(result)
-
-          if (loadedResume?.id && loadedResume.resume_data) {
-            const loadedData = loadedResume.resume_data
-
-            setFormData((current) => ({
-              ...current,
-              ...loadedData,
-            }))
-            formDataRef.current = {
-              ...formDataRef.current,
-              ...loadedData,
-            }
-
-            saveResumeDraftLocally(formDataRef.current)
-
-            setActiveResumeId(loadedResume.id)
-            setActiveResumeIdState(loadedResume.id)
-            activeResumeIdRef.current = loadedResume.id
-
-            if (loadedResume.title) {
-              setResumeTitle(loadedResume.title)
-            }
-
-            if (loadedResume.selected_template) {
-              setSelectedResumeTemplate(loadedResume.selected_template)
-            }
-
-            setHasUnsavedChanges(false)
-            setAutosaveStatus("saved")
-            setLastSavedAt(new Date())
-            setAutosaveMessage("Selected resume loaded.")
-            setServerMessage("Selected resume loaded.")
-            initialLoadCompleteRef.current = true
-            return
-          }
-
-          setServerMessage(result.message || "Selected resume could not be loaded.")
-        }
-
-        const savedDraft = loadResumeDraftLocally()
-
-        if (!savedDraft) {
-          initialLoadCompleteRef.current = true
-          return
-        }
-
-        setFormData((current) => ({
-          ...current,
-          ...savedDraft,
-        }))
-        formDataRef.current = {
-          ...formDataRef.current,
-          ...savedDraft,
-        }
-
-        setSaveMessage("Loaded saved local draft.")
-        setHasUnsavedChanges(false)
-        setAutosaveStatus("idle")
-        setAutosaveMessage(
-          "Local draft loaded. Save to Supabase to enable cloud autosave.",
-        )
-        initialLoadCompleteRef.current = true
-      } catch {
-        setSaveMessage("Saved local draft could not be loaded.")
-        initialLoadCompleteRef.current = true
-      }
-    }
-
     loadInitialResume()
 
     return () => {
@@ -347,135 +336,6 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
     } catch {
       setAutosaveStatus("error")
       setAutosaveMessage("Autosave request failed.")
-    }
-  }
-
-  // =====================================================
-  // BLOCK: Central Resume Update Helper
-  // =====================================================
-
-  function updateFormData(
-    updater: (current: ResumeBuilderFormData) => ResumeBuilderFormData,
-  ) {
-    setFormData((current) => {
-      const updated = updater(current)
-      formDataRef.current = updated
-      return updated
-    })
-
-    setHasUnsavedChanges(true)
-    setAutosaveStatus("unsaved")
-    setAutosaveMessage("Unsaved changes detected.")
-  }
-
-  // =====================================================
-  // BLOCK: Local Draft Actions
-  // =====================================================
-
-  function saveDraft() {
-    saveResumeDraftLocally(formData)
-    setSaveMessage("Draft saved locally in this browser.")
-    setAutosaveMessage("Draft saved locally. Supabase autosave still requires cloud save.")
-    setHasUnsavedChanges(false)
-  }
-
-  function clearDraft() {
-    clearResumeDraftLocally()
-    setFormData(data)
-    formDataRef.current = data
-    setSaveMessage("Local draft cleared.")
-    setAutosaveStatus("idle")
-    setAutosaveMessage("Local draft cleared.")
-    setHasUnsavedChanges(false)
-  }
-
-  // =====================================================
-  // BLOCK: Supabase Save / Load Actions
-  // =====================================================
-
-  async function saveDraftToServer() {
-    setServerMessage("Saving draft to Supabase...")
-    setAutosaveStatus("saving")
-    setAutosaveMessage("Saving resume to Supabase...")
-
-    try {
-      saveResumeDraftLocally(formData)
-
-      const result = await saveResumeDraftToServer(formData, undefined, activeResumeId)
-
-      if (result.resume?.id) {
-        setActiveResumeId(result.resume.id)
-        setActiveResumeIdState(result.resume.id)
-        activeResumeIdRef.current = result.resume.id
-
-        if (result.resume.title) {
-          setResumeTitle(result.resume.title)
-        }
-      }
-
-      setServerMessage(result.message || "Server save completed.")
-
-      if (result.status === "success") {
-        setHasUnsavedChanges(false)
-        setAutosaveStatus("saved")
-        setLastSavedAt(new Date())
-        setAutosaveMessage("Saved to Supabase.")
-      } else {
-        setAutosaveStatus("error")
-        setAutosaveMessage(result.message || "Server save failed.")
-      }
-    } catch {
-      setServerMessage("Server save request failed.")
-      setAutosaveStatus("error")
-      setAutosaveMessage("Server save request failed.")
-    }
-  }
-
-  async function loadDraftsFromServer() {
-    setServerMessage("Loading drafts from Supabase...")
-
-    try {
-      const result = await loadResumeDraftsFromServer()
-      const loadedResume = getFirstLoadedResumeData(result)
-      const loadedTemplate = getFirstLoadedResumeTemplate(result)
-      const firstResume = result?.resumes?.[0]
-
-      if (loadedTemplate) {
-        setSelectedResumeTemplate(loadedTemplate)
-      }
-
-      if (firstResume?.id) {
-        setActiveResumeId(firstResume.id)
-        setActiveResumeIdState(firstResume.id)
-        activeResumeIdRef.current = firstResume.id
-      }
-
-      if (firstResume?.title) {
-        setResumeTitle(firstResume.title)
-      }
-
-      if (loadedResume) {
-        setFormData((current) => ({
-          ...current,
-          ...loadedResume,
-        }))
-        formDataRef.current = {
-          ...formDataRef.current,
-          ...loadedResume,
-        }
-
-        saveResumeDraftLocally(formDataRef.current)
-        setHasUnsavedChanges(false)
-        setAutosaveStatus("saved")
-        setLastSavedAt(new Date())
-        setAutosaveMessage("Resume loaded from Supabase.")
-        setServerMessage("Resume loaded from Supabase.")
-        return
-      }
-
-      setServerMessage(result.message || "No server resume found.")
-    } catch {
-      setServerMessage("Server load request failed.")
     }
   }
 
@@ -583,198 +443,15 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
   }
 
   // =====================================================
-  // BLOCK: Contact / Summary / Skills Update Handlers
-  // =====================================================
-
-  function updateContactField(
-    field: keyof ResumeBuilderFormData["contact"],
-    value: string,
-  ) {
-    updateFormData((current) => ({
-      ...current,
-      contact: {
-        ...current.contact,
-        [field]: value,
-      },
-    }))
-  }
-
-  function updateSummary(value: string) {
-    updateFormData((current) => ({
-      ...current,
-      summary: value,
-    }))
-  }
-
-  function updateListField(field: "skills" | "certifications", value: string) {
-    updateFormData((current) => ({
-      ...current,
-      [field]: value
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
-    }))
-  }
-
-  // =====================================================
-  // BLOCK: Experience Update Handlers
-  // =====================================================
-
-  function updateExperienceField(
-    id: string,
-    field: keyof Omit<ResumeExperienceItem, "id" | "bullets">,
-    value: string,
-  ) {
-    updateFormData((current) => ({
-      ...current,
-      experience: current.experience.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              [field]: value,
-            }
-          : item,
-      ),
-    }))
-  }
-
-  function updateExperienceBullet(id: string, index: number, value: string) {
-    updateFormData((current) => ({
-      ...current,
-      experience: current.experience.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              bullets: item.bullets.map((bullet, bulletIndex) =>
-                bulletIndex === index ? value : bullet,
-              ),
-            }
-          : item,
-      ),
-    }))
-  }
-
-  function addExperienceBullet(id: string) {
-    updateFormData((current) => ({
-      ...current,
-      experience: current.experience.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              bullets: [...item.bullets, ""],
-            }
-          : item,
-      ),
-    }))
-  }
-
-  function removeExperienceBullet(id: string, index: number) {
-    updateFormData((current) => ({
-      ...current,
-      experience: current.experience.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              bullets:
-                item.bullets.length > 1
-                  ? item.bullets.filter((_, bulletIndex) => bulletIndex !== index)
-                  : [""],
-            }
-          : item,
-      ),
-    }))
-  }
-
-  function addExperienceItem() {
-    updateFormData((current) => ({
-      ...current,
-      experience: [
-        ...current.experience,
-        {
-          id: `experience-${current.experience.length + 1}`,
-          company: "",
-          role: "",
-          location: "",
-          startDate: "",
-          endDate: "",
-          bullets: [""],
-        },
-      ],
-    }))
-  }
-
-  function removeExperienceItem(id: string) {
-    updateFormData((current) => ({
-      ...current,
-      experience: current.experience.filter((item) => item.id !== id),
-    }))
-  }
-
-  // =====================================================
-  // BLOCK: Education Update Handlers
-  // =====================================================
-
-  function updateEducationField(
-    id: string,
-    field: keyof Omit<ResumeEducationItem, "id">,
-    value: string,
-  ) {
-    updateFormData((current) => ({
-      ...current,
-      education: current.education.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              [field]: value,
-            }
-          : item,
-      ),
-    }))
-  }
-
-  function addEducationItem() {
-    updateFormData((current) => ({
-      ...current,
-      education: [
-        ...current.education,
-        {
-          id: `education-${current.education.length + 1}`,
-          school: "",
-          degree: "",
-          field: "",
-          graduationDate: "",
-        },
-      ],
-    }))
-  }
-
-  function removeEducationItem(id: string) {
-    updateFormData((current) => ({
-      ...current,
-      education: current.education.filter((item) => item.id !== id),
-    }))
-  }
-
-  // =====================================================
-  // BLOCK: Workspace Panel Config
-  // =====================================================
-
-  const panels = [
-    { id: "editor", label: "Editor", icon: FileText },
-    { id: "preview", label: "Preview", icon: LayoutTemplate },
-    { id: "health", label: "Health", icon: Activity },
-    { id: "versions", label: "Versions", icon: History },
-    { id: "import", label: "Import", icon: Import },
-    { id: "optimize", label: "AI Tools", icon: Brain },
-    { id: "match", label: "Job Match", icon: SearchCheck },
-  ] as const
-
-  // =====================================================
   // BLOCK: Main Render
   // =====================================================
 
   return (
     <div className="grid gap-5">
+      {/* =====================================================
+          BLOCK: Resume Action Bar
+      ===================================================== */}
+
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
         <ResumeActionBar
           title={resumeTitle}
@@ -790,34 +467,25 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
         />
       </motion.div>
 
+      {/* =====================================================
+          BLOCK: Resume Workspace Layout
+      ===================================================== */}
+
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">
         <main className="min-w-0 space-y-5">
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-            <div className="grid min-w-max grid-cols-7 gap-3 xl:min-w-0">
-              {panels.map((panel) => {
-                const Icon = panel.icon
-                const active = activePanel === panel.id
+          {/* =====================================================
+              BLOCK: Workspace Panel Tabs
+          ===================================================== */}
 
-                return (
-                  <motion.button
-                    key={panel.id}
-                    type="button"
-                    whileHover={{ y: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setActivePanel(panel.id)}
-                    className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-extrabold transition ${
-                      active
-                        ? "border-blue-600 bg-blue-50 text-blue-700"
-                        : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-white"
-                    }`}
-                  >
-                    <Icon size={16} />
-                    {panel.label}
-                  </motion.button>
-                )
-              })}
-            </div>
-          </div>
+          <WorkspacePanelTabs
+            panels={panels}
+            activePanel={activePanel}
+            onPanelChange={setActivePanel}
+          />
+
+          {/* =====================================================
+              BLOCK: Save / Server Message Panel
+          ===================================================== */}
 
           {(saveMessage || serverMessage) && (
             <motion.div
@@ -826,11 +494,16 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
               className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-sm"
             >
               {saveMessage && <p className="text-slate-500">{saveMessage}</p>}
+
               {serverMessage && (
                 <p className="mt-1 text-slate-700">{serverMessage}</p>
               )}
             </motion.div>
           )}
+
+          {/* =====================================================
+              BLOCK: Editor Panel
+          ===================================================== */}
 
           {activePanel === "editor" && (
             <WorkspaceCard
@@ -839,8 +512,15 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
               description="Edit your resume in clean, organized sections."
             >
               <div className="grid gap-5">
-                <ContactSection contact={formData.contact} onChange={updateContactField} />
-                <SummarySection summary={formData.summary} onChange={updateSummary} />
+                <ContactSection
+                  contact={formData.contact}
+                  onChange={updateContactField}
+                />
+
+                <SummarySection
+                  summary={formData.summary}
+                  onChange={updateSummary}
+                />
 
                 <ExperienceSection
                   experience={formData.experience}
@@ -871,6 +551,10 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
             </WorkspaceCard>
           )}
 
+          {/* =====================================================
+              BLOCK: Mobile / Tablet Preview Panel
+          ===================================================== */}
+
           {activePanel === "preview" && (
             <div className="xl:hidden">
               <WorkspaceCard
@@ -882,6 +566,10 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
               </WorkspaceCard>
             </div>
           )}
+
+          {/* =====================================================
+              BLOCK: Resume Health Panel
+          ===================================================== */}
 
           {activePanel === "health" && (
             <WorkspaceCard
@@ -895,14 +583,20 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
                   lastSavedAt={lastSavedAt}
                   message={autosaveMessage}
                 />
-                <ResumeCompletionCard 
-                analysis={completionAnalysis} 
-                achievementReport={achievementReport}
+
+                <ResumeCompletionCard
+                  analysis={completionAnalysis}
+                  achievementReport={achievementReport}
                 />
+
                 <ResumeValidationPanel issues={validation.issues} />
               </div>
             </WorkspaceCard>
           )}
+
+          {/* =====================================================
+              BLOCK: Versions Panel
+          ===================================================== */}
 
           {activePanel === "versions" && (
             <WorkspaceCard
@@ -917,6 +611,10 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
             </WorkspaceCard>
           )}
 
+          {/* =====================================================
+              BLOCK: Import Panel
+          ===================================================== */}
+
           {activePanel === "import" && (
             <WorkspaceCard
               icon={Import}
@@ -926,6 +624,10 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
               <ResumeImportPanel onApplyImportedResume={applyImportedResume} />
             </WorkspaceCard>
           )}
+
+          {/* =====================================================
+              BLOCK: AI Optimization Panel
+          ===================================================== */}
 
           {activePanel === "optimize" && (
             <WorkspaceCard
@@ -956,25 +658,11 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
               </div>
             </WorkspaceCard>
           )}
-
-          {activePanel === "match" && (
-            <WorkspaceCard
-              icon={SearchCheck}
-              title="ATS Job Match"
-              description="Compare your resume against a target job description."
-            >
-              <ResumeJobMatchForm
-                data={formData}
-                savedJobDescription={savedJobDescription}
-                onJobDescriptionChange={setSavedJobDescription}
-                onResumeUpdate={(updatedResume) => {
-                  updateFormData(() => updatedResume)
-                  setSaveMessage("Optimization suggestion applied.")
-                }}
-              />
-            </WorkspaceCard>
-          )}
         </main>
+
+        {/* =====================================================
+            BLOCK: Desktop Sticky Preview
+        ===================================================== */}
 
         <aside className="hidden min-w-0 xl:sticky xl:top-6 xl:block xl:h-fit">
           <WorkspaceCard
@@ -987,49 +675,5 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
         </aside>
       </div>
     </div>
-  )
-}
-
-// =====================================================
-// BLOCK: Reusable Workspace Card Component
-// =====================================================
-
-type WorkspaceCardProps = {
-  icon: React.ComponentType<{ size?: number }>
-  title: string
-  description?: string
-  children: React.ReactNode
-}
-
-function WorkspaceCard({
-  icon: Icon,
-  title,
-  description,
-  children,
-}: WorkspaceCardProps) {
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
-    >
-      <div className="mb-4 flex items-start gap-3 border-b border-slate-100 pb-4">
-        <div className="rounded-2xl bg-blue-50 p-2 text-blue-700">
-          <Icon size={18} />
-        </div>
-
-        <div>
-          <h2 className="text-lg font-black text-slate-950">{title}</h2>
-
-          {description && (
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              {description}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {children}
-    </motion.section>
   )
 }

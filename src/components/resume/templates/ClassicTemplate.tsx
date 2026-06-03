@@ -1,8 +1,24 @@
 import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 
+// =====================================================
+// BLOCK: Utility Imports
+// =====================================================
+
+import {
+  buildExperienceMetaLine,
+} from "@/modules/resume-builder/utils/experience-date-normalizer"
+
+// =====================================================
+// BLOCK: Component Types
+// =====================================================
+
 type ClassicTemplateProps = {
   data: ResumeBuilderFormData
 }
+
+// =====================================================
+// BLOCK: Text Cleanup Helpers
+// =====================================================
 
 function stripHtml(value: string) {
   return value.replace(/<[^>]+>/g, "").trim()
@@ -11,6 +27,10 @@ function stripHtml(value: string) {
 function cleanText(value?: string) {
   return stripHtml(value || "").replace(/\s+/g, " ").trim()
 }
+
+// =====================================================
+// BLOCK: Shared Styles
+// =====================================================
 
 const sectionTitleStyle = {
   fontSize: "12px",
@@ -24,7 +44,13 @@ const sectionTitleStyle = {
   pageBreakAfter: "avoid" as const,
 }
 
+// =====================================================
+// BLOCK: Classic Resume Template
+// =====================================================
+
 export function ClassicTemplate({ data }: ClassicTemplateProps) {
+  console.log("CLASSIC TEMPLATE FULL EXPERIENCE DATA:", data.experience)
+
   return (
     <article
       style={{
@@ -37,6 +63,10 @@ export function ClassicTemplate({ data }: ClassicTemplateProps) {
         fontSize: "12px",
       }}
     >
+      {/* =====================================================
+          BLOCK: Resume Header
+      ===================================================== */}
+
       <header
         style={{
           textAlign: "center",
@@ -49,7 +79,9 @@ export function ClassicTemplate({ data }: ClassicTemplateProps) {
         </h1>
 
         <p style={{ marginTop: "6px", marginBottom: 0, color: "#374151", fontSize: "11px" }}>
-          {[data.contact.email, data.contact.phone, data.contact.location].filter(Boolean).join(" • ")}
+          {[data.contact.email, data.contact.phone, data.contact.location]
+            .filter(Boolean)
+            .join(" • ")}
         </p>
 
         {[data.contact.linkedIn, data.contact.website].filter(Boolean).length > 0 && (
@@ -59,6 +91,10 @@ export function ClassicTemplate({ data }: ClassicTemplateProps) {
         )}
       </header>
 
+      {/* =====================================================
+          BLOCK: Professional Summary
+      ===================================================== */}
+
       <section style={{ marginTop: "14px" }}>
         <h2 style={sectionTitleStyle}>Professional Summary</h2>
         <p style={{ margin: 0 }}>
@@ -66,44 +102,76 @@ export function ClassicTemplate({ data }: ClassicTemplateProps) {
         </p>
       </section>
 
+      {/* =====================================================
+          BLOCK: Work Experience
+      ===================================================== */}
+
       <section style={{ marginTop: "14px" }}>
         <h2 style={sectionTitleStyle}>Work Experience</h2>
 
         <div style={{ display: "grid", gap: "11px" }}>
-          {data.experience.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                breakInside: "avoid",
-                pageBreakInside: "avoid",
-              }}
-            >
-              <strong style={{ fontSize: "12px" }}>
-                {item.role || "Role"} {item.company ? `— ${item.company}` : ""}
-              </strong>
+          {data.experience.map((item) => {
+            console.log("CLASSIC TEMPLATE EXPERIENCE ITEM:", {
+              id: item.id,
+              role: item.role,
+              company: item.company,
+              location: item.location,
+              startDate: item.startDate,
+              endDate: item.endDate,
+              bullets: item.bullets,
+            })
 
-              <p style={{ color: "#4b5563", marginTop: "2px", marginBottom: 0 }}>
-                {[item.location, item.startDate, item.endDate].filter(Boolean).join(" • ")}
-              </p>
+            return (
+              <div
+                key={item.id}
+                style={{
+                  breakInside: "avoid",
+                  pageBreakInside: "avoid",
+                }}
+              >
+                {/* =====================================================
+                    BLOCK: Experience Header
+                ===================================================== */}
 
-              <ul style={{ marginTop: "5px", marginBottom: 0, paddingLeft: "17px" }}>
-                {item.bullets.filter(Boolean).map((bullet, index) => (
-                  <li
-                    key={`${item.id}-classic-${index}`}
-                    style={{
-                      marginBottom: "2px",
-                      breakInside: "avoid",
-                      pageBreakInside: "avoid",
-                    }}
-                  >
-                    {cleanText(bullet)}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+                <strong style={{ fontSize: "12px" }}>
+                  {item.role || "Role"} {item.company ? `— ${item.company}` : ""}
+                </strong>
+
+                {/* =====================================================
+                    BLOCK: Production Meta Line
+                  ===================================================== */}
+
+                    <p style={{ color: "#4b5563", marginTop: "2px", marginBottom: 0 }}>
+                      {buildExperienceMetaLine(item)}
+                    </p>
+
+                {/* =====================================================
+                    BLOCK: Experience Bullets
+                ===================================================== */}
+
+                <ul style={{ marginTop: "5px", marginBottom: 0, paddingLeft: "17px" }}>
+                  {item.bullets.filter(Boolean).map((bullet, index) => (
+                    <li
+                      key={`${item.id}-classic-${index}`}
+                      style={{
+                        marginBottom: "2px",
+                        breakInside: "avoid",
+                        pageBreakInside: "avoid",
+                      }}
+                    >
+                      {cleanText(bullet)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
+          })}
         </div>
       </section>
+
+      {/* =====================================================
+          BLOCK: Education
+      ===================================================== */}
 
       <section style={{ marginTop: "14px" }}>
         <h2 style={sectionTitleStyle}>Education</h2>
@@ -126,12 +194,20 @@ export function ClassicTemplate({ data }: ClassicTemplateProps) {
         </div>
       </section>
 
+      {/* =====================================================
+          BLOCK: Skills
+      ===================================================== */}
+
       <section style={{ marginTop: "14px" }}>
         <h2 style={sectionTitleStyle}>Skills</h2>
         <p style={{ margin: 0, overflowWrap: "anywhere" }}>
           {data.skills.length ? data.skills.join(", ") : "Skills not added yet."}
         </p>
       </section>
+
+      {/* =====================================================
+          BLOCK: Certifications
+      ===================================================== */}
 
       <section style={{ marginTop: "14px" }}>
         <h2 style={sectionTitleStyle}>Certifications</h2>

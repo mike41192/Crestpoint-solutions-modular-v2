@@ -1,61 +1,43 @@
-const commonStopWords = new Set([
-  "a",
-  "an",
-  "and",
-  "are",
-  "as",
-  "at",
-  "be",
-  "by",
-  "for",
-  "from",
-  "has",
-  "have",
-  "in",
-  "is",
-  "it",
-  "of",
-  "on",
-  "or",
-  "our",
-  "that",
-  "the",
-  "their",
-  "this",
-  "to",
-  "with",
-  "you",
-  "your",
-])
+// =====================================================
+// BLOCK: Taxonomy Imports
+// =====================================================
+
+import {
+  extractTaxonomyKeywords,
+  filterValidAtsKeywords,
+  normalizeAtsKeyword,
+} from "@/modules/keyword-engine"
+
+// =====================================================
+// BLOCK: Text Normalization
+// Kept for backward compatibility with older ATS imports.
+// =====================================================
 
 export function normalizeKeywordText(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9+#.\s-]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
+  return normalizeAtsKeyword(value)
 }
+
+// =====================================================
+// BLOCK: Job Description Tokenization
+// Kept for compatibility, but now returns ATS-safe taxonomy
+// terms instead of generic single-word tokens.
+// =====================================================
 
 export function tokenizeJobDescription(jobDescription: string): string[] {
-  const normalized = normalizeKeywordText(jobDescription)
-
-  return normalized
-    .split(" ")
-    .map((word) => word.trim())
-    .filter((word) => word.length >= 3)
-    .filter((word) => !commonStopWords.has(word))
+  return extractJobKeywords(jobDescription)
 }
 
+// =====================================================
+// BLOCK: Job Keyword Extraction
+// Taxonomy-backed extraction prevents generic words like
+// "years", "position", "full-time", "job", "type", etc.
+// from becoming ATS keywords.
+// =====================================================
+
 export function extractJobKeywords(jobDescription: string): string[] {
-  const tokens = tokenizeJobDescription(jobDescription)
-  const frequencyMap = new Map<string, number>()
+  const taxonomyKeywords = extractTaxonomyKeywords(jobDescription).map(
+    (match) => match.keyword,
+  )
 
-  tokens.forEach((token) => {
-    frequencyMap.set(token, (frequencyMap.get(token) || 0) + 1)
-  })
-
-  return Array.from(frequencyMap.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([keyword]) => keyword)
-    .slice(0, 40)
+  return filterValidAtsKeywords(taxonomyKeywords).slice(0, 40)
 }

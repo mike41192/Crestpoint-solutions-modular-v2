@@ -35,6 +35,8 @@ export type TaxonomyMatch = {
 
 // =====================================================
 // BLOCK: Stop Words / Generic Blocklist
+// Prevents generic resume/job-description words from
+// being treated as ATS skills.
 // =====================================================
 
 const STOP_WORDS = new Set([
@@ -49,6 +51,7 @@ const STOP_WORDS = new Set([
   "for",
   "from",
   "in",
+  "into",
   "is",
   "it",
   "of",
@@ -56,25 +59,41 @@ const STOP_WORDS = new Set([
   "or",
   "that",
   "the",
+  "their",
+  "this",
   "to",
   "with",
+  "within",
+  "across",
+  "through",
   "work",
+  "works",
+  "working",
   "team",
+  "teams",
   "job",
   "role",
+  "type",
+  "position",
+  "candidate",
+  "summary",
+  "resume",
+  "full-time",
+  "part-time",
+  "seeking",
+  "looking",
+  "requires",
+  "required",
+  "preferred",
+  "responsible",
+  "responsibilities",
   "tasks",
   "duties",
-  "responsibilities",
-  "support",
-  "help",
-  "assist",
-  "manage",
-  "handled",
-  "performed",
-  "worked",
   "daily",
   "weekly",
   "monthly",
+  "years",
+  "year",
 ])
 
 const GENERIC_BLOCKLIST = new Set([
@@ -91,10 +110,7 @@ const GENERIC_BLOCKLIST = new Set([
   "motivated",
   "hardworking",
   "friendly",
-  "customer",
-  "service",
   "business",
-  "operations",
   "process",
   "processes",
   "system",
@@ -102,10 +118,26 @@ const GENERIC_BLOCKLIST = new Set([
   "data",
   "reports",
   "reporting",
+  "midwest",
+  "decatur",
+  "lead",
+  "led",
+  "manage",
+  "managed",
+  "management",
+  "support",
+  "supported",
+  "help",
+  "helped",
+  "assist",
+  "assisted",
+  "handled",
+  "performed",
 ])
 
 // =====================================================
 // BLOCK: Synonym Map
+// Maps common variations to canonical ATS-safe keywords.
 // =====================================================
 
 const SYNONYMS: Record<string, string> = {
@@ -115,17 +147,43 @@ const SYNONYMS: Record<string, string> = {
   nextjs: "next.js",
   "next js": "next.js",
   "restful api": "rest api",
+
   spreadsheet: "microsoft excel",
   spreadsheets: "microsoft excel",
   excel: "microsoft excel",
+
   crm: "customer relationship management",
   "crm management": "customer relationship management",
   "customer relations": "customer relationship management",
+
   "project coordination": "project management",
   "people management": "team leadership",
-  "process improvement": "root cause analysis",
+  leadership: "team leadership",
+  supervisor: "supervision",
+  supervising: "supervision",
+
   loto: "lockout tagout",
+  "lock out tag out": "lockout tagout",
+  "lock-out tag-out": "lockout tagout",
+
   csm: "certified scrum master",
+
+  "preventative maintenance": "preventive maintenance",
+  "pm maintenance": "preventive maintenance",
+  "maintenance planning": "preventive maintenance",
+  "maintenance repairs": "corrective maintenance",
+
+  troubleshooting: "equipment troubleshooting",
+  "troubleshoot equipment": "equipment troubleshooting",
+  "mechanical troubleshooting": "equipment troubleshooting",
+
+  "root cause": "root cause analysis",
+  rca: "root cause analysis",
+  "root-cause analysis": "root cause analysis",
+
+  "osha safety": "osha",
+  cmms: "cmms",
+  "computerized maintenance management system": "cmms",
 }
 
 // =====================================================
@@ -135,18 +193,34 @@ const SYNONYMS: Record<string, string> = {
 const TAXONOMY: Record<KeywordCategory, string[]> = {
   technical_skill: [
     ...technicalSkills,
+    ...manufacturingSkills,
     "api integration",
     "rest api",
     "database design",
     "dashboard development",
+    "preventive maintenance",
+    "corrective maintenance",
+    "equipment troubleshooting",
+    "mechanical systems",
+    "electrical systems",
+    "hydraulic systems",
+    "pneumatic systems",
+    "equipment repair",
+    "production equipment",
+    "industrial maintenance",
   ],
 
   soft_skill: [
+    ...businessSkills,
     ...leadershipSkills,
     "client communication",
     "cross-functional collaboration",
     "conflict resolution",
     "stakeholder management",
+    "team leadership",
+    "staff training",
+    "employee training",
+    "supervision",
   ],
 
   tool: [
@@ -166,6 +240,10 @@ const TAXONOMY: Record<KeywordCategory, string[]> = {
     "stripe",
     "vercel",
     "github",
+    "cmms",
+    "blueprints",
+    "schematics",
+    "plc",
   ],
 
   platform: [
@@ -184,18 +262,38 @@ const TAXONOMY: Record<KeywordCategory, string[]> = {
     "scrum",
     "kanban",
     "lean six sigma",
+    "lean manufacturing",
     "root cause analysis",
     "standard operating procedures",
     "sop development",
+    "quality control",
+    "safety compliance",
+    "inventory control",
+    "process improvement",
   ],
 
-  certification: [...certificationKeywords],
+  certification: [
+    ...certificationKeywords,
+    "osha",
+    "lockout tagout",
+    "six sigma",
+    "certified scrum master",
+  ],
 
-  experience_signal: [...experienceSignals],
+  experience_signal: [
+    ...experienceSignals,
+    "5 years experience",
+    "supervisory experience",
+    "maintenance experience",
+    "manufacturing experience",
+    "equipment maintenance",
+    "work orders",
+    "vendor management",
+  ],
 }
 
 // =====================================================
-// BLOCK: Helpers
+// BLOCK: Normalization Helpers
 // =====================================================
 
 export function normalizeAtsKeyword(value: string): string {
@@ -214,9 +312,21 @@ function resolveSynonym(keyword: string): string {
   return SYNONYMS[keyword] ?? keyword
 }
 
+function normalizeAndResolve(value: string): string {
+  return resolveSynonym(normalizeAtsKeyword(value))
+}
+
+// =====================================================
+// BLOCK: Taxonomy Lookup Helpers
+// =====================================================
+
 function getCategoryForKeyword(keyword: string): KeywordCategory | null {
+  const normalized = normalizeAndResolve(keyword)
+
   for (const [category, keywords] of Object.entries(TAXONOMY)) {
-    if (keywords.includes(keyword)) {
+    const normalizedKeywords = keywords.map(normalizeAndResolve)
+
+    if (normalizedKeywords.includes(normalized)) {
       return category as KeywordCategory
     }
   }
@@ -232,68 +342,96 @@ function isBlockedKeyword(keyword: string): boolean {
   if (STOP_WORDS.has(normalized)) return true
   if (GENERIC_BLOCKLIST.has(normalized)) return true
 
-  const wordCount = normalized.split(" ").length
+  const words = normalized.split(" ")
 
-  if (wordCount === 1 && normalized.length < 4) {
+  if (words.every((word) => STOP_WORDS.has(word))) {
+    return true
+  }
+
+  if (words.every((word) => GENERIC_BLOCKLIST.has(word))) {
+    return true
+  }
+
+  if (words.length === 1 && normalized.length < 4) {
     return true
   }
 
   return false
 }
 
+// =====================================================
+// BLOCK: Phrase Priority Builder
+// Includes both canonical keywords and synonym aliases.
+// Long phrases are matched first to prevent splitting
+// "root cause analysis" into weaker single-word matches.
+// =====================================================
+
 function buildPhrasePriorityList(): string[] {
-  return Object.values(TAXONOMY)
-    .flat()
+  const canonicalKeywords = Object.values(TAXONOMY).flat().map(normalizeAtsKeyword)
+
+  const synonymAliases = Object.keys(SYNONYMS).map(normalizeAtsKeyword)
+
+  const synonymCanonicals = Object.values(SYNONYMS).map(normalizeAtsKeyword)
+
+  return [...canonicalKeywords, ...synonymAliases, ...synonymCanonicals]
     .map(normalizeAtsKeyword)
-    .map(resolveSynonym)
     .filter((keyword) => !isBlockedKeyword(keyword))
     .filter((keyword, index, array) => array.indexOf(keyword) === index)
     .sort((a, b) => b.split(" ").length - a.split(" ").length || b.length - a.length)
 }
 
 // =====================================================
-// BLOCK: Public Functions
+// BLOCK: Public Keyword Extraction
 // =====================================================
 
 export function extractTaxonomyKeywords(text: string): TaxonomyMatch[] {
   const normalizedText = normalizeAtsKeyword(text)
   const matches = new Map<string, TaxonomyMatch>()
 
-  for (const keyword of buildPhrasePriorityList()) {
-    const category = getCategoryForKeyword(keyword)
+  for (const phrase of buildPhrasePriorityList()) {
+    const canonical = normalizeAndResolve(phrase)
+    const category = getCategoryForKeyword(canonical)
 
-    if (!category) {
+    if (!category || isBlockedKeyword(canonical)) {
       continue
     }
 
-    const pattern = new RegExp(`(^|\\s)${escapeRegExp(keyword)}(\\s|$)`, "i")
+    const pattern = new RegExp(`(^|\\s)${escapeRegExp(phrase)}(\\s|$)`, "i")
 
     if (!pattern.test(normalizedText)) {
       continue
     }
 
-    matches.set(keyword, {
-      keyword,
-      normalized: keyword,
+    matches.set(canonical, {
+      keyword: canonical,
+      normalized: canonical,
       category,
-      matchedText: keyword,
-      confidence: keyword.includes(" ") ? "high" : "medium",
+      matchedText: phrase,
+      confidence: canonical.includes(" ") ? "high" : "medium",
     })
   }
 
   return Array.from(matches.values())
 }
 
+// =====================================================
+// BLOCK: Public Keyword Filtering
+// =====================================================
+
 export function filterValidAtsKeywords(keywords: string[]): string[] {
   return keywords
-    .map(normalizeAtsKeyword)
-    .map(resolveSynonym)
+    .map(normalizeAndResolve)
     .filter((keyword) => !isBlockedKeyword(keyword))
     .filter((keyword) => getCategoryForKeyword(keyword) !== null)
+    .filter((keyword, index, array) => array.indexOf(keyword) === index)
 }
 
+// =====================================================
+// BLOCK: Public Keyword Classification
+// =====================================================
+
 export function classifyKeyword(keyword: string): KeywordCategory | null {
-  const normalized = resolveSynonym(normalizeAtsKeyword(keyword))
+  const normalized = normalizeAndResolve(keyword)
 
   if (isBlockedKeyword(normalized)) {
     return null

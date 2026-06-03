@@ -22,6 +22,23 @@ import {
 } from "./keyword-taxonomy"
 
 // =====================================================
+// BLOCK: Local Constants
+// =====================================================
+
+const SKILL_CATEGORIES = new Set([
+  "technical_skill",
+  "soft_skill",
+  "tool",
+  "platform",
+  "methodology",
+])
+
+const MAX_MISSING_SKILLS = 8
+const MAX_MISSING_CERTIFICATIONS = 5
+const MAX_EXPERIENCE_GAPS = 6
+const MAX_KEYWORD_GAPS = 8
+
+// =====================================================
 // BLOCK: Resume Text Helpers
 // =====================================================
 
@@ -47,17 +64,28 @@ function buildResumeText(data: ResumeBuilderFormData): string {
 }
 
 // =====================================================
-// BLOCK: Deduplication Helpers
+// BLOCK: Keyword Helpers
 // =====================================================
 
 function uniqueKeywords(keywords: string[]): string[] {
-  return Array.from(new Set(keywords.map(normalizeAtsKeyword))).filter(Boolean)
+  return Array.from(new Set(keywords.map(normalizeAtsKeyword)))
+    .filter(Boolean)
+    .filter((keyword) => classifyKeyword(keyword) !== null)
+}
+
+function getCleanTaxonomyKeywords(text: string): string[] {
+  return filterValidAtsKeywords(
+    extractTaxonomyKeywords(text).map((match) => match.keyword),
+  )
 }
 
 function getMissingFromResume(jobKeywords: string[], resumeKeywords: string[]) {
-  const resumeKeywordSet = new Set(resumeKeywords.map(normalizeAtsKeyword))
+  const cleanJobKeywords = uniqueKeywords(filterValidAtsKeywords(jobKeywords))
+  const cleanResumeKeywords = uniqueKeywords(filterValidAtsKeywords(resumeKeywords))
 
-  return uniqueKeywords(jobKeywords).filter((keyword) => {
+  const resumeKeywordSet = new Set(cleanResumeKeywords.map(normalizeAtsKeyword))
+
+  return cleanJobKeywords.filter((keyword) => {
     return !resumeKeywordSet.has(normalizeAtsKeyword(keyword))
   })
 }
@@ -136,9 +164,11 @@ function refineMissingSkillsWithIntelligence({
   resumeText: string
   missingSkills: string[]
 }): string[] {
+  const cleanMissingSkills = uniqueKeywords(filterValidAtsKeywords(missingSkills))
+
   const phraseFilteredSkills = removeIntelligentlyDetectedSkills({
     resumeText,
-    missingSkills,
+    missingSkills: cleanMissingSkills,
   })
 
   const evidenceFilteredSkills = removeEvidenceCoveredSkills({
@@ -163,22 +193,15 @@ function getMissingSkills(
   const resumeText = buildResumeText(data)
 
   const jobSkills = extractTaxonomyKeywords(jobDescription)
-    .filter((match) => {
-      return (
-        match.category === "technical_skill" ||
-        match.category === "soft_skill" ||
-        match.category === "tool" ||
-        match.category === "platform" ||
-        match.category === "methodology"
-      )
-    })
+    .filter((match) => SKILL_CATEGORIES.has(match.category))
     .map((match) => match.keyword)
 
-  const resumeSkills = extractTaxonomyKeywords(resumeText).map((match) => {
-    return match.keyword
-  })
+  const resumeSkills = getCleanTaxonomyKeywords(resumeText)
 
-  const missingSkills = getMissingFromResume(jobSkills, resumeSkills).slice(0, 8)
+  const missingSkills = getMissingFromResume(jobSkills, resumeSkills).slice(
+    0,
+    MAX_MISSING_SKILLS,
+  )
 
   return refineMissingSkillsWithIntelligence({
     resumeText,
@@ -192,15 +215,18 @@ function getMissingCertifications(
 ): string[] {
   const resumeText = buildResumeText(data)
 
-  const jobCertifications = extractTaxonomyKeywords(jobDescription)
-    .filter((match) => isCertificationKeyword(match.keyword))
-    .map((match) => match.keyword)
+  const jobCertifications = getCleanTaxonomyKeywords(jobDescription).filter(
+    isCertificationKeyword,
+  )
 
-  const resumeCertifications = extractTaxonomyKeywords(resumeText)
-    .filter((match) => isCertificationKeyword(match.keyword))
-    .map((match) => match.keyword)
+  const resumeCertifications = getCleanTaxonomyKeywords(resumeText).filter(
+    isCertificationKeyword,
+  )
 
-  return getMissingFromResume(jobCertifications, resumeCertifications).slice(0, 5)
+  return getMissingFromResume(jobCertifications, resumeCertifications).slice(
+    0,
+    MAX_MISSING_CERTIFICATIONS,
+  )
 }
 
 function getExperienceGaps(
@@ -209,18 +235,18 @@ function getExperienceGaps(
 ): string[] {
   const resumeText = buildResumeText(data)
 
-  const jobExperienceSignals = extractTaxonomyKeywords(jobDescription)
-    .filter((match) => isExperienceSignalKeyword(match.keyword))
-    .map((match) => match.keyword)
+  const jobExperienceSignals = getCleanTaxonomyKeywords(jobDescription).filter(
+    isExperienceSignalKeyword,
+  )
 
-  const resumeExperienceSignals = extractTaxonomyKeywords(resumeText)
-    .filter((match) => isExperienceSignalKeyword(match.keyword))
-    .map((match) => match.keyword)
+  const resumeExperienceSignals = getCleanTaxonomyKeywords(resumeText).filter(
+    isExperienceSignalKeyword,
+  )
 
   const experienceGaps = getMissingFromResume(
     jobExperienceSignals,
     resumeExperienceSignals,
-  ).slice(0, 6)
+  ).slice(0, MAX_EXPERIENCE_GAPS)
 
   return refineMissingSkillsWithIntelligence({
     resumeText,
@@ -234,25 +260,16 @@ function getKeywordGaps(
 ): string[] {
   const resumeText = buildResumeText(data)
 
-  const jobKeywords = extractTaxonomyKeywords(jobDescription)
-    .filter((match) => {
-      return !isCertificationKeyword(match.keyword)
-    })
-    .filter((match) => {
-      return !isExperienceSignalKeyword(match.keyword)
-    })
-    .map((match) => match.keyword)
+  const jobKeywords = getCleanTaxonomyKeywords(jobDescription)
+    .filter((keyword) => !isCertificationKeyword(keyword))
+    .filter((keyword) => !isExperienceSignalKeyword(keyword))
 
-  const resumeKeywords = extractTaxonomyKeywords(resumeText).map((match) => {
-    return match.keyword
-  })
+  const resumeKeywords = getCleanTaxonomyKeywords(resumeText)
 
-  const keywordGaps = getMissingFromResume(
-    filterValidAtsKeywords(jobKeywords),
-    filterValidAtsKeywords(resumeKeywords),
+  const keywordGaps = getMissingFromResume(jobKeywords, resumeKeywords).slice(
+    0,
+    MAX_KEYWORD_GAPS,
   )
-    .filter((keyword) => classifyKeyword(keyword) !== null)
-    .slice(0, 8)
 
   return refineMissingSkillsWithIntelligence({
     resumeText,
