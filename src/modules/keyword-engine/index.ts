@@ -1,11 +1,7 @@
 // =====================================================
-// BLOCK: Central Keyword Engine Re-Exports
+// BLOCK: Central Keyword Engine Exports
 // Crestpoint Solutions V2
 // Version: 1.5.6
-//
-// This module centralizes ATS-safe keyword intelligence.
-// ATS Engine, Gap Analyzer, Resume Optimizer, and future
-// AI modules should import keyword logic from here.
 // =====================================================
 
 export {
@@ -15,9 +11,6 @@ export {
   isCertificationKeyword,
   isExperienceSignalKeyword,
   normalizeAtsKeyword,
-} from "@/modules/gap-analyzer/keyword-taxonomy"
+} from "./taxonomy"
 
-export type {
-  KeywordCategory,
-  TaxonomyMatch,
-} from "@/modules/gap-analyzer/keyword-taxonomy"
+export type { KeywordCategory, TaxonomyMatch } from "./taxonomy"

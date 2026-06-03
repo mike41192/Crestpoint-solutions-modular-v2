@@ -1,6 +1,6 @@
 Crestpoint Solutions
 
-Version: 1.5.5
+Version: 1.5.6
 Branch: modular-v2-build
 Status: Active Development (Pre-v1.6.0 Hardening Review)
 Architecture: Modular V2
@@ -600,3 +600,15 @@ Overall Score
 8.5 / 10
 
 Current focus is preparing the platform for the v1.6.0 Hardening Phase before continuing expansion into the Crestpoint Intelligence Layer and Career Operating System roadmap.
+
+## Version 1.5.6
+
+### ATS System Refactor
+- ATS dashboard separated from Resume Builder
+- Dedicated ATS scoring module created
+- ATS tab navigation implemented
+- Keyword taxonomy engine integrated
+- ATS recommendations upgraded
+- ATS risk detection upgraded
+- Gap Analyzer upgraded with taxonomy intelligence
+- Central keyword-engine module introduced

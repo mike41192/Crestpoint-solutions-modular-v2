@@ -5,7 +5,7 @@
 import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 
 // =====================================================
-// BLOCK: Taxonomy Imports
+// BLOCK: Keyword Engine Imports
 // =====================================================
 
 import {
@@ -53,10 +53,10 @@ function resumeToSearchableText(data: ResumeBuilderFormData) {
 }
 
 // =====================================================
-// BLOCK: Keyword Deduplication Helper
+// BLOCK: Keyword Normalization / Deduplication
 // =====================================================
 
-function uniqueKeywords(keywords: string[]) {
+function uniqueValidKeywords(keywords: string[]) {
   return Array.from(new Set(keywords.map(normalizeAtsKeyword)))
     .filter(Boolean)
     .filter((keyword) => filterValidAtsKeywords([keyword]).length > 0)
@@ -67,9 +67,58 @@ function uniqueKeywords(keywords: string[]) {
 // =====================================================
 
 function getTaxonomyKeywords(text: string) {
-  return uniqueKeywords(
+  return uniqueValidKeywords(
     extractTaxonomyKeywords(text).map((match) => match.keyword),
   )
+}
+
+// =====================================================
+// BLOCK: Flexible Keyword Match Helper
+// Handles exact matches and partial phrase overlap.
+// =====================================================
+
+function hasKeywordMatch(keyword: string, resumeKeywords: string[]) {
+  const normalizedKeyword = normalizeAtsKeyword(keyword)
+
+  return resumeKeywords.some((resumeKeyword) => {
+    const normalizedResumeKeyword = normalizeAtsKeyword(resumeKeyword)
+
+    if (normalizedResumeKeyword === normalizedKeyword) {
+      return true
+    }
+
+    if (
+      normalizedKeyword.includes(" ") &&
+      normalizedResumeKeyword.includes(normalizedKeyword)
+    ) {
+      return true
+    }
+
+    if (
+      normalizedResumeKeyword.includes(" ") &&
+      normalizedKeyword.includes(normalizedResumeKeyword)
+    ) {
+      return true
+    }
+
+    return false
+  })
+}
+
+// =====================================================
+// BLOCK: Match Percentage Helper
+// =====================================================
+
+function calculateKeywordMatchPercent({
+  matchedCount,
+  totalCount,
+}: {
+  matchedCount: number
+  totalCount: number
+}) {
+  if (totalCount === 0) return 0
+
+  return Math.round((matchedCount / totalCount) * 100)
 }
 
 // =====================================================
@@ -82,7 +131,6 @@ export function matchResumeKeywords(
 ): KeywordMatchResult {
   const jobKeywords = getTaxonomyKeywords(jobDescription)
   const resumeKeywords = getTaxonomyKeywords(resumeToSearchableText(data))
-  const resumeKeywordSet = new Set(resumeKeywords.map(normalizeAtsKeyword))
 
   if (!jobDescription.trim() || jobKeywords.length === 0) {
     return {
@@ -94,19 +142,20 @@ export function matchResumeKeywords(
   }
 
   const matchedKeywords = jobKeywords.filter((keyword) =>
-    resumeKeywordSet.has(normalizeAtsKeyword(keyword)),
+    hasKeywordMatch(keyword, resumeKeywords),
   )
 
   const missingKeywords = jobKeywords.filter(
-    (keyword) => !resumeKeywordSet.has(normalizeAtsKeyword(keyword)),
+    (keyword) => !hasKeywordMatch(keyword, resumeKeywords),
   )
 
   return {
     matchedKeywords,
     missingKeywords,
-    keywordMatchPercent: Math.round(
-      (matchedKeywords.length / jobKeywords.length) * 100,
-    ),
+    keywordMatchPercent: calculateKeywordMatchPercent({
+      matchedCount: matchedKeywords.length,
+      totalCount: jobKeywords.length,
+    }),
     totalKeywords: jobKeywords.length,
   }
 }

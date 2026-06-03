@@ -19,7 +19,7 @@ import {
   isCertificationKeyword,
   isExperienceSignalKeyword,
   normalizeAtsKeyword,
-} from "./keyword-taxonomy"
+} from "@/modules/keyword-engine"
 
 // =====================================================
 // BLOCK: Local Constants
