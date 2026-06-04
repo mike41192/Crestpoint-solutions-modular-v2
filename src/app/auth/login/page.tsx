@@ -50,13 +50,13 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client"
         host.includes("app.github.dev") ||
         host.includes("localhost")
       ) {
-        return "https://crestpoint-solutions-modular-v2-4n67-qkhli3k3r.vercel.app"
+        return "https://crestpoint-solutions.vercel.app"
       }
 
     return window.location.origin
   }
 
-  return "https://crestpoint-solutions-modular-v2-4n67-qkhli3k3r.vercel.app"
+  return "https://crestpoint-solutions.vercel.app"
 }
 // =====================================================
 // BLOCK: Page Component
