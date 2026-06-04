@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { Award, Factory, Target } from "lucide-react"
-import { ATSValidationPanel } from "@/components/admin/ATSValidationPanel"
+import { ATSExplainabilityPanel, ATSValidationPanel } from "@/components/admin"
 import {
   ATSDashboardTabs,
   type ATSDashboardTab,
@@ -14,6 +14,8 @@ import {
 import { ResumeATSPanel } from "@/components/ats/ResumeATSPanel"
 import { ResumeGapAnalysisPanel } from "@/components/ats/ResumeGapAnalysisPanel"
 import { ResumeOptimizationPanel } from "@/components/ats/ResumeOptimizationPanel"
+import { analyzeSkillEvidence } from "@/modules/ats-intelligence"
+import { explainATSScore } from "@/modules/ats-explainability"
 import { generateATSReport } from "@/modules/ats-engine"
 import { analyzeResumeGaps } from "@/modules/gap-analyzer"
 import type { IndustryGapItem } from "@/modules/ats-intelligence"
@@ -75,6 +77,11 @@ export function ResumeJobMatchForm({
         atsResult,
       }),
     [data, jobDescription, atsResult],
+  )
+
+  const explainabilityReport = useMemo(
+    () => explainATSScore(atsResult),
+    [atsResult],
   )
 
   function handleApplySuggestion(suggestion: ResumeOptimizationSuggestion) {
@@ -227,6 +234,12 @@ export function ResumeJobMatchForm({
       {activeTab === "validation" && (
         <div className="min-w-0 max-w-full overflow-hidden">
           <ATSValidationPanel result={atsResult} />
+        </div>
+      )}
+
+      {activeTab === "explainability" && (
+        <div className="min-w-0 max-w-full overflow-hidden">
+          <ATSExplainabilityPanel report={explainabilityReport} />
         </div>
       )}
     </section>

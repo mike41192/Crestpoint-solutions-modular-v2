@@ -127,18 +127,19 @@ Features:
 
 ---
 
-ATS Validation Dashboard
 
-Version: 1.6.4
+## ATS Explainability Engine (v1.6.7)
 
 Features:
+- Score reasoning engine
+- Strength analysis
+- Weakness analysis
+- Risk flag explanations
+- Explainability report generation
 
-- Industry Detection Viewer
-- Industry Readiness Viewer
-- ATS Score Breakdown
-- Missing Skills Viewer
-- Risk Flag Viewer
-- ATS Debug Layer
+Purpose:
+Provide transparency into ATS scoring decisions and support future ATS optimization workflows.
+
 
 Purpose:
 
@@ -454,3 +455,5 @@ Overall Health Score
 8.5 / 10
 
 Current focus is continued ATS Intelligence development and preparation for the v1.7.0 Intelligence Layer release.
+
+

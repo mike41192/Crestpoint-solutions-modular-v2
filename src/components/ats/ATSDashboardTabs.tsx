@@ -12,6 +12,7 @@ import {
   SearchCheck,
   Sparkles,
   Wrench,
+  Brain,
 } from "lucide-react"
 
 // =====================================================
@@ -26,6 +27,7 @@ export type ATSDashboardTab =
   | "recommendations"
   | "apply"
   | "validation"
+  | "explainability"
 
 type ATSDashboardTabsProps = {
   activeTab: ATSDashboardTab
@@ -76,6 +78,11 @@ const tabs: {
     label: "Validation",
     icon: Wrench,
   },
+  {
+    id: "explainability",
+    label: "Explainability",
+    icon: Brain,
+  }
 ]
 
 // =====================================================
@@ -88,7 +95,7 @@ export function ATSDashboardTabs({
 }: ATSDashboardTabsProps) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-      <div className="grid min-w-max grid-cols-7 gap-3 xl:min-w-0">
+      <div className="grid min-w-max grid-cols-8 gap-3 xl:min-w-0">
         {tabs.map((tab) => {
           const Icon = tab.icon
 
