@@ -1,7 +1,16 @@
 "use client"
 
+// =====================================================
+// BLOCK: React / Next Imports
+// =====================================================
+
 import Link from "next/link"
 import { useState } from "react"
+
+// =====================================================
+// BLOCK: Icon Imports
+// =====================================================
+
 import {
   ArrowRight,
   CheckCircle2,
@@ -12,7 +21,16 @@ import {
   Sparkles,
   UserRound,
 } from "lucide-react"
+
+// =====================================================
+// BLOCK: Supabase Imports
+// =====================================================
+
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
+
+// =====================================================
+// BLOCK: Page Component
+// =====================================================
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin")
@@ -20,7 +38,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
   const [loading, setLoading] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
   const [message, setMessage] = useState("")
+
+  // =====================================================
+  // BLOCK: Email / Password Auth Handler
+  // =====================================================
 
   async function handleAuth() {
     setLoading(true)
@@ -44,7 +67,7 @@ export default function LoginPage() {
           setMessage(error.message)
         } else {
           setMessage(
-            "Account created. If email confirmation is enabled, confirm your email before signing in."
+            "Account created. If email confirmation is enabled, confirm your email before signing in.",
           )
         }
       }
@@ -67,6 +90,42 @@ export default function LoginPage() {
 
     setLoading(false)
   }
+
+  // =====================================================
+  // BLOCK: Forgot Password Handler
+  // =====================================================
+
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      setMessage("Enter your email address first, then click Forgot Password.")
+      return
+    }
+
+    setResetLoading(true)
+    setMessage("")
+
+    try {
+      const supabase = createSupabaseBrowserClient()
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      })
+
+      if (error) {
+        setMessage(error.message)
+      } else {
+        setMessage("Password reset email sent. Check your inbox.")
+      }
+    } catch {
+      setMessage("Password reset request failed.")
+    }
+
+    setResetLoading(false)
+  }
+
+  // =====================================================
+  // BLOCK: Render
+  // =====================================================
 
   return (
     <main className="min-h-screen bg-slate-100">
@@ -215,6 +274,17 @@ export default function LoginPage() {
                 icon={Lock}
               />
 
+              {mode === "signin" && (
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={resetLoading}
+                  className="w-fit text-sm font-black text-blue-700 transition hover:text-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {resetLoading ? "Sending reset email..." : "Forgot password?"}
+                </button>
+              )}
+
               <button
                 type="button"
                 disabled={loading || !email || !password}
@@ -247,6 +317,10 @@ export default function LoginPage() {
     </main>
   )
 }
+
+// =====================================================
+// BLOCK: Reusable Field Component
+// =====================================================
 
 type FieldProps = {
   label: string
@@ -285,6 +359,10 @@ function Field({
     </label>
   )
 }
+
+// =====================================================
+// BLOCK: Reusable Feature Card
+// =====================================================
 
 function FeatureMiniCard({
   icon: Icon,

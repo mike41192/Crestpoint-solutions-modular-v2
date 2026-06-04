@@ -1,8 +1,17 @@
 "use client"
 
+// =====================================================
+// BLOCK: React / Next Imports
+// =====================================================
+
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+
+// =====================================================
+// BLOCK: Icon Imports
+// =====================================================
+
 import {
   BarChart3,
   BriefcaseBusiness,
@@ -16,11 +25,25 @@ import {
   Users,
 } from "lucide-react"
 
+// =====================================================
+// BLOCK: Auth Imports
+// =====================================================
+
+import { LogoutButton } from "@/components/auth/LogoutButton"
+
+// =====================================================
+// BLOCK: Component Types
+// =====================================================
+
 type ModulePageLayoutProps = {
   title: string
   description: string
   children?: ReactNode
 }
+
+// =====================================================
+// BLOCK: Navigation Config
+// =====================================================
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: Home },
@@ -40,6 +63,10 @@ const navItems = [
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
+// =====================================================
+// BLOCK: Module Page Layout Component
+// =====================================================
+
 export function ModulePageLayout({
   title,
   description,
@@ -50,17 +77,39 @@ export function ModulePageLayout({
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="mx-auto grid w-full max-w-[1700px] gap-6 px-3 py-5 sm:px-4 xl:grid-cols-[280px_minmax(0,1fr)] xl:px-6">
+        {/* =====================================================
+            BLOCK: Desktop Sidebar
+        ===================================================== */}
+
         <aside className="hidden xl:block">
           <div className="sticky top-5 rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
+            {/* =====================================================
+                BLOCK: Brand Header / Favicon Mark
+            ===================================================== */}
+
             <div className="mb-5 rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-5 text-white">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-200">
-                Crestpoint
-              </p>
-              <h2 className="mt-2 text-xl font-black">Career OS</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur">
+                  <span className="text-xl font-black text-blue-300">C</span>
+                </div>
+
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-200">
+                    Crestpoint
+                  </p>
+
+                  <h2 className="text-xl font-black">Career OS</h2>
+                </div>
+              </div>
+
+              <p className="mt-4 text-sm leading-6 text-slate-300">
                 Resume, interview, job search, and career growth tools.
               </p>
             </div>
+
+            {/* =====================================================
+                BLOCK: Desktop Navigation
+            ===================================================== */}
 
             <nav className="grid gap-1">
               {navItems.map((item) => {
@@ -85,22 +134,50 @@ export function ModulePageLayout({
                 )
               })}
             </nav>
+
+            {/* =====================================================
+                BLOCK: Account Actions
+            ===================================================== */}
+
+            <div className="mt-5 border-t border-slate-200 pt-4">
+              <LogoutButton />
+            </div>
           </div>
         </aside>
 
+        {/* =====================================================
+            BLOCK: Main Content Area
+        ===================================================== */}
+
         <main className="min-w-0">
           <header className="mb-6 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">
-              Crestpoint Solutions
-            </p>
+            {/* =====================================================
+                BLOCK: Header Title / Description
+            ===================================================== */}
 
-            <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-4xl">
-              {title}
-            </h1>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">
+                  Crestpoint Solutions
+                </p>
 
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500 sm:text-base">
-              {description}
-            </p>
+                <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                  {title}
+                </h1>
+
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500 sm:text-base">
+                  {description}
+                </p>
+              </div>
+
+              <div className="hidden lg:block">
+                <LogoutButton />
+              </div>
+            </div>
+
+            {/* =====================================================
+                BLOCK: Mobile / Tablet Navigation
+            ===================================================== */}
 
             <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:hidden">
               {navItems.slice(0, 6).map((item) => {
@@ -124,8 +201,16 @@ export function ModulePageLayout({
                   </Link>
                 )
               })}
+
+              <div className="sm:col-span-2">
+                <LogoutButton />
+              </div>
             </div>
           </header>
+
+          {/* =====================================================
+              BLOCK: Page Content
+          ===================================================== */}
 
           {children}
         </main>
