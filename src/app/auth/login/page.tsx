@@ -29,6 +29,26 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 
 // =====================================================
+// BLOCK: Site URL Helper
+// Uses Vercel production URL when NEXT_PUBLIC_SITE_URL is set.
+// Falls back to current browser origin for local/dev testing.
+// =====================================================
+
+function getSiteUrl() {
+  const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL
+
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/$/, "")
+  }
+
+  if (typeof window !== "undefined") {
+    return window.location.origin.replace(/\/$/, "")
+  }
+
+  return ""
+}
+
+// =====================================================
 // BLOCK: Page Component
 // =====================================================
 
@@ -93,6 +113,7 @@ export default function LoginPage() {
 
   // =====================================================
   // BLOCK: Forgot Password Handler
+  // Sends reset email to the configured Vercel route.
   // =====================================================
 
   async function handleForgotPassword() {
@@ -106,9 +127,10 @@ export default function LoginPage() {
 
     try {
       const supabase = createSupabaseBrowserClient()
+      const siteUrl = getSiteUrl()
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: `${siteUrl}/auth/reset-password`,
       })
 
       if (error) {
