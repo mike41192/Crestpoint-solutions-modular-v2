@@ -5,6 +5,12 @@
 import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 
 // =====================================================
+// BLOCK: ATS Intelligence Imports
+// =====================================================
+
+import { analyzeIndustryGaps } from "@/modules/ats-intelligence"
+
+// =====================================================
 // BLOCK: ATS Type Imports
 // =====================================================
 
@@ -96,6 +102,16 @@ export function calculateATSScore(
   const detectedTargetRole = detectTargetJobTitle(data, jobDescription)
 
   // =====================================================
+  // BLOCK: Industry Gap Analysis
+  // Adds skill evidence and industry readiness intelligence.
+  // =====================================================
+
+  const industryGapAnalysis = analyzeIndustryGaps({
+    data,
+    industry: detectedIndustry,
+  })
+
+  // =====================================================
   // BLOCK: Supporting Scores
   // =====================================================
 
@@ -183,6 +199,10 @@ export function calculateATSScore(
     strengths.push("Keyword alignment is strong.")
   }
 
+  if (industryGapAnalysis.readinessScore >= 80) {
+    strengths.push("Industry readiness is strong.")
+  }
+
   // =====================================================
   // BLOCK: Weakness Analysis
   // =====================================================
@@ -193,6 +213,10 @@ export function calculateATSScore(
 
   if (keywordResult.totalKeywords > 0 && keywordResult.keywordMatchPercent < 75) {
     weaknesses.push("Keyword alignment needs improvement.")
+  }
+
+  if (industryGapAnalysis.readinessScore < 75) {
+    weaknesses.push("Industry readiness needs improvement.")
   }
 
   riskFlags
@@ -220,5 +244,12 @@ export function calculateATSScore(
     riskFlags,
     detectedIndustry,
     detectedTargetRole,
+
+    // =====================================================
+    // BLOCK: Phase 1.6.1 Industry Intelligence Results
+    // =====================================================
+
+    industryReadinessScore: industryGapAnalysis.readinessScore,
+    industryGaps: industryGapAnalysis.gaps,
   }
 }

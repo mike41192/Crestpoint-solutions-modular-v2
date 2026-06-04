@@ -1,5 +1,19 @@
+// =====================================================
+// BLOCK: ATS Engine Type Imports
+// =====================================================
+
 import type { ATSGrade } from "./ats-grade"
 import type { ATSRiskFlag } from "./risk-flags"
+
+// =====================================================
+// BLOCK: ATS Intelligence Type Imports
+// =====================================================
+
+import type { IndustryGapItem } from "@/modules/ats-intelligence"
+
+// =====================================================
+// BLOCK: Section Score Type
+// =====================================================
 
 export interface ATSSectionScore {
   name: string
@@ -7,11 +21,19 @@ export interface ATSSectionScore {
   maxScore: number
 }
 
+// =====================================================
+// BLOCK: Recommendation Type
+// =====================================================
+
 export interface ATSRecommendation {
   severity: "high" | "medium" | "low"
   title: string
   description: string
 }
+
+// =====================================================
+// BLOCK: ATS Result Type
+// =====================================================
 
 export interface ATSResult {
   overallScore: number
@@ -29,4 +51,11 @@ export interface ATSResult {
   riskFlags: ATSRiskFlag[]
   detectedIndustry: string
   detectedTargetRole: string
+
+  // =====================================================
+  // BLOCK: Phase 1.6.1 Industry Intelligence Results
+  // =====================================================
+
+  industryReadinessScore: number
+  industryGaps: IndustryGapItem[]
 }
