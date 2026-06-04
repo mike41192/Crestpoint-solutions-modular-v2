@@ -29,25 +29,35 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 
 // =====================================================
-// BLOCK: Site URL Helper
-// Uses Vercel production URL when NEXT_PUBLIC_SITE_URL is set.
-// Falls back to current browser origin for local/dev testing.
+// BLOCK: Production URL Helper
 // =====================================================
 
-function getSiteUrl() {
-  const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL
+    function getAppUrl() {
+  // Vercel production URL from environment variable
+    if (
+      process.env.NEXT_PUBLIC_SITE_URL &&
+      process.env.NEXT_PUBLIC_SITE_URL.length > 0
+      ) {
+    return process.env.NEXT_PUBLIC_SITE_URL
+    }
 
-  if (configuredUrl) {
-    return configuredUrl.replace(/\/$/, "")
+  // Browser fallback
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname
+
+      if (
+        host.includes("github.dev") ||
+        host.includes("app.github.dev") ||
+        host.includes("localhost")
+      ) {
+        return "https://crestpoint-solutions-modular-v2-4n67-qkhli3k3r.vercel.app"
+      }
+
+    return window.location.origin
   }
 
-  if (typeof window !== "undefined") {
-    return window.location.origin.replace(/\/$/, "")
-  }
-
-  return ""
+  return "https://crestpoint-solutions-modular-v2-4n67-qkhli3k3r.vercel.app"
 }
-
 // =====================================================
 // BLOCK: Page Component
 // =====================================================
@@ -113,37 +123,45 @@ export default function LoginPage() {
 
   // =====================================================
   // BLOCK: Forgot Password Handler
-  // Sends reset email to the configured Vercel route.
   // =====================================================
 
-  async function handleForgotPassword() {
-    if (!email.trim()) {
-      setMessage("Enter your email address first, then click Forgot Password.")
-      return
-    }
-
-    setResetLoading(true)
-    setMessage("")
-
-    try {
-      const supabase = createSupabaseBrowserClient()
-      const siteUrl = getSiteUrl()
-
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${siteUrl}/auth/callback?next=/auth/reset-password`,
-      })
-
-      if (error) {
-        setMessage(error.message)
-      } else {
-        setMessage("Password reset email sent. Check your inbox.")
+    async function handleForgotPassword() {
+      if (!email.trim()) {
+        setMessage(
+          "Enter your email address first, then click Forgot Password."
+        )
+        return
       }
-    } catch {
-      setMessage("Password reset request failed.")
+
+      setResetLoading(true)
+      setMessage("")
+
+      try {
+        const supabase = createSupabaseBrowserClient()
+
+        const { error } =
+          await supabase.auth.resetPasswordForEmail(
+            email,
+            {
+            redirectTo: `${getAppUrl()}/auth/reset-password`,
+            }
+          )
+
+        if (error) {
+          setMessage(error.message)
+        } else {
+          setMessage(
+            "Password reset email sent. Check your inbox."
+          )
+        }
+      }  catch {
+        setMessage(
+          "Password reset request failed."
+        )
     }
 
-    setResetLoading(false)
-  }
+      setResetLoading(false)
+    }
 
   // =====================================================
   // BLOCK: Render
