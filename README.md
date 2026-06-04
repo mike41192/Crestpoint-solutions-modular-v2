@@ -612,3 +612,17 @@ Current focus is preparing the platform for the v1.6.0 Hardening Phase before co
 - ATS risk detection upgraded
 - Gap Analyzer upgraded with taxonomy intelligence
 - Central keyword-engine module introduced
+
+
+## ATS Validation Dashboard (v1.6.4)
+
+Features:
+- Industry Detection Viewer
+- ATS Score Breakdown
+- Missing Skill Viewer
+- Risk Flag Viewer
+- ATS Debug Layer
+- Industry Readiness Visibility
+
+Purpose:
+Provide transparency into ATS scoring decisions and support future ATS tuning and diagnostics.
