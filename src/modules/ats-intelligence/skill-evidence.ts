@@ -211,18 +211,30 @@ export function analyzeSkillEvidence({
   // BLOCK: Final Report
   // =====================================================
 
-  const score =
-    calculateEvidenceScore(
-      evidence,
-    )
+  const score = calculateEvidenceScore(evidence)
+  const strength = getEvidenceStrengthFromScore(score)
 
   return {
     skill,
     score,
-    strength:
-      getEvidenceStrengthFromScore(
-        score,
-      ),
+    confidence: score,
+    strength,
     evidence,
+
+    evidenceFound: evidence.map((item) => ({
+      phrase: item.evidenceText,
+      source: item.category,
+      confidence: item.score,
+    })),
+
+    evidenceMissing:
+      evidence.length > 0
+        ? []
+        : [`No direct resume evidence found for ${skill}.`],
+
+    recommendation:
+      evidence.length > 0
+        ? `Strengthen this skill by adding measurable resume evidence for ${skill}.`
+        : `Add truthful resume evidence showing how you used ${skill}.`,
   }
 }
