@@ -130,7 +130,7 @@ export default function LoginPage() {
       const siteUrl = getSiteUrl()
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${siteUrl}/auth/reset-password`,
+        redirectTo: `${siteUrl}/auth/callback?next=/auth/reset-password`,
       })
 
       if (error) {
