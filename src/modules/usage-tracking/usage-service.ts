@@ -1,10 +1,4 @@
 // =====================================================
-// BLOCK: Supabase Imports
-// =====================================================
-
-import { createSupabaseBrowserClient } from "@/lib/supabase/client"
-
-// =====================================================
 // BLOCK: Type Imports
 // =====================================================
 
@@ -27,29 +21,26 @@ export function createEmptyUsage(): UserUsageData {
 // =====================================================
 
 export async function loadCurrentUsage(): Promise<UserUsageData> {
-  const supabase = createSupabaseBrowserClient()
+  try {
+    const response = await fetch("/api/user/usage", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    const result = await response.json()
 
-  if (!user) {
+    if (!response.ok || result.status !== "success") {
+      return createEmptyUsage()
+    }
+
+    return {
+      atsScansUsed: Number(result.usage?.atsScansUsed ?? 0),
+      aiRewritesUsed: Number(result.usage?.aiRewritesUsed ?? 0),
+      resumesCreated: Number(result.usage?.resumesCreated ?? 0),
+    }
+  } catch {
     return createEmptyUsage()
-  }
-
-  const { data } = await supabase
-    .from("user_usage")
-    .select("*")
-    .eq("user_id", user.id)
-    .maybeSingle()
-
-  if (!data) {
-    return createEmptyUsage()
-  }
-
-  return {
-    atsScansUsed: data.ats_scans_used,
-    aiRewritesUsed: data.ai_rewrites_used,
-    resumesCreated: data.resumes_created,
   }
 }

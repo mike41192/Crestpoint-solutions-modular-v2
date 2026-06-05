@@ -1,5 +1,7 @@
 // =====================================================
 // BLOCK: Taxonomy Imports
+// Crestpoint Solutions V2
+// Version: 1.7.13
 // =====================================================
 
 import {
@@ -161,6 +163,10 @@ const SYNONYMS: Record<string, string> = {
   leadership: "team leadership",
   supervisor: "supervision",
   supervising: "supervision",
+  supervised: "supervision",
+  "supervisory experience": "supervision",
+  "managed a team": "team leadership",
+  "led a team": "team leadership",
 
   loto: "lockout tagout",
   "lock out tag out": "lockout tagout",
@@ -172,19 +178,105 @@ const SYNONYMS: Record<string, string> = {
   "pm maintenance": "preventive maintenance",
   "maintenance planning": "preventive maintenance",
   "maintenance repairs": "corrective maintenance",
+  "maintenance operations": "equipment maintenance",
+  "maintenance technician": "equipment maintenance",
+  "maintenance supervisor": "equipment maintenance",
+  "industrial maintenance": "equipment maintenance",
+  "facility maintenance": "equipment maintenance",
+  "mechanical maintenance": "equipment maintenance",
+  "manufacturing maintenance": "equipment maintenance",
 
   troubleshooting: "equipment troubleshooting",
   "troubleshoot equipment": "equipment troubleshooting",
+  "troubleshooting equipment": "equipment troubleshooting",
   "mechanical troubleshooting": "equipment troubleshooting",
+  "maintenance troubleshooting": "equipment troubleshooting",
+  "equipment failures": "equipment troubleshooting",
+  "resolved operational issues": "equipment troubleshooting",
 
   "root cause": "root cause analysis",
   rca: "root cause analysis",
   "root-cause analysis": "root cause analysis",
 
   "osha safety": "osha",
+  "workplace safety": "safety compliance",
+  "safety procedures": "safety compliance",
+
   cmms: "cmms",
   "computerized maintenance management system": "cmms",
+
+  "continuous improvements": "continuous improvement",
+  "workflow efficiency": "process improvement",
+  "operational improvement": "process improvement",
+  "production improvement": "process improvement",
+
+  "parts inventory": "inventory management",
+  inventory: "inventory management",
+  "inventory control": "inventory management",
+
+  "work order": "work orders",
+  "work-order": "work orders",
 }
+
+// =====================================================
+// BLOCK: Equivalent Skill Groups
+// Purpose:
+// Prevents the same real-world skill from appearing as multiple missing gaps.
+// Example:
+// Resume has "equipment maintenance"; job says "mechanical maintenance".
+// The gap analyzer should treat that as related evidence.
+// =====================================================
+
+const EQUIVALENT_SKILL_GROUPS: string[][] = [
+  [
+    "equipment maintenance",
+    "preventive maintenance",
+    "corrective maintenance",
+    "mechanical maintenance",
+    "industrial maintenance",
+    "facility maintenance",
+    "manufacturing maintenance",
+    "maintenance operations",
+    "maintenance technician",
+    "maintenance supervisor",
+  ],
+  [
+    "equipment troubleshooting",
+    "electrical troubleshooting",
+    "mechanical troubleshooting",
+    "maintenance troubleshooting",
+    "equipment repair",
+    "root cause analysis",
+  ],
+  [
+    "team leadership",
+    "supervision",
+    "supervisory experience",
+    "staff training",
+    "employee training",
+    "scheduling",
+  ],
+  [
+    "safety compliance",
+    "workplace safety",
+    "osha",
+    "osha 30",
+    "lockout tagout",
+  ],
+  [
+    "lean manufacturing",
+    "six sigma",
+    "lean six sigma",
+    "continuous improvement",
+    "process improvement",
+  ],
+  [
+    "inventory management",
+    "inventory control",
+    "vendor management",
+    "parts inventory",
+  ],
+]
 
 // =====================================================
 // BLOCK: Taxonomy Registry
@@ -200,14 +292,21 @@ const TAXONOMY: Record<KeywordCategory, string[]> = {
     "dashboard development",
     "preventive maintenance",
     "corrective maintenance",
+    "equipment maintenance",
     "equipment troubleshooting",
+    "mechanical maintenance",
+    "industrial maintenance",
+    "facility maintenance",
+    "manufacturing maintenance",
+    "maintenance operations",
     "mechanical systems",
     "electrical systems",
     "hydraulic systems",
     "pneumatic systems",
     "equipment repair",
     "production equipment",
-    "industrial maintenance",
+    "electrical troubleshooting",
+    "mechanical troubleshooting",
   ],
 
   soft_skill: [
@@ -221,6 +320,8 @@ const TAXONOMY: Record<KeywordCategory, string[]> = {
     "staff training",
     "employee training",
     "supervision",
+    "supervisory experience",
+    "scheduling",
   ],
 
   tool: [
@@ -268,16 +369,21 @@ const TAXONOMY: Record<KeywordCategory, string[]> = {
     "sop development",
     "quality control",
     "safety compliance",
+    "workplace safety",
     "inventory control",
+    "inventory management",
     "process improvement",
+    "continuous improvement",
   ],
 
   certification: [
     ...certificationKeywords,
     "osha",
+    "osha 30",
     "lockout tagout",
     "six sigma",
     "certified scrum master",
+    "forklift certification",
   ],
 
   experience_signal: [
@@ -289,6 +395,7 @@ const TAXONOMY: Record<KeywordCategory, string[]> = {
     "equipment maintenance",
     "work orders",
     "vendor management",
+    "production equipment",
   ],
 }
 
@@ -314,6 +421,26 @@ function resolveSynonym(keyword: string): string {
 
 function normalizeAndResolve(value: string): string {
   return resolveSynonym(normalizeAtsKeyword(value))
+}
+
+// =====================================================
+// BLOCK: Equivalent Skill Resolver
+// =====================================================
+
+function getEquivalentKeywords(keyword: string): string[] {
+  const normalized = normalizeAndResolve(keyword)
+
+  const matchingGroup = EQUIVALENT_SKILL_GROUPS.find((group) =>
+    group.map(normalizeAndResolve).includes(normalized),
+  )
+
+  if (!matchingGroup) {
+    return [normalized]
+  }
+
+  return Array.from(
+    new Set(matchingGroup.map(normalizeAndResolve)),
+  )
 }
 
 // =====================================================
@@ -368,16 +495,24 @@ function isBlockedKeyword(keyword: string): boolean {
 
 function buildPhrasePriorityList(): string[] {
   const canonicalKeywords = Object.values(TAXONOMY).flat().map(normalizeAtsKeyword)
-
   const synonymAliases = Object.keys(SYNONYMS).map(normalizeAtsKeyword)
-
   const synonymCanonicals = Object.values(SYNONYMS).map(normalizeAtsKeyword)
+  const equivalentKeywords = EQUIVALENT_SKILL_GROUPS.flat().map(normalizeAtsKeyword)
 
-  return [...canonicalKeywords, ...synonymAliases, ...synonymCanonicals]
+  return [
+    ...canonicalKeywords,
+    ...synonymAliases,
+    ...synonymCanonicals,
+    ...equivalentKeywords,
+  ]
     .map(normalizeAtsKeyword)
     .filter((keyword) => !isBlockedKeyword(keyword))
     .filter((keyword, index, array) => array.indexOf(keyword) === index)
-    .sort((a, b) => b.split(" ").length - a.split(" ").length || b.length - a.length)
+    .sort(
+      (a, b) =>
+        b.split(" ").length - a.split(" ").length ||
+        b.length - a.length,
+    )
 }
 
 // =====================================================
@@ -419,8 +554,16 @@ export function extractTaxonomyKeywords(text: string): TaxonomyMatch[] {
 // =====================================================
 
 export function filterValidAtsKeywords(keywords: string[]): string[] {
-  return keywords
+  const resolvedKeywords = keywords
     .map(normalizeAndResolve)
+    .filter((keyword) => !isBlockedKeyword(keyword))
+    .filter((keyword) => getCategoryForKeyword(keyword) !== null)
+
+  const expandedKeywords = resolvedKeywords.flatMap((keyword) =>
+    getEquivalentKeywords(keyword),
+  )
+
+  return expandedKeywords
     .filter((keyword) => !isBlockedKeyword(keyword))
     .filter((keyword) => getCategoryForKeyword(keyword) !== null)
     .filter((keyword, index, array) => array.indexOf(keyword) === index)
@@ -446,4 +589,14 @@ export function isCertificationKeyword(keyword: string): boolean {
 
 export function isExperienceSignalKeyword(keyword: string): boolean {
   return classifyKeyword(keyword) === "experience_signal"
+}
+
+// =====================================================
+// BLOCK: Public Equivalence Helper
+// Used by gap analysis to prevent related maintenance terms
+// from being treated as separate missing skills.
+// =====================================================
+
+export function getEquivalentAtsKeywords(keyword: string): string[] {
+  return getEquivalentKeywords(keyword)
 }

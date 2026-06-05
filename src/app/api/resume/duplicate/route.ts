@@ -5,12 +5,107 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 // =====================================================
+// BLOCK: Type Imports
+// =====================================================
+
+import type { MembershipData } from "@/modules/membership-management/types"
+
+// =====================================================
+// BLOCK: Membership Helpers
+// =====================================================
+
+function createFallbackMembership(): MembershipData {
+  return {
+    planName: "Free",
+    status: "Active",
+    atsLimit: 10,
+    rewriteLimit: 5,
+    resumeLimit: 3,
+  }
+}
+
+async function loadServerMembership(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  userId: string,
+): Promise<MembershipData> {
+  const { data } = await supabase
+    .from("memberships")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  if (!data) {
+    return createFallbackMembership()
+  }
+
+  return {
+    planName: data.plan_name || "Free",
+    status: data.status || "Active",
+    atsLimit: Number(data.ats_limit ?? 10),
+    rewriteLimit: Number(data.rewrite_limit ?? 5),
+    resumeLimit: Number(data.resume_limit ?? 3),
+  }
+}
+
+// =====================================================
+// BLOCK: Resume Count Helpers
+// =====================================================
+
+function isUnlimitedLimit(limit: number): boolean {
+  return limit < 0
+}
+
+async function loadCurrentResumeCount(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  userId: string,
+): Promise<number> {
+  const { count, error } = await supabase
+    .from("resumes")
+    .select("id", {
+      count: "exact",
+      head: true,
+    })
+    .eq("user_id", userId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return count ?? 0
+}
+
+function canCreateAnotherResume(
+  membership: MembershipData,
+  currentResumeCount: number,
+): {
+  allowed: boolean
+  message?: string
+} {
+  if (isUnlimitedLimit(membership.resumeLimit)) {
+    return {
+      allowed: true,
+    }
+  }
+
+  if (currentResumeCount >= membership.resumeLimit) {
+    return {
+      allowed: false,
+      message: `Resume limit reached. Your ${membership.planName} plan allows ${membership.resumeLimit} saved resumes. You currently have ${currentResumeCount}. Upgrade your membership to create or duplicate more resumes.`,
+    }
+  }
+
+  return {
+    allowed: true,
+  }
+}
+
+// =====================================================
 // BLOCK: Resume Duplicate Route
 // =====================================================
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    const body = await request.json().catch(() => ({}))
     const resumeId = body?.resumeId
 
     if (!resumeId || typeof resumeId !== "string") {
@@ -37,6 +132,25 @@ export async function POST(request: Request) {
           message: "You must be signed in to duplicate resumes.",
         },
         { status: 401 },
+      )
+    }
+
+    const membership = await loadServerMembership(supabase, user.id)
+    const currentResumeCount = await loadCurrentResumeCount(supabase, user.id)
+
+    const access = canCreateAnotherResume(membership, currentResumeCount)
+
+    if (!access.allowed) {
+      return Response.json(
+        {
+          status: "limit_reached",
+          message:
+            access.message ||
+            "Resume limit reached. Upgrade your membership to create more resumes.",
+          currentResumeCount,
+          resumeLimit: membership.resumeLimit,
+        },
+        { status: 403 },
       )
     }
 

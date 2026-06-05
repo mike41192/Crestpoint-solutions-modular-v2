@@ -1,5 +1,7 @@
 // =====================================================
 // BLOCK: Imports
+// Crestpoint Solutions V2
+// Version: 1.7.13
 // =====================================================
 
 import type { ResumeBuilderFormData } from "@/modules/resume-builder"
@@ -37,6 +39,83 @@ const MAX_MISSING_SKILLS = 8
 const MAX_MISSING_CERTIFICATIONS = 5
 const MAX_EXPERIENCE_GAPS = 6
 const MAX_KEYWORD_GAPS = 8
+
+// =====================================================
+// BLOCK: Equivalent Skill Groups
+// Purpose:
+// Prevents related real-world skills from being treated as separate gaps.
+// Example:
+// "mechanical maintenance", "industrial maintenance", and "facility maintenance"
+// should not all show as separate missing skills when the resume already shows
+// strong maintenance experience.
+// =====================================================
+
+const EQUIVALENT_SKILL_GROUPS: string[][] = [
+  [
+    "equipment maintenance",
+    "preventive maintenance",
+    "corrective maintenance",
+    "mechanical maintenance",
+    "industrial maintenance",
+    "facility maintenance",
+    "manufacturing maintenance",
+    "maintenance operations",
+    "maintenance technician",
+    "maintenance supervisor",
+    "maintenance experience",
+  ],
+  [
+    "equipment troubleshooting",
+    "electrical troubleshooting",
+    "mechanical troubleshooting",
+    "maintenance troubleshooting",
+    "equipment repair",
+    "equipment failures",
+    "root cause analysis",
+    "resolved operational issues",
+  ],
+  [
+    "team leadership",
+    "supervision",
+    "supervisory experience",
+    "staff training",
+    "employee training",
+    "scheduling",
+    "managed a team",
+    "led a team",
+  ],
+  [
+    "safety compliance",
+    "workplace safety",
+    "osha",
+    "osha 30",
+    "lockout tagout",
+    "loto",
+  ],
+  [
+    "lean manufacturing",
+    "six sigma",
+    "lean six sigma",
+    "continuous improvement",
+    "process improvement",
+    "workflow efficiency",
+    "operational improvement",
+    "production improvement",
+  ],
+  [
+    "inventory management",
+    "inventory control",
+    "vendor management",
+    "parts inventory",
+    "inventory",
+  ],
+  [
+    "work orders",
+    "work order",
+    "cmms",
+    "maintenance documentation",
+  ],
+]
 
 // =====================================================
 // BLOCK: Resume Text Helpers
@@ -79,14 +158,96 @@ function getCleanTaxonomyKeywords(text: string): string[] {
   )
 }
 
+function getEquivalentGroup(keyword: string): string[] {
+  const normalizedKeyword = normalizeAtsKeyword(keyword)
+
+  const group = EQUIVALENT_SKILL_GROUPS.find((items) =>
+    items.map(normalizeAtsKeyword).includes(normalizedKeyword),
+  )
+
+  if (!group) {
+    return [normalizedKeyword]
+  }
+
+  return Array.from(new Set(group.map(normalizeAtsKeyword)))
+}
+
+function getCanonicalGapKeyword(keyword: string): string {
+  return getEquivalentGroup(keyword)[0] || normalizeAtsKeyword(keyword)
+}
+
+function getExpandedKeywordSet(keywords: string[]): Set<string> {
+  const expandedKeywords = keywords.flatMap((keyword) =>
+    getEquivalentGroup(keyword),
+  )
+
+  return new Set(expandedKeywords.map(normalizeAtsKeyword))
+}
+
+function isKeywordCoveredByResume({
+  keyword,
+  resumeKeywords,
+}: {
+  keyword: string
+  resumeKeywords: string[]
+}) {
+  const resumeKeywordSet = getExpandedKeywordSet(resumeKeywords)
+  const equivalentKeywords = getEquivalentGroup(keyword)
+
+  return equivalentKeywords.some((equivalentKeyword) =>
+    resumeKeywordSet.has(normalizeAtsKeyword(equivalentKeyword)),
+  )
+}
+
+function dedupeEquivalentKeywords(keywords: string[]): string[] {
+  const seenCanonicalKeywords = new Set<string>()
+  const dedupedKeywords: string[] = []
+
+  keywords.forEach((keyword) => {
+    const canonicalKeyword = getCanonicalGapKeyword(keyword)
+
+    if (seenCanonicalKeywords.has(canonicalKeyword)) {
+      return
+    }
+
+    seenCanonicalKeywords.add(canonicalKeyword)
+    dedupedKeywords.push(canonicalKeyword)
+  })
+
+  return dedupedKeywords
+}
+
 function getMissingFromResume(jobKeywords: string[], resumeKeywords: string[]) {
-  const cleanJobKeywords = uniqueKeywords(filterValidAtsKeywords(jobKeywords))
+  const cleanJobKeywords = dedupeEquivalentKeywords(
+    uniqueKeywords(filterValidAtsKeywords(jobKeywords)),
+  )
+
   const cleanResumeKeywords = uniqueKeywords(filterValidAtsKeywords(resumeKeywords))
 
-  const resumeKeywordSet = new Set(cleanResumeKeywords.map(normalizeAtsKeyword))
-
   return cleanJobKeywords.filter((keyword) => {
-    return !resumeKeywordSet.has(normalizeAtsKeyword(keyword))
+    return !isKeywordCoveredByResume({
+      keyword,
+      resumeKeywords: cleanResumeKeywords,
+    })
+  })
+}
+
+function removeAlreadyCoveredKeywordGaps({
+  keywordGaps,
+  existingGaps,
+}: {
+  keywordGaps: string[]
+  existingGaps: string[]
+}) {
+  return keywordGaps.filter((keywordGap) => {
+    return !existingGaps.some((existingGap) => {
+      const existingGroup = getEquivalentGroup(existingGap)
+      const keywordGroup = getEquivalentGroup(keywordGap)
+
+      return keywordGroup.some((keyword) =>
+        existingGroup.includes(keyword),
+      )
+    })
   })
 }
 
@@ -106,12 +267,14 @@ function removeIntelligentlyDetectedSkills({
     targetSkills: missingSkills,
   })
 
-  const detectedSkillSet = new Set(
-    intelligentCoverage.detectedSkills.map(normalizeAtsKeyword),
+  const detectedSkillSet = getExpandedKeywordSet(
+    intelligentCoverage.detectedSkills,
   )
 
   return missingSkills.filter((skill) => {
-    return !detectedSkillSet.has(normalizeAtsKeyword(skill))
+    return !getEquivalentGroup(skill).some((equivalentSkill) =>
+      detectedSkillSet.has(normalizeAtsKeyword(equivalentSkill)),
+    )
   })
 }
 
@@ -131,10 +294,12 @@ function removeEvidenceCoveredSkills({
     targetSkills: missingSkills,
   })
 
-  const coveredSkillSet = new Set(coveredSkills.map(normalizeAtsKeyword))
+  const coveredSkillSet = getExpandedKeywordSet(coveredSkills)
 
   return missingSkills.filter((skill) => {
-    return !coveredSkillSet.has(normalizeAtsKeyword(skill))
+    return !getEquivalentGroup(skill).some((equivalentSkill) =>
+      coveredSkillSet.has(normalizeAtsKeyword(equivalentSkill)),
+    )
   })
 }
 
@@ -150,10 +315,12 @@ function removeProjectCoveredSkills({
   missingSkills: string[]
 }): string[] {
   const projectCoveredSkills = getProjectCoveredSkills(resumeText)
-  const projectSkillSet = new Set(projectCoveredSkills.map(normalizeAtsKeyword))
+  const projectSkillSet = getExpandedKeywordSet(projectCoveredSkills)
 
   return missingSkills.filter((skill) => {
-    return !projectSkillSet.has(normalizeAtsKeyword(skill))
+    return !getEquivalentGroup(skill).some((equivalentSkill) =>
+      projectSkillSet.has(normalizeAtsKeyword(equivalentSkill)),
+    )
   })
 }
 
@@ -164,7 +331,9 @@ function refineMissingSkillsWithIntelligence({
   resumeText: string
   missingSkills: string[]
 }): string[] {
-  const cleanMissingSkills = uniqueKeywords(filterValidAtsKeywords(missingSkills))
+  const cleanMissingSkills = dedupeEquivalentKeywords(
+    uniqueKeywords(filterValidAtsKeywords(missingSkills)),
+  )
 
   const phraseFilteredSkills = removeIntelligentlyDetectedSkills({
     resumeText,
@@ -176,10 +345,12 @@ function refineMissingSkillsWithIntelligence({
     missingSkills: phraseFilteredSkills,
   })
 
-  return removeProjectCoveredSkills({
+  const projectFilteredSkills = removeProjectCoveredSkills({
     resumeText,
     missingSkills: evidenceFilteredSkills,
   })
+
+  return dedupeEquivalentKeywords(projectFilteredSkills)
 }
 
 // =====================================================
@@ -254,10 +425,15 @@ function getExperienceGaps(
   })
 }
 
-function getKeywordGaps(
-  data: ResumeBuilderFormData,
-  jobDescription: string,
-): string[] {
+function getKeywordGaps({
+  data,
+  jobDescription,
+  existingGaps,
+}: {
+  data: ResumeBuilderFormData
+  jobDescription: string
+  existingGaps: string[]
+}): string[] {
   const resumeText = buildResumeText(data)
 
   const jobKeywords = getCleanTaxonomyKeywords(jobDescription)
@@ -271,9 +447,14 @@ function getKeywordGaps(
     MAX_KEYWORD_GAPS,
   )
 
-  return refineMissingSkillsWithIntelligence({
+  const refinedKeywordGaps = refineMissingSkillsWithIntelligence({
     resumeText,
     missingSkills: keywordGaps,
+  })
+
+  return removeAlreadyCoveredKeywordGaps({
+    keywordGaps: refinedKeywordGaps,
+    existingGaps,
   })
 }
 
@@ -373,7 +554,16 @@ export function analyzeResumeGaps(
   const missingSkills = getMissingSkills(data, jobDescription)
   const missingCertifications = getMissingCertifications(data, jobDescription)
   const experienceGaps = getExperienceGaps(data, jobDescription)
-  const keywordGaps = getKeywordGaps(data, jobDescription)
+
+  const keywordGaps = getKeywordGaps({
+    data,
+    jobDescription,
+    existingGaps: [
+      ...missingSkills,
+      ...missingCertifications,
+      ...experienceGaps,
+    ],
+  })
 
   const gaps = createGapItems({
     missingSkills,

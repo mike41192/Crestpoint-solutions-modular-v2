@@ -5,7 +5,7 @@
 // =====================================================
 
 import { useEffect, useMemo, useState } from "react"
-import { Award, Factory, Target } from "lucide-react"
+import { AlertTriangle, Award, CheckCircle2, Factory, Target } from "lucide-react"
 import { ATSExplainabilityPanel, ATSValidationPanel } from "@/components/admin"
 import {
   ATSDashboardTabs,
@@ -72,6 +72,7 @@ export function ResumeJobMatchForm({
 
   const [scanMessage, setScanMessage] = useState("")
   const [scanLoading, setScanLoading] = useState(false)
+  const [loadingAccess, setLoadingAccess] = useState(true)
 
   // =====================================================
   // BLOCK: Keep Saved Job Description Synced
@@ -86,19 +87,31 @@ export function ResumeJobMatchForm({
   // BLOCK: Load Membership And Usage
   // =====================================================
 
+  async function refreshAccessData() {
+    const [membershipResult, usageResult] = await Promise.all([
+      loadCurrentMembership(),
+      loadCurrentUsage(),
+    ])
+
+    setMembership(membershipResult)
+    setUsage(usageResult)
+    setLoadingAccess(false)
+  }
+
   useEffect(() => {
-    async function loadAccessData() {
-      const [membershipResult, usageResult] = await Promise.all([
-        loadCurrentMembership(),
-        loadCurrentUsage(),
-      ])
-
-      setMembership(membershipResult)
-      setUsage(usageResult)
-    }
-
-    loadAccessData()
+    refreshAccessData()
   }, [])
+
+  // =====================================================
+  // BLOCK: Derived Access State
+  // =====================================================
+
+  const atsAccess = canRunATSScan(membership, usage)
+
+  const atsLimitText =
+    membership.atsLimit < 0
+      ? `${usage.atsScansUsed} ATS scans used · Unlimited plan`
+      : `${usage.atsScansUsed} of ${membership.atsLimit} ATS scans used`
 
   // =====================================================
   // BLOCK: Job Description Update Handler
@@ -117,29 +130,45 @@ export function ResumeJobMatchForm({
 
   async function handleRunATSAnalysis() {
     setScanMessage("")
-    setScanLoading(true)
+
+    if (loadingAccess) {
+      setScanMessage("Membership access is still loading. Try again.")
+      return
+    }
 
     const access = canRunATSScan(membership, usage)
 
     if (!access.allowed) {
       setScanMessage(access.reason || "ATS scan limit reached.")
-      setScanLoading(false)
       return
     }
 
-    setAnalyzedJobDescription(jobDescription)
+    setScanLoading(true)
 
-    const result = await incrementATSScan()
+    try {
+      setAnalyzedJobDescription(jobDescription)
 
-    if (result.status === "success") {
-      const updatedUsage = await loadCurrentUsage()
-      setUsage(updatedUsage)
+      const result = await incrementATSScan()
+
+      if (result.status !== "success") {
+        setScanMessage(
+          result.message ||
+            "ATS analysis completed, but usage tracking could not be updated.",
+        )
+        return
+      }
+
+      setUsage((currentUsage) => ({
+        ...currentUsage,
+        atsScansUsed: currentUsage.atsScansUsed + 1,
+      }))
+
       setScanMessage("ATS analysis completed and usage updated.")
-    } else {
-      setScanMessage(result.message)
+    } catch {
+      setScanMessage("ATS analysis request failed.")
+    } finally {
+      setScanLoading(false)
     }
-
-    setScanLoading(false)
   }
 
   // =====================================================
@@ -224,7 +253,7 @@ export function ResumeJobMatchForm({
       <div className="flex flex-col gap-3 rounded-2xl border border-violet-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-black text-slate-950">
-            ATS Scans Used: {usage.atsScansUsed} / {membership.atsLimit}
+            {loadingAccess ? "Loading ATS access..." : atsLimitText}
           </p>
 
           <p className="mt-1 text-xs font-semibold text-slate-500">
@@ -235,7 +264,7 @@ export function ResumeJobMatchForm({
         <button
           type="button"
           onClick={handleRunATSAnalysis}
-          disabled={scanLoading}
+          disabled={scanLoading || loadingAccess || !atsAccess.allowed}
           className="w-fit rounded-full bg-violet-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:bg-slate-400"
         >
           {scanLoading ? "Running..." : "Run ATS Analysis"}
@@ -243,8 +272,34 @@ export function ResumeJobMatchForm({
       </div>
 
       {scanMessage && (
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
-          {scanMessage}
+        <div
+          className={`flex items-start gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold ${
+            atsAccess.allowed
+              ? "border-blue-100 bg-white text-slate-700"
+              : "border-amber-200 bg-amber-50 text-amber-900"
+          }`}
+        >
+          {atsAccess.allowed ? (
+            <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-blue-700" />
+          ) : (
+            <AlertTriangle
+              size={16}
+              className="mt-0.5 shrink-0 text-amber-700"
+            />
+          )}
+
+          <span>{scanMessage}</span>
+        </div>
+      )}
+
+      {!atsAccess.allowed && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+          <p className="font-black">ATS scan limit reached</p>
+
+          <p className="mt-1">
+            Upgrade messaging and Stripe plan changes will be connected during
+            the billing integration phase.
+          </p>
         </div>
       )}
 

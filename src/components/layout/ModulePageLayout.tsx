@@ -17,6 +17,7 @@ import {
   BriefcaseBusiness,
   CreditCard,
   FileText,
+  FolderOpen,
   GraduationCap,
   Home,
   MessageSquare,
@@ -48,6 +49,7 @@ type ModulePageLayoutProps = {
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: Home },
   { label: "Resume Builder", href: "/dashboard/resume", icon: FileText },
+  { label: "Resume Library", href: "/dashboard/resumes", icon: FolderOpen },
   { label: "ATS Scoring", href: "/dashboard/ats", icon: Target },
   { label: "AI Interviewer", href: "/dashboard/interview", icon: MessageSquare },
   {
@@ -77,16 +79,8 @@ export function ModulePageLayout({
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="mx-auto grid w-full max-w-[1700px] gap-6 px-3 py-5 sm:px-4 xl:grid-cols-[280px_minmax(0,1fr)] xl:px-6">
-        {/* =====================================================
-            BLOCK: Desktop Sidebar
-        ===================================================== */}
-
         <aside className="hidden xl:block">
           <div className="sticky top-5 rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
-            {/* =====================================================
-                BLOCK: Brand Header / Favicon Mark
-            ===================================================== */}
-
             <div className="mb-5 rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-5 text-white">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur">
@@ -106,10 +100,6 @@ export function ModulePageLayout({
                 Resume, interview, job search, and career growth tools.
               </p>
             </div>
-
-            {/* =====================================================
-                BLOCK: Desktop Navigation
-            ===================================================== */}
 
             <nav className="grid gap-1">
               {navItems.map((item) => {
@@ -135,26 +125,14 @@ export function ModulePageLayout({
               })}
             </nav>
 
-            {/* =====================================================
-                BLOCK: Account Actions
-            ===================================================== */}
-
             <div className="mt-5 border-t border-slate-200 pt-4">
               <LogoutButton />
             </div>
           </div>
         </aside>
 
-        {/* =====================================================
-            BLOCK: Main Content Area
-        ===================================================== */}
-
         <main className="min-w-0">
           <header className="mb-6 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-            {/* =====================================================
-                BLOCK: Header Title / Description
-            ===================================================== */}
-
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">
@@ -174,10 +152,6 @@ export function ModulePageLayout({
                 <LogoutButton />
               </div>
             </div>
-
-            {/* =====================================================
-                BLOCK: Mobile / Tablet Navigation
-            ===================================================== */}
 
             <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:hidden">
               {navItems.slice(0, 6).map((item) => {
@@ -207,10 +181,6 @@ export function ModulePageLayout({
               </div>
             </div>
           </header>
-
-          {/* =====================================================
-              BLOCK: Page Content
-          ===================================================== */}
 
           {children}
         </main>

@@ -5,6 +5,7 @@
 // =====================================================
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 
 // =====================================================
 // BLOCK: Icon Imports
@@ -14,6 +15,7 @@ import {
   BarChart3,
   CheckCircle2,
   CreditCard,
+  ExternalLink,
   FileText,
   Sparkles,
   Target,
@@ -48,6 +50,25 @@ import {
 import type { UserUsageData } from "@/modules/usage-tracking"
 
 // =====================================================
+// BLOCK: Resume Count Helper
+// =====================================================
+
+async function loadSavedResumeCount(): Promise<number> {
+  try {
+    const response = await fetch("/api/resume/load")
+    const result = await response.json()
+
+    if (result.status !== "success") {
+      return 0
+    }
+
+    return Array.isArray(result.resumes) ? result.resumes.length : 0
+  } catch {
+    return 0
+  }
+}
+
+// =====================================================
 // BLOCK: Billing Settings Page
 // =====================================================
 
@@ -57,31 +78,26 @@ export default function BillingSettingsPage() {
   )
 
   const [usage, setUsage] = useState<UserUsageData>(createEmptyUsage())
-
+  const [savedResumeCount, setSavedResumeCount] = useState(0)
   const [loading, setLoading] = useState(true)
-
-  // =====================================================
-  // BLOCK: Load Current Membership + Usage
-  // =====================================================
 
   useEffect(() => {
     async function loadMembershipData() {
-      const [membershipResult, usageResult] = await Promise.all([
-        loadCurrentMembership(),
-        loadCurrentUsage(),
-      ])
+      const [membershipResult, usageResult, resumeCountResult] =
+        await Promise.all([
+          loadCurrentMembership(),
+          loadCurrentUsage(),
+          loadSavedResumeCount(),
+        ])
 
       setMembership(membershipResult)
       setUsage(usageResult)
+      setSavedResumeCount(resumeCountResult)
       setLoading(false)
     }
 
     loadMembershipData()
   }, [])
-
-  // =====================================================
-  // BLOCK: Render
-  // =====================================================
 
   return (
     <ModulePageLayout
@@ -96,10 +112,6 @@ export default function BillingSettingsPage() {
         <SettingsBackLink />
 
         <div className="grid gap-5">
-          {/* =====================================================
-              BLOCK: Membership Overview
-          ===================================================== */}
-
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
@@ -134,16 +146,14 @@ export default function BillingSettingsPage() {
             </div>
           </section>
 
-          {/* =====================================================
-              BLOCK: Usage Summary
-          ===================================================== */}
-
           <section className="grid gap-5 lg:grid-cols-3">
             <UsageCard
               title="Saved Resumes"
               icon={FileText}
-              used={usage.resumesCreated}
+              used={savedResumeCount}
               limit={membership.resumeLimit}
+              actionHref="/dashboard/resumes"
+              actionLabel="Open Resume Library"
             />
 
             <UsageCard
@@ -160,10 +170,6 @@ export default function BillingSettingsPage() {
               limit={membership.rewriteLimit}
             />
           </section>
-
-          {/* =====================================================
-              BLOCK: Module Access
-          ===================================================== */}
 
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-2">
@@ -196,10 +202,6 @@ export default function BillingSettingsPage() {
             </div>
           </section>
 
-          {/* =====================================================
-              BLOCK: Stripe Placeholder
-          ===================================================== */}
-
           <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
             <h3 className="text-lg font-black text-amber-950">
               Billing Portal Coming Soon
@@ -226,14 +228,21 @@ function UsageCard({
   icon: Icon,
   used,
   limit,
+  actionHref,
+  actionLabel,
 }: {
   title: string
   icon: React.ComponentType<{ size?: number; className?: string }>
   used: number
   limit: number
+  actionHref?: string
+  actionLabel?: string
 }) {
+  const isUnlimited = limit < 0
   const safeLimit = Math.max(limit, 1)
-  const percent = Math.min(Math.round((used / safeLimit) * 100), 100)
+  const percent = isUnlimited
+    ? 0
+    : Math.min(Math.round((used / safeLimit) * 100), 100)
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -243,14 +252,14 @@ function UsageCard({
         </div>
 
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
-          {percent}%
+          {isUnlimited ? "Unlimited" : `${percent}%`}
         </span>
       </div>
 
       <h3 className="mt-4 text-lg font-black text-slate-950">{title}</h3>
 
       <p className="mt-1 text-sm font-semibold text-slate-500">
-        {used} of {limit} used
+        {isUnlimited ? `${used} used` : `${used} of ${limit} used`}
       </p>
 
       <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
@@ -261,6 +270,16 @@ function UsageCard({
           }}
         />
       </div>
+
+      {actionHref && actionLabel && (
+        <Link
+          href={actionHref}
+          className="mt-4 inline-flex items-center gap-2 text-sm font-black text-blue-700 hover:text-blue-900"
+        >
+          {actionLabel}
+          <ExternalLink size={14} />
+        </Link>
+      )}
     </div>
   )
 }

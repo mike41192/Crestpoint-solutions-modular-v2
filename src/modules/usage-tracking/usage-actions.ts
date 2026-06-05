@@ -1,13 +1,7 @@
 // =====================================================
-// BLOCK: Supabase Imports
-// Crestpoint Solutions V2
-// Version: 1.7.11
-// =====================================================
-
-import { createSupabaseBrowserClient } from "@/lib/supabase/client"
-
-// =====================================================
 // BLOCK: Usage Action Types
+// Crestpoint Solutions V2
+// Version: 1.7.14
 // =====================================================
 
 type UsageColumn =
@@ -21,87 +15,41 @@ type UsageActionResult = {
 }
 
 // =====================================================
-// BLOCK: Current User Helper
-// =====================================================
-
-async function getCurrentUserId() {
-  const supabase = createSupabaseBrowserClient()
-
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-
-  if (error || !user) {
-    return null
-  }
-
-  return user.id
-}
-
-// =====================================================
-// BLOCK: Ensure Usage Row Exists
-// =====================================================
-
-async function ensureUsageRow(userId: string) {
-  const supabase = createSupabaseBrowserClient()
-
-  await supabase.from("user_usage").upsert({
-    user_id: userId,
-  })
-}
-
-// =====================================================
-// BLOCK: Increment Usage Column
+// BLOCK: Server Usage Increment Helper
 // =====================================================
 
 async function incrementUsageColumn(
   column: UsageColumn,
 ): Promise<UsageActionResult> {
-  const supabase = createSupabaseBrowserClient()
-  const userId = await getCurrentUserId()
-
-  if (!userId) {
-    return {
-      status: "error",
-      message: "You must be signed in to track usage.",
-    }
-  }
-
-  await ensureUsageRow(userId)
-
-  const { data, error: loadError } = await supabase
-    .from("user_usage")
-    .select(column)
-    .eq("user_id", userId)
-    .maybeSingle()
-
-  if (loadError) {
-    return {
-      status: "error",
-      message: loadError.message,
-    }
-  }
-
-  const currentValue = Number(data?.[column] || 0)
-
-  const { error: updateError } = await supabase
-    .from("user_usage")
-    .update({
-      [column]: currentValue + 1,
+  try {
+    const response = await fetch("/api/user/usage/increment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        column,
+      }),
     })
-    .eq("user_id", userId)
 
-  if (updateError) {
+    const result = await response.json()
+
+    if (!response.ok || result.status !== "success") {
+      return {
+        status: "error",
+        message: result.message || "Usage update failed.",
+      }
+    }
+
+    return {
+      status: "success",
+      message: result.message || "Usage updated.",
+    }
+  } catch {
     return {
       status: "error",
-      message: updateError.message,
+      message: "Usage update request failed.",
     }
-  }
-
-  return {
-    status: "success",
-    message: "Usage updated.",
   }
 }
 

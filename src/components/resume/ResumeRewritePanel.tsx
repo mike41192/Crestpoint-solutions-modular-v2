@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import {
+  AlertTriangle,
   CheckCircle2,
   FilePenLine,
   RefreshCw,
@@ -20,6 +21,18 @@ import {
   addRewriteHistoryItem,
   createRewriteHistoryItem,
 } from "@/modules/rewrite-history"
+import {
+  createEmptyMembership,
+  loadCurrentMembership,
+} from "@/modules/membership-management/membership-service"
+import type { MembershipData } from "@/modules/membership-management/types"
+import {
+  createEmptyUsage,
+  loadCurrentUsage,
+} from "@/modules/usage-tracking"
+import type { UserUsageData } from "@/modules/usage-tracking"
+import { incrementAIRewrite } from "@/modules/usage-tracking/usage-actions"
+import { canRunRewrite } from "@/modules/subscription-enforcement/enforcement-engine"
 
 // =====================================================
 // BLOCK: Component Types
@@ -47,22 +60,38 @@ export function ResumeRewritePanel({
   onResumeUpdate,
   onHistoryUpdated,
 }: ResumeRewritePanelProps) {
-  // =====================================================
-  // BLOCK: Local State
-  // =====================================================
-
   const firstExperienceId = data.experience[0]?.id || ""
 
   const [selectedExperienceId, setSelectedExperienceId] =
     useState(firstExperienceId)
 
   const [selectedBulletIndex, setSelectedBulletIndex] = useState(0)
-
   const [activeRewrite, setActiveRewrite] = useState<ActiveRewrite | null>(null)
 
-  // =====================================================
-  // BLOCK: Keep Selection Valid When Resume Data Changes
-  // =====================================================
+  const [membership, setMembership] = useState<MembershipData>(
+    createEmptyMembership(),
+  )
+
+  const [usage, setUsage] = useState<UserUsageData>(createEmptyUsage())
+
+  const [loadingAccess, setLoadingAccess] = useState(true)
+  const [rewriteMessage, setRewriteMessage] = useState("")
+  const [runningRewrite, setRunningRewrite] = useState(false)
+
+  async function refreshAccessData() {
+    const [membershipResult, usageResult] = await Promise.all([
+      loadCurrentMembership(),
+      loadCurrentUsage(),
+    ])
+
+    setMembership(membershipResult)
+    setUsage(usageResult)
+    setLoadingAccess(false)
+  }
+
+  useEffect(() => {
+    refreshAccessData()
+  }, [])
 
   useEffect(() => {
     const selectedExperienceStillExists = data.experience.some(
@@ -75,10 +104,6 @@ export function ResumeRewritePanel({
       setActiveRewrite(null)
     }
   }, [data.experience, selectedExperienceId])
-
-  // =====================================================
-  // BLOCK: Derived Data
-  // =====================================================
 
   const selectedExperience = useMemo(
     () =>
@@ -102,50 +127,98 @@ export function ResumeRewritePanel({
       )
     : null
 
-  // =====================================================
-  // BLOCK: Selector Handlers
-  // =====================================================
+  const rewriteAccess = canRunRewrite(membership, usage)
+
+  const rewriteLimitText =
+    membership.rewriteLimit < 0
+      ? `${usage.aiRewritesUsed} rewrites used · Unlimited plan`
+      : `${usage.aiRewritesUsed} of ${membership.rewriteLimit} rewrites used`
 
   function handleExperienceChange(nextExperienceId: string) {
     setSelectedExperienceId(nextExperienceId)
     setSelectedBulletIndex(0)
     setActiveRewrite(null)
+    setRewriteMessage("")
   }
 
   function handleBulletChange(nextBulletIndex: number) {
     setSelectedBulletIndex(nextBulletIndex)
     setActiveRewrite(null)
+    setRewriteMessage("")
   }
 
-  // =====================================================
-  // BLOCK: Rewrite Actions
-  // =====================================================
+  async function runRewriteWithAccessCheck(
+    rewriteType: "summary" | "bullet",
+  ) {
+    setRewriteMessage("")
+
+    if (loadingAccess) {
+      setRewriteMessage("Membership access is still loading. Try again.")
+      return
+    }
+
+    const access = canRunRewrite(membership, usage)
+
+    if (!access.allowed) {
+      setRewriteMessage(
+        access.reason ||
+          "AI rewrite limit reached. Upgrade your membership to continue using AI rewrites.",
+      )
+      return
+    }
+
+    if (rewriteType === "bullet" && !selectedBullet.trim()) {
+      setRewriteMessage("Select a bullet with text before rewriting.")
+      return
+    }
+
+    setRunningRewrite(true)
+
+    try {
+      const result =
+        rewriteType === "summary"
+          ? AIRewriteEngine.rewriteSummary(data.summary)
+          : AIRewriteEngine.rewriteBullet(selectedBullet)
+
+      const usageResult = await incrementAIRewrite()
+
+      if (usageResult.status !== "success") {
+        setRewriteMessage(
+          usageResult.message ||
+            "Rewrite generated, but usage tracking could not be updated.",
+        )
+        return
+      }
+
+      setUsage((currentUsage) => ({
+        ...currentUsage,
+        aiRewritesUsed: currentUsage.aiRewritesUsed + 1,
+      }))
+
+      setActiveRewrite({
+        type: rewriteType,
+        result,
+        experienceId:
+          rewriteType === "bullet" ? selectedExperience?.id : undefined,
+        bulletIndex:
+          rewriteType === "bullet" ? selectedBulletIndex : undefined,
+      })
+
+      setRewriteMessage("Rewrite generated successfully.")
+    } catch {
+      setRewriteMessage("Rewrite request failed.")
+    } finally {
+      setRunningRewrite(false)
+    }
+  }
 
   function rewriteSummary() {
-    const result = AIRewriteEngine.rewriteSummary(data.summary)
-
-    setActiveRewrite({
-      type: "summary",
-      result,
-    })
+    runRewriteWithAccessCheck("summary")
   }
 
   function rewriteSelectedBullet() {
-    if (!selectedBullet.trim()) return
-
-    const result = AIRewriteEngine.rewriteBullet(selectedBullet)
-
-    setActiveRewrite({
-      type: "bullet",
-      result,
-      experienceId: selectedExperience?.id,
-      bulletIndex: selectedBulletIndex,
-    })
+    runRewriteWithAccessCheck("bullet")
   }
-
-  // =====================================================
-  // BLOCK: Apply Rewrite + Save Rewrite History
-  // =====================================================
 
   function applyRewrite() {
     if (!activeRewrite) return
@@ -168,6 +241,7 @@ export function ResumeRewritePanel({
       onResumeUpdate(updatedResume)
       onHistoryUpdated?.()
       setActiveRewrite(null)
+      setRewriteMessage("Rewrite applied to summary.")
       return
     }
 
@@ -204,12 +278,9 @@ export function ResumeRewritePanel({
       onResumeUpdate(updatedResume)
       onHistoryUpdated?.()
       setActiveRewrite(null)
+      setRewriteMessage("Rewrite applied to selected bullet.")
     }
   }
-
-  // =====================================================
-  // BLOCK: Render
-  // =====================================================
 
   return (
     <section className="grid min-w-0 gap-4 rounded-3xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm sm:p-5">
@@ -228,8 +299,30 @@ export function ResumeRewritePanel({
             rewrite quality, then apply it directly into that exact resume
             section.
           </p>
+
+          <p className="mt-2 text-xs font-black uppercase tracking-[0.14em] text-indigo-700">
+            {loadingAccess ? "Loading rewrite access..." : rewriteLimitText}
+          </p>
         </div>
       </div>
+
+      {rewriteMessage && (
+        <div
+          className={`flex items-start gap-2 rounded-2xl border p-3 text-sm font-bold leading-6 ${
+            rewriteAccess.allowed
+              ? "border-blue-100 bg-blue-50 text-blue-800"
+              : "border-amber-200 bg-amber-50 text-amber-900"
+          }`}
+        >
+          {rewriteAccess.allowed ? (
+            <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+          ) : (
+            <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+          )}
+
+          <span>{rewriteMessage}</span>
+        </div>
+      )}
 
       <div className="grid min-w-0 gap-3 rounded-3xl border border-indigo-100 bg-white p-4 shadow-sm">
         <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2">
@@ -283,11 +376,12 @@ export function ResumeRewritePanel({
         <button
           type="button"
           onClick={rewriteSummary}
-          className="rounded-2xl border border-indigo-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-400"
+          disabled={runningRewrite || loadingAccess || !rewriteAccess.allowed}
+          className="rounded-2xl border border-indigo-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <div className="flex items-center gap-2 text-sm font-black text-indigo-700">
             <Sparkles size={16} />
-            Rewrite Summary
+            {runningRewrite ? "Generating..." : "Rewrite Summary"}
           </div>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -299,12 +393,17 @@ export function ResumeRewritePanel({
         <button
           type="button"
           onClick={rewriteSelectedBullet}
-          disabled={!selectedBullet.trim()}
+          disabled={
+            runningRewrite ||
+            loadingAccess ||
+            !rewriteAccess.allowed ||
+            !selectedBullet.trim()
+          }
           className="rounded-2xl border border-indigo-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <div className="flex items-center gap-2 text-sm font-black text-indigo-700">
             <RefreshCw size={16} />
-            Rewrite Selected Bullet
+            {runningRewrite ? "Generating..." : "Rewrite Selected Bullet"}
           </div>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -313,6 +412,16 @@ export function ResumeRewritePanel({
           </p>
         </button>
       </div>
+
+      {!rewriteAccess.allowed && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+          <p className="font-black">AI rewrite limit reached</p>
+          <p className="mt-1">
+            Upgrade messaging and Stripe plan changes will be connected during
+            the billing integration phase.
+          </p>
+        </div>
+      )}
 
       {activeRewrite && (
         <div className="grid min-w-0 gap-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">

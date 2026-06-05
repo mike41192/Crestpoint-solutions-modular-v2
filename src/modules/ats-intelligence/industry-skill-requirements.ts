@@ -1,7 +1,7 @@
 // =====================================================
 // BLOCK: Industry Skill Requirements
 // Crestpoint Solutions V2
-// Version: 1.6.1
+// Version: 1.7.13
 // =====================================================
 
 export type IndustrySkillRequirement = {
@@ -27,12 +27,12 @@ export const INDUSTRY_SKILL_REQUIREMENTS: IndustrySkillRequirement[] = [
       "safety compliance",
       "work orders",
       "production equipment",
-      "mechanical systems",
-      "hydraulic systems",
-      "pneumatic systems",
     ],
 
     preferredSkills: [
+      "mechanical systems",
+      "hydraulic systems",
+      "pneumatic systems",
       "cmms",
       "lean manufacturing",
       "continuous improvement",
@@ -47,6 +47,7 @@ export const INDUSTRY_SKILL_REQUIREMENTS: IndustrySkillRequirement[] = [
       "staff training",
       "scheduling",
       "supervision",
+      "supervisory experience",
     ],
 
     certificationSkills: [
@@ -60,16 +61,16 @@ export const INDUSTRY_SKILL_REQUIREMENTS: IndustrySkillRequirement[] = [
     industry: "Information Technology",
 
     requiredSkills: [
-      "javascript",
-      "typescript",
+      "software development",
+      "debugging",
       "api integration",
       "database design",
       "github",
-      "debugging",
-      "software development",
     ],
 
     preferredSkills: [
+      "javascript",
+      "typescript",
       "react",
       "next.js",
       "cloud",
@@ -158,11 +159,11 @@ export const INDUSTRY_SKILL_REQUIREMENTS: IndustrySkillRequirement[] = [
       "operations management",
       "process improvement",
       "workflow optimization",
-      "budget management",
       "staff training",
     ],
 
     preferredSkills: [
+      "budget management",
       "lean six sigma",
       "root cause analysis",
       "continuous improvement",
