@@ -2,6 +2,8 @@
 
 // =====================================================
 // BLOCK: Imports
+// Crestpoint Solutions V2
+// Version: 1.8.4
 // =====================================================
 
 import { useEffect, useMemo, useState } from "react"
@@ -14,10 +16,12 @@ import {
 import { ResumeATSPanel } from "@/components/ats/ResumeATSPanel"
 import { ResumeGapAnalysisPanel } from "@/components/ats/ResumeGapAnalysisPanel"
 import { ResumeOptimizationPanel } from "@/components/ats/ResumeOptimizationPanel"
+import { JobDescriptionPicker } from "@/components/jobs/JobDescriptionPicker"
 import { explainATSScore } from "@/modules/ats-explainability"
 import { generateATSReport } from "@/modules/ats-engine"
 import { analyzeResumeGaps } from "@/modules/gap-analyzer"
 import type { IndustryGapItem } from "@/modules/ats-intelligence"
+import type { JobDescriptionRecord } from "@/modules/job-description-library"
 import {
   createEmptyMembership,
   loadCurrentMembership,
@@ -121,6 +125,17 @@ export function ResumeJobMatchForm({
     setJobDescription(value)
     onJobDescriptionChange?.(value)
     setScanMessage("")
+  }
+
+  // =====================================================
+  // BLOCK: Saved Job Description Handler
+  // =====================================================
+
+  function handleLoadSavedJob(job: JobDescriptionRecord) {
+    updateJobDescription(job.description)
+    setAnalyzedJobDescription(job.description)
+    setScanMessage(`Loaded saved job description: ${job.title}`)
+    setActiveTab("overview")
   }
 
   // =====================================================
@@ -228,12 +243,14 @@ export function ResumeJobMatchForm({
           </h3>
 
           <p className="mt-1 break-words text-sm leading-6 text-slate-600">
-            Paste a job description to compare your resume against target role
-            keywords, missing skills, section strength, gaps, and ATS
+            Paste or load a saved job description to compare your resume against
+            target role keywords, missing skills, section strength, gaps, and ATS
             compatibility.
           </p>
         </div>
       </div>
+
+      <JobDescriptionPicker onSelect={handleLoadSavedJob} />
 
       <label className="block min-w-0 max-w-full text-sm font-black text-slate-700">
         Job Description
@@ -245,10 +262,6 @@ export function ResumeJobMatchForm({
           className="mt-2 min-h-[190px] w-full min-w-0 max-w-full resize-y rounded-2xl border border-violet-200 bg-white p-4 text-sm leading-6 text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
         />
       </label>
-
-      {/* =====================================================
-          BLOCK: ATS Usage Enforcement Controls
-      ===================================================== */}
 
       <div className="flex flex-col gap-3 rounded-2xl border border-violet-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

@@ -2,6 +2,8 @@
 
 // =====================================================
 // BLOCK: React / Next Imports
+// Crestpoint Solutions V2
+// Version: 1.8.3
 // =====================================================
 
 import type { ReactNode } from "react"
@@ -15,6 +17,7 @@ import { usePathname } from "next/navigation"
 import {
   BarChart3,
   BriefcaseBusiness,
+  ClipboardList,
   CreditCard,
   FileText,
   FolderOpen,
@@ -50,6 +53,11 @@ const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: Home },
   { label: "Resume Builder", href: "/dashboard/resume", icon: FileText },
   { label: "Resume Library", href: "/dashboard/resumes", icon: FolderOpen },
+  {
+    label: "Job Descriptions",
+    href: "/dashboard/job-descriptions",
+    icon: ClipboardList,
+  },
   { label: "ATS Scoring", href: "/dashboard/ats", icon: Target },
   { label: "AI Interviewer", href: "/dashboard/interview", icon: MessageSquare },
   {
@@ -104,6 +112,7 @@ export function ModulePageLayout({
             <nav className="grid gap-1">
               {navItems.map((item) => {
                 const Icon = item.icon
+
                 const active =
                   pathname === item.href ||
                   (item.href !== "/dashboard" && pathname.startsWith(item.href))
@@ -154,8 +163,9 @@ export function ModulePageLayout({
             </div>
 
             <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:hidden">
-              {navItems.slice(0, 6).map((item) => {
+              {navItems.slice(0, 7).map((item) => {
                 const Icon = item.icon
+
                 const active =
                   pathname === item.href ||
                   (item.href !== "/dashboard" && pathname.startsWith(item.href))
