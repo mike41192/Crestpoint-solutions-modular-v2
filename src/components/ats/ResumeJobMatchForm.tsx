@@ -14,17 +14,28 @@ import {
 import { ResumeATSPanel } from "@/components/ats/ResumeATSPanel"
 import { ResumeGapAnalysisPanel } from "@/components/ats/ResumeGapAnalysisPanel"
 import { ResumeOptimizationPanel } from "@/components/ats/ResumeOptimizationPanel"
-import { analyzeSkillEvidence } from "@/modules/ats-intelligence"
 import { explainATSScore } from "@/modules/ats-explainability"
 import { generateATSReport } from "@/modules/ats-engine"
 import { analyzeResumeGaps } from "@/modules/gap-analyzer"
 import type { IndustryGapItem } from "@/modules/ats-intelligence"
+import {
+  createEmptyMembership,
+  loadCurrentMembership,
+} from "@/modules/membership-management/membership-service"
+import type { MembershipData } from "@/modules/membership-management/types"
 import type { ResumeBuilderFormData } from "@/modules/resume-builder"
 import {
   applyOptimizationSuggestion,
   generateResumeOptimizationReport,
 } from "@/modules/resume-optimizer"
 import type { ResumeOptimizationSuggestion } from "@/modules/resume-optimizer"
+import { canRunATSScan } from "@/modules/subscription-enforcement"
+import {
+  createEmptyUsage,
+  incrementATSScan,
+  loadCurrentUsage,
+} from "@/modules/usage-tracking"
+import type { UserUsageData } from "@/modules/usage-tracking"
 
 // =====================================================
 // BLOCK: Component Types
@@ -48,35 +59,111 @@ export function ResumeJobMatchForm({
   onResumeUpdate,
 }: ResumeJobMatchFormProps) {
   const [jobDescription, setJobDescription] = useState(savedJobDescription)
+  const [analyzedJobDescription, setAnalyzedJobDescription] =
+    useState(savedJobDescription)
+
   const [activeTab, setActiveTab] = useState<ATSDashboardTab>("overview")
+
+  const [membership, setMembership] = useState<MembershipData>(
+    createEmptyMembership(),
+  )
+
+  const [usage, setUsage] = useState<UserUsageData>(createEmptyUsage())
+
+  const [scanMessage, setScanMessage] = useState("")
+  const [scanLoading, setScanLoading] = useState(false)
+
+  // =====================================================
+  // BLOCK: Keep Saved Job Description Synced
+  // =====================================================
 
   useEffect(() => {
     setJobDescription(savedJobDescription)
+    setAnalyzedJobDescription(savedJobDescription)
   }, [savedJobDescription])
+
+  // =====================================================
+  // BLOCK: Load Membership And Usage
+  // =====================================================
+
+  useEffect(() => {
+    async function loadAccessData() {
+      const [membershipResult, usageResult] = await Promise.all([
+        loadCurrentMembership(),
+        loadCurrentUsage(),
+      ])
+
+      setMembership(membershipResult)
+      setUsage(usageResult)
+    }
+
+    loadAccessData()
+  }, [])
+
+  // =====================================================
+  // BLOCK: Job Description Update Handler
+  // =====================================================
 
   function updateJobDescription(value: string) {
     setJobDescription(value)
     onJobDescriptionChange?.(value)
+    setScanMessage("")
   }
 
+  // =====================================================
+  // BLOCK: Run ATS Analysis Handler
+  // Only this action increments usage.
+  // =====================================================
+
+  async function handleRunATSAnalysis() {
+    setScanMessage("")
+    setScanLoading(true)
+
+    const access = canRunATSScan(membership, usage)
+
+    if (!access.allowed) {
+      setScanMessage(access.reason || "ATS scan limit reached.")
+      setScanLoading(false)
+      return
+    }
+
+    setAnalyzedJobDescription(jobDescription)
+
+    const result = await incrementATSScan()
+
+    if (result.status === "success") {
+      const updatedUsage = await loadCurrentUsage()
+      setUsage(updatedUsage)
+      setScanMessage("ATS analysis completed and usage updated.")
+    } else {
+      setScanMessage(result.message)
+    }
+
+    setScanLoading(false)
+  }
+
+  // =====================================================
+  // BLOCK: ATS / Gap / Optimization Analysis
+  // =====================================================
+
   const atsResult = useMemo(
-    () => generateATSReport(data, jobDescription),
-    [data, jobDescription],
+    () => generateATSReport(data, analyzedJobDescription),
+    [data, analyzedJobDescription],
   )
 
   const gapAnalysisResult = useMemo(
-    () => analyzeResumeGaps(data, jobDescription),
-    [data, jobDescription],
+    () => analyzeResumeGaps(data, analyzedJobDescription),
+    [data, analyzedJobDescription],
   )
 
   const optimizationResult = useMemo(
     () =>
       generateResumeOptimizationReport({
         resume: data,
-        jobDescription,
+        jobDescription: analyzedJobDescription,
         atsResult,
       }),
-    [data, jobDescription, atsResult],
+    [data, analyzedJobDescription, atsResult],
   )
 
   const explainabilityReport = useMemo(
@@ -84,12 +171,20 @@ export function ResumeJobMatchForm({
     [atsResult],
   )
 
+  // =====================================================
+  // BLOCK: Apply Optimization Suggestions
+  // =====================================================
+
   function handleApplySuggestion(suggestion: ResumeOptimizationSuggestion) {
     if (!onResumeUpdate) return
 
     const updatedResume = applyOptimizationSuggestion(data, suggestion)
     onResumeUpdate(updatedResume)
   }
+
+  // =====================================================
+  // BLOCK: Main Render
+  // =====================================================
 
   return (
     <section className="grid min-w-0 max-w-full gap-4 overflow-hidden rounded-3xl border border-violet-200 bg-violet-50 p-4 shadow-sm sm:p-5">
@@ -121,6 +216,37 @@ export function ResumeJobMatchForm({
           className="mt-2 min-h-[190px] w-full min-w-0 max-w-full resize-y rounded-2xl border border-violet-200 bg-white p-4 text-sm leading-6 text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
         />
       </label>
+
+      {/* =====================================================
+          BLOCK: ATS Usage Enforcement Controls
+      ===================================================== */}
+
+      <div className="flex flex-col gap-3 rounded-2xl border border-violet-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-black text-slate-950">
+            ATS Scans Used: {usage.atsScansUsed} / {membership.atsLimit}
+          </p>
+
+          <p className="mt-1 text-xs font-semibold text-slate-500">
+            Click Run ATS Analysis to refresh scoring and count usage.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleRunATSAnalysis}
+          disabled={scanLoading}
+          className="w-fit rounded-full bg-violet-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+        >
+          {scanLoading ? "Running..." : "Run ATS Analysis"}
+        </button>
+      </div>
+
+      {scanMessage && (
+        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
+          {scanMessage}
+        </div>
+      )}
 
       <ATSDashboardTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
