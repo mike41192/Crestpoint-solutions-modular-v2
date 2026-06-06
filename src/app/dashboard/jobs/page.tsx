@@ -1,13 +1,15 @@
-import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
-import { FirstUseTutorial } from "@/components/onboarding/FirstUseTutorial"
+"use client"
 
-export default function JobsDashboardPage() {
+import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
+import { JobTrackerBoard } from "@/components/jobs/tracker/JobTrackerBoard"
+
+export default function JobTrackerPage() {
   return (
     <ModulePageLayout
       title="Job Tracker"
-      description="Track applications, interviews, follow-ups, recruiters, offers, and job-search progress."
+      description="Track every application from saved to offer using the Crestpoint Kaizen workflow."
     >
-      <FirstUseTutorial moduleKey="job_tracker" />
+      <JobTrackerBoard />
     </ModulePageLayout>
   )
 }
