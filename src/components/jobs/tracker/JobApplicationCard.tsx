@@ -3,9 +3,10 @@
 // =====================================================
 // BLOCK: Imports
 // Crestpoint Solutions V2
-// Version: 1.9.4
+// Version: 1.9.6
 // =====================================================
 
+import { JobReminderBadge } from "@/components/jobs/reminders/JobReminderBadge"
 import type { JobApplicationRecord } from "@/modules/job-tracker"
 
 // =====================================================
@@ -53,6 +54,8 @@ export function JobApplicationCard({
       {application.location && (
         <p className="mt-3 text-xs text-slate-500">{application.location}</p>
       )}
+
+      <JobReminderBadge application={application} />
 
       {application.next_action && (
         <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-2">

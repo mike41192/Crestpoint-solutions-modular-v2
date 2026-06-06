@@ -3,7 +3,7 @@
 // =====================================================
 // BLOCK: Imports
 // Crestpoint Solutions V2
-// Version: 1.9.5
+// Version: 1.9.6
 // =====================================================
 
 import { useEffect, useState } from "react"
@@ -37,6 +37,7 @@ import { useJobDragDrop } from "./hooks/useJobDragDrop"
 type JobTrackerBoardProps = {
   initialApplications?: JobApplicationRecord[]
   onApplicationsChange?: (applications: JobApplicationRecord[]) => void
+  onOpenApplication?: (application: JobApplicationRecord) => void
 }
 
 // =====================================================
@@ -46,6 +47,7 @@ type JobTrackerBoardProps = {
 export function JobTrackerBoard({
   initialApplications,
   onApplicationsChange,
+  onOpenApplication,
 }: JobTrackerBoardProps) {
   const [loading, setLoading] = useState(!initialApplications)
   const [showForm, setShowForm] = useState(false)
@@ -64,6 +66,11 @@ export function JobTrackerBoard({
   function syncApplications(nextApplications: JobApplicationRecord[]) {
     setApplications(nextApplications)
     onApplicationsChange?.(nextApplications)
+  }
+
+  function openApplication(application: JobApplicationRecord) {
+    setSelectedApplication(application)
+    onOpenApplication?.(application)
   }
 
   // =====================================================
@@ -304,7 +311,7 @@ export function JobTrackerBoard({
                   (application) => application.status === status,
                 )}
                 isDragOver={dragOverStatus === status}
-                onOpenApplication={setSelectedApplication}
+                onOpenApplication={openApplication}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
                 onDragOver={handleDragOver}

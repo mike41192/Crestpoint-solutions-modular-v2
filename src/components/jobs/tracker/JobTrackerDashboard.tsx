@@ -3,12 +3,11 @@
 // =====================================================
 // BLOCK: Imports
 // Crestpoint Solutions V2
-// Version: 1.9.5
+// Version: 1.9.6
 // =====================================================
 
 import { useEffect, useState } from "react"
-import { JobTrackerAnalytics } from "@/components/jobs/analytics/JobTrackerAnalytics"
-import { JobTrackerBoard } from "@/components/jobs/tracker/JobTrackerBoard"
+import { JobTrackerWorkspace } from "@/components/jobs/tracker/JobTrackerWorkspace"
 import {
   listJobApplications,
   type JobApplicationRecord,
@@ -21,6 +20,8 @@ import {
 export function JobTrackerDashboard() {
   const [loading, setLoading] = useState(true)
   const [applications, setApplications] = useState<JobApplicationRecord[]>([])
+  const [selectedApplication, setSelectedApplication] =
+    useState<JobApplicationRecord | null>(null)
 
   async function loadApplications() {
     try {
@@ -45,12 +46,17 @@ export function JobTrackerDashboard() {
 
   return (
     <div className="grid gap-6">
-      <JobTrackerAnalytics applications={applications} />
-
-      <JobTrackerBoard
-        initialApplications={applications}
+      <JobTrackerWorkspace
+        applications={applications}
         onApplicationsChange={setApplications}
+        onOpenApplication={setSelectedApplication}
       />
+
+      {selectedApplication && (
+        <div className="hidden">
+          Selected application: {selectedApplication.id}
+        </div>
+      )}
     </div>
   )
 }
