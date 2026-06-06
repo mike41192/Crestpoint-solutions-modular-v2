@@ -3,11 +3,17 @@
 // =====================================================
 // BLOCK: Imports
 // Crestpoint Solutions V2
-// Version: 1.9.3
+// Version: 1.9.9
 // =====================================================
 
 import { useEffect, useState } from "react"
 import { ExternalLink, Trash2, X } from "lucide-react"
+import { FollowUpGeneratorPanel } from "@/components/jobs/followup/FollowUpGeneratorPanel"
+import { JobTimelinePanel } from "@/components/jobs/timeline/JobTimelinePanel"
+import {
+  listJobApplicationEvents,
+  type JobApplicationEventRecord,
+} from "@/modules/job-application-events"
 import type {
   JobApplicationPayload,
   JobApplicationPriority,
@@ -38,6 +44,8 @@ export function JobApplicationDetailDrawer({
 }: JobApplicationDetailDrawerProps) {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [loadingEvents, setLoadingEvents] = useState(false)
+  const [events, setEvents] = useState<JobApplicationEventRecord[]>([])
 
   const [title, setTitle] = useState("")
   const [company, setCompany] = useState("")
@@ -54,7 +62,10 @@ export function JobApplicationDetailDrawer({
   // =====================================================
 
   useEffect(() => {
-    if (!application) return
+    if (!application) {
+      setEvents([])
+      return
+    }
 
     setTitle(application.title || "")
     setCompany(application.company || "")
@@ -66,6 +77,27 @@ export function JobApplicationDetailDrawer({
     setStatus(application.status || "saved")
     setPriority(application.priority || "medium")
   }, [application])
+
+  // =====================================================
+  // BLOCK: Load Timeline Events
+  // =====================================================
+
+  async function loadTimelineEvents(applicationId: string) {
+    setLoadingEvents(true)
+
+    try {
+      const timelineEvents = await listJobApplicationEvents(applicationId)
+      setEvents(timelineEvents)
+    } finally {
+      setLoadingEvents(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!application?.id) return
+
+    loadTimelineEvents(application.id)
+  }, [application?.id])
 
   if (!application) {
     return null
@@ -92,6 +124,8 @@ export function JobApplicationDetailDrawer({
       followUpAt: application.follow_up_at,
       interviewAt: application.interview_at,
     })
+
+    await loadTimelineEvents(application.id)
 
     setSaving(false)
   }
@@ -124,7 +158,8 @@ export function JobApplicationDetailDrawer({
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              Update status, priority, next action, notes, and job details.
+              Update job details, review the activity timeline, and generate
+              professional follow-up messages.
             </p>
           </div>
 
@@ -268,6 +303,20 @@ export function JobApplicationDetailDrawer({
                 <ExternalLink size={14} />
                 Open source listing
               </a>
+            )}
+          </div>
+
+          <div className="mt-5">
+            <FollowUpGeneratorPanel application={application} />
+          </div>
+
+          <div className="mt-5">
+            {loadingEvents ? (
+              <div className="rounded-3xl border border-slate-200 bg-white p-5 text-sm font-bold text-slate-500 shadow-sm">
+                Loading timeline...
+              </div>
+            ) : (
+              <JobTimelinePanel events={events} />
             )}
           </div>
         </div>

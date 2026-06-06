@@ -1,7 +1,7 @@
 // =====================================================
 // BLOCK: Job Application Event Exports
 // Crestpoint Solutions V2
-// Version: 1.9.7
+// Version: 1.9.8
 // =====================================================
 
 export type {
@@ -11,9 +11,7 @@ export type {
   JobApplicationEventType,
 } from "./types"
 
-export {
-  createJobApplicationEvent,
-} from "./job-application-event-service"
+export { createJobApplicationEvent } from "./job-application-event-service"
 
 export {
   buildCreatedEvent,
@@ -21,6 +19,6 @@ export {
   buildUpdatedEvent,
 } from "./event-builders"
 
-export {
-  logJobApplicationEvent,
-} from "./event-logger"
+export { logJobApplicationEvent } from "./event-logger"
+
+export { listJobApplicationEvents } from "./list-job-application-events"
