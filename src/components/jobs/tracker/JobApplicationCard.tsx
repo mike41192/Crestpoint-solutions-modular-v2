@@ -3,7 +3,7 @@
 // =====================================================
 // BLOCK: Imports
 // Crestpoint Solutions V2
-// Version: 1.9.3
+// Version: 1.9.4
 // =====================================================
 
 import type { JobApplicationRecord } from "@/modules/job-tracker"
@@ -15,6 +15,8 @@ import type { JobApplicationRecord } from "@/modules/job-tracker"
 type JobApplicationCardProps = {
   application: JobApplicationRecord
   onOpen: (application: JobApplicationRecord) => void
+  onDragStart: (application: JobApplicationRecord) => void
+  onDragEnd: () => void
 }
 
 // =====================================================
@@ -24,12 +26,17 @@ type JobApplicationCardProps = {
 export function JobApplicationCard({
   application,
   onOpen,
+  onDragStart,
+  onDragEnd,
 }: JobApplicationCardProps) {
   return (
     <button
       type="button"
+      draggable
+      onDragStart={() => onDragStart(application)}
+      onDragEnd={onDragEnd}
       onClick={() => onOpen(application)}
-      className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+      className="w-full cursor-grab rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md active:cursor-grabbing"
     >
       <div>
         <p className="text-sm font-black text-slate-950">

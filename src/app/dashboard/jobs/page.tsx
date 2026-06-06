@@ -1,7 +1,7 @@
 "use client"
 
 import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
-import { JobTrackerBoard } from "@/components/jobs/tracker/JobTrackerBoard"
+import { JobTrackerDashboard } from "@/components/jobs/tracker/JobTrackerDashboard"
 
 export default function JobTrackerPage() {
   return (
@@ -9,7 +9,7 @@ export default function JobTrackerPage() {
       title="Job Tracker"
       description="Track every application from saved to offer using the Crestpoint Kaizen workflow."
     >
-      <JobTrackerBoard />
+      <JobTrackerDashboard />
     </ModulePageLayout>
   )
 }

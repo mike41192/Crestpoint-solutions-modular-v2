@@ -3,7 +3,7 @@
 // =====================================================
 // BLOCK: Imports
 // Crestpoint Solutions V2
-// Version: 1.9.3
+// Version: 1.9.5
 // =====================================================
 
 import { useEffect, useState } from "react"
@@ -14,8 +14,10 @@ import {
   deleteJobApplication,
   listJobApplications,
   updateJobApplication,
+  updateJobApplicationStatus,
   type JobApplicationPayload,
   type JobApplicationRecord,
+  type JobApplicationStatus,
 } from "@/modules/job-tracker"
 
 import {
@@ -26,19 +28,53 @@ import {
 import { JobApplicationDetailDrawer } from "./JobApplicationDetailDrawer"
 import { JobApplicationForm } from "./JobApplicationForm"
 import { JobTrackerColumn } from "./JobTrackerColumn"
+import { useJobDragDrop } from "./hooks/useJobDragDrop"
+
+// =====================================================
+// BLOCK: Component Types
+// =====================================================
+
+type JobTrackerBoardProps = {
+  initialApplications?: JobApplicationRecord[]
+  onApplicationsChange?: (applications: JobApplicationRecord[]) => void
+}
 
 // =====================================================
 // BLOCK: Job Tracker Board
 // =====================================================
 
-export function JobTrackerBoard() {
-  const [loading, setLoading] = useState(true)
+export function JobTrackerBoard({
+  initialApplications,
+  onApplicationsChange,
+}: JobTrackerBoardProps) {
+  const [loading, setLoading] = useState(!initialApplications)
   const [showForm, setShowForm] = useState(false)
   const [message, setMessage] = useState("")
   const [selectedApplication, setSelectedApplication] =
     useState<JobApplicationRecord | null>(null)
 
-  const [applications, setApplications] = useState<JobApplicationRecord[]>([])
+  const [applications, setApplications] = useState<JobApplicationRecord[]>(
+    initialApplications || [],
+  )
+
+  // =====================================================
+  // BLOCK: State Sync Helper
+  // =====================================================
+
+  function syncApplications(nextApplications: JobApplicationRecord[]) {
+    setApplications(nextApplications)
+    onApplicationsChange?.(nextApplications)
+  }
+
+  // =====================================================
+  // BLOCK: Sync Parent Applications
+  // =====================================================
+
+  useEffect(() => {
+    if (!initialApplications) return
+
+    setApplications(initialApplications)
+  }, [initialApplications])
 
   // =====================================================
   // BLOCK: Load Jobs
@@ -47,13 +83,15 @@ export function JobTrackerBoard() {
   async function loadApplications() {
     try {
       const data = await listJobApplications()
-      setApplications(data)
+      syncApplications(data)
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
+    if (initialApplications) return
+
     loadApplications()
   }, [])
 
@@ -71,10 +109,12 @@ export function JobTrackerBoard() {
       return
     }
 
-    setApplications((currentApplications) => [
+    const nextApplications = [
       result.application as JobApplicationRecord,
-      ...currentApplications,
-    ])
+      ...applications,
+    ]
+
+    syncApplications(nextApplications)
 
     setShowForm(false)
     setMessage("Job application added to tracker.")
@@ -94,13 +134,13 @@ export function JobTrackerBoard() {
       return
     }
 
-    setApplications((currentApplications) =>
-      currentApplications.map((application) =>
-        application.id === result.application?.id
-          ? (result.application as JobApplicationRecord)
-          : application,
-      ),
+    const nextApplications = applications.map((application) =>
+      application.id === result.application?.id
+        ? (result.application as JobApplicationRecord)
+        : application,
     )
+
+    syncApplications(nextApplications)
 
     setSelectedApplication(result.application as JobApplicationRecord)
     setMessage("Job application updated.")
@@ -120,13 +160,75 @@ export function JobTrackerBoard() {
       return
     }
 
-    setApplications((currentApplications) =>
-      currentApplications.filter((application) => application.id !== id),
+    const nextApplications = applications.filter(
+      (application) => application.id !== id,
     )
+
+    syncApplications(nextApplications)
 
     setSelectedApplication(null)
     setMessage("Job application deleted.")
   }
+
+  // =====================================================
+  // BLOCK: Drag And Drop Status Update
+  // =====================================================
+
+  async function handleDragStatusChange({
+    applicationId,
+    nextStatus,
+  }: {
+    applicationId: string
+    nextStatus: JobApplicationStatus
+  }) {
+    setMessage("")
+
+    const previousApplications = applications
+
+    const optimisticApplications = applications.map((application) =>
+      application.id === applicationId
+        ? {
+            ...application,
+            status: nextStatus,
+            updated_at: new Date().toISOString(),
+          }
+        : application,
+    )
+
+    syncApplications(optimisticApplications)
+
+    const result = await updateJobApplicationStatus({
+      id: applicationId,
+      status: nextStatus,
+    })
+
+    if (result.status !== "success" || !result.application) {
+      syncApplications(previousApplications)
+      setMessage(result.message || "Unable to move job application.")
+      return
+    }
+
+    const confirmedApplications = optimisticApplications.map((application) =>
+      application.id === result.application?.id
+        ? (result.application as JobApplicationRecord)
+        : application,
+    )
+
+    syncApplications(confirmedApplications)
+
+    setMessage(`Moved job to ${JOB_TRACKER_COLUMN_LABELS[nextStatus]}.`)
+  }
+
+  const {
+    dragOverStatus,
+    handleDragStart,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    handleDragEnd,
+  } = useJobDragDrop({
+    onStatusChange: handleDragStatusChange,
+  })
 
   // =====================================================
   // BLOCK: Loading
@@ -196,11 +298,18 @@ export function JobTrackerBoard() {
             {JOB_TRACKER_COLUMN_ORDER.map((status) => (
               <JobTrackerColumn
                 key={status}
+                status={status}
                 title={JOB_TRACKER_COLUMN_LABELS[status]}
                 applications={applications.filter(
                   (application) => application.status === status,
                 )}
+                isDragOver={dragOverStatus === status}
                 onOpenApplication={setSelectedApplication}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
               />
             ))}
           </div>
