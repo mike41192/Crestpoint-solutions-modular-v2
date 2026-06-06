@@ -3,7 +3,7 @@
 // =====================================================
 // BLOCK: Imports
 // Crestpoint Solutions V2
-// Version: 1.9.6
+// Version: 1.9.7
 // =====================================================
 
 import { useEffect, useState } from "react"
@@ -19,6 +19,13 @@ import {
   type JobApplicationRecord,
   type JobApplicationStatus,
 } from "@/modules/job-tracker"
+
+import {
+  buildCreatedEvent,
+  buildStatusChangeEvent,
+  buildUpdatedEvent,
+  logJobApplicationEvent,
+} from "@/modules/job-application-events"
 
 import {
   JOB_TRACKER_COLUMN_LABELS,
@@ -116,12 +123,17 @@ export function JobTrackerBoard({
       return
     }
 
-    const nextApplications = [
-      result.application as JobApplicationRecord,
-      ...applications,
-    ]
+    const createdApplication = result.application as JobApplicationRecord
+
+    const nextApplications = [createdApplication, ...applications]
 
     syncApplications(nextApplications)
+
+    await logJobApplicationEvent(
+      buildCreatedEvent({
+        jobApplicationId: createdApplication.id,
+      }),
+    )
 
     setShowForm(false)
     setMessage("Job application added to tracker.")
@@ -141,20 +153,30 @@ export function JobTrackerBoard({
       return
     }
 
+    const updatedApplication = result.application as JobApplicationRecord
+
     const nextApplications = applications.map((application) =>
-      application.id === result.application?.id
-        ? (result.application as JobApplicationRecord)
-        : application,
+      application.id === updatedApplication.id ? updatedApplication : application,
     )
 
     syncApplications(nextApplications)
 
-    setSelectedApplication(result.application as JobApplicationRecord)
+    await logJobApplicationEvent(
+      buildUpdatedEvent({
+        jobApplicationId: updatedApplication.id,
+      }),
+    )
+
+    setSelectedApplication(updatedApplication)
     setMessage("Job application updated.")
   }
 
   // =====================================================
   // BLOCK: Delete Job Application
+  // NOTE:
+  // Delete events are intentionally not logged yet because the
+  // application record is removed. Future soft-delete/archive flow
+  // should log deletion before archival or use an archive event.
   // =====================================================
 
   async function handleDeleteApplication(id: string) {
@@ -192,6 +214,17 @@ export function JobTrackerBoard({
 
     const previousApplications = applications
 
+    const movedApplication = applications.find(
+      (application) => application.id === applicationId,
+    )
+
+    if (!movedApplication) {
+      setMessage("Unable to find job application.")
+      return
+    }
+
+    const previousStatus = movedApplication.status
+
     const optimisticApplications = applications.map((application) =>
       application.id === applicationId
         ? {
@@ -215,13 +248,23 @@ export function JobTrackerBoard({
       return
     }
 
+    const confirmedApplication = result.application as JobApplicationRecord
+
     const confirmedApplications = optimisticApplications.map((application) =>
-      application.id === result.application?.id
-        ? (result.application as JobApplicationRecord)
+      application.id === confirmedApplication.id
+        ? confirmedApplication
         : application,
     )
 
     syncApplications(confirmedApplications)
+
+    await logJobApplicationEvent(
+      buildStatusChangeEvent({
+        jobApplicationId: applicationId,
+        fromStatus: previousStatus,
+        toStatus: nextStatus,
+      }),
+    )
 
     setMessage(`Moved job to ${JOB_TRACKER_COLUMN_LABELS[nextStatus]}.`)
   }
