@@ -7,6 +7,8 @@
 // =====================================================
 
 import { useEffect, useState } from "react"
+import { BriefcaseBusiness } from "lucide-react"
+
 import { JobTrackerWorkspace } from "@/components/jobs/tracker/JobTrackerWorkspace"
 import {
   listJobApplications,
@@ -38,8 +40,22 @@ export function JobTrackerDashboard() {
 
   if (loading) {
     return (
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 text-sm font-bold text-slate-500 shadow-sm">
-        Loading job tracker dashboard...
+      <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
+            <BriefcaseBusiness size={22} />
+          </div>
+
+          <div>
+            <p className="text-sm font-black text-slate-950">
+              Loading job tracker
+            </p>
+
+            <p className="mt-1 text-sm font-semibold text-slate-500">
+              Pulling your saved applications, reminders, and pipeline history.
+            </p>
+          </div>
+        </div>
       </div>
     )
   }

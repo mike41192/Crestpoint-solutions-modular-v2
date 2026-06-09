@@ -7,7 +7,15 @@
 // =====================================================
 
 import { useEffect, useState } from "react"
-import { ExternalLink, Trash2, X } from "lucide-react"
+import {
+  BriefcaseBusiness,
+  CalendarClock,
+  ExternalLink,
+  MapPin,
+  Trash2,
+  WalletCards,
+  X,
+} from "lucide-react"
 import { FollowUpGeneratorPanel } from "@/components/jobs/followup/FollowUpGeneratorPanel"
 import { JobTimelinePanel } from "@/components/jobs/timeline/JobTimelinePanel"
 import {
@@ -103,6 +111,16 @@ export function JobApplicationDetailDrawer({
     return null
   }
 
+  const statusLabel = status
+    .replace("_", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+  const priorityClass =
+    priority === "high"
+      ? "border-red-200 bg-red-50 text-red-700"
+      : priority === "medium"
+        ? "border-amber-200 bg-amber-50 text-amber-700"
+        : "border-emerald-200 bg-emerald-50 text-emerald-700"
+
   async function handleSave() {
     if (!application || !title.trim()) return
 
@@ -146,30 +164,67 @@ export function JobApplicationDetailDrawer({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-sm">
-      <div className="ml-auto flex h-full w-full max-w-2xl flex-col overflow-hidden bg-white shadow-2xl">
-        <div className="flex items-start justify-between border-b border-slate-200 p-5">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">
-              Job Application
-            </p>
+      <div className="ml-auto flex h-full w-full max-w-3xl flex-col overflow-hidden bg-white shadow-2xl">
+        <div className="border-b border-slate-200 bg-slate-950 p-5 text-white">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-200">
+                Job Application Record
+              </p>
 
-            <h2 className="mt-2 text-2xl font-black text-slate-950">
-              Edit Tracker Card
-            </h2>
+              <h2 className="mt-2 line-clamp-2 text-2xl font-black tracking-tight">
+                {application.title}
+              </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
-              Update job details, review the activity timeline, and generate
-              professional follow-up messages.
-            </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-300">
+                <span className="inline-flex items-center gap-1.5">
+                  <BriefcaseBusiness size={15} />
+                  {application.company || "Company not listed"}
+                </span>
+
+                {application.location && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <MapPin size={15} />
+                    {application.location}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full border border-white/15 bg-white/10 p-2 text-slate-200 transition hover:bg-white/15 hover:text-white"
+            >
+              <X size={18} />
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-950"
-          >
-            <X size={18} />
-          </button>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <DrawerMetric
+              icon={CalendarClock}
+              label="Status"
+              value={statusLabel}
+            />
+
+            <DrawerMetric
+              icon={WalletCards}
+              label="Compensation"
+              value={salaryRange || "Not listed"}
+            />
+
+            <div className="rounded-2xl border border-white/10 bg-white/10 p-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-blue-100">
+                Priority
+              </p>
+
+              <span
+                className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-black uppercase ${priorityClass}`}
+              >
+                {priority}
+              </span>
+            </div>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-5">
@@ -282,7 +337,7 @@ export function JobApplicationDetailDrawer({
             </label>
           </div>
 
-          <div className="mt-5 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-500">
+          <div className="mt-5 grid gap-3 rounded-[24px] border border-slate-200 bg-slate-50 p-4 text-xs text-slate-500 sm:grid-cols-2">
             <p>
               <span className="font-black text-slate-700">Created:</span>{" "}
               {new Date(application.created_at).toLocaleString()}
@@ -298,7 +353,7 @@ export function JobApplicationDetailDrawer({
                 href={application.source_url}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex w-fit items-center gap-2 font-black text-blue-700 hover:text-blue-900"
+                className="inline-flex w-fit items-center gap-2 font-black text-blue-700 hover:text-blue-900 sm:col-span-2"
               >
                 <ExternalLink size={14} />
                 Open source listing
@@ -352,6 +407,30 @@ export function JobApplicationDetailDrawer({
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function DrawerMetric({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ size?: number; className?: string }>
+  label: string
+  value: string
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/10 p-3">
+      <div className="flex items-center gap-2 text-blue-100">
+        <Icon size={15} />
+
+        <p className="text-[10px] font-black uppercase tracking-[0.14em]">
+          {label}
+        </p>
+      </div>
+
+      <p className="mt-2 truncate text-sm font-black text-white">{value}</p>
     </div>
   )
 }
