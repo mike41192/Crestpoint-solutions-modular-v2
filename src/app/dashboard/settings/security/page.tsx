@@ -1,10 +1,17 @@
 "use client"
 
 // =====================================================
+// BLOCK: Next Imports
+// =====================================================
+
+import Link from "next/link"
+
+// =====================================================
 // BLOCK: Icon Imports
 // =====================================================
 
 import {
+  ArrowRight,
   KeyRound,
   Lock,
   MonitorSmartphone,
@@ -16,7 +23,6 @@ import {
 // =====================================================
 
 import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
-import { SettingsBackLink } from "@/components/settings/SettingsBackLink"
 import { SettingsPageShell } from "@/components/settings/SettingsPageShell"
 
 // =====================================================
@@ -34,8 +40,6 @@ export default function SecuritySettingsPage() {
         title="Security Center"
         description="Review account security status and future authentication controls."
       >
-        <SettingsBackLink />
-
         <div className="grid gap-5">
 
           {/* =====================================================
@@ -43,21 +47,26 @@ export default function SecuritySettingsPage() {
           ===================================================== */}
 
           <section className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
-            <div className="flex items-center gap-3">
-              <ShieldCheck
-                size={22}
-                className="text-emerald-700"
-              />
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl bg-white p-3 text-emerald-700 shadow-sm">
+                  <ShieldCheck size={22} />
+                </div>
 
-              <div>
-                <h3 className="font-black text-emerald-900">
-                  Account Protected
-                </h3>
+                <div>
+                  <h3 className="font-black text-emerald-900">
+                    Account Protected
+                  </h3>
 
-                <p className="text-sm text-emerald-700">
-                  Authentication is currently managed through Supabase.
-                </p>
+                  <p className="mt-1 text-sm font-semibold text-emerald-700">
+                    Authentication is currently managed through Supabase.
+                  </p>
+                </div>
               </div>
+
+              <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-emerald-700 shadow-sm">
+                Live
+              </span>
             </div>
           </section>
 
@@ -70,29 +79,33 @@ export default function SecuritySettingsPage() {
             <SecurityCard
               icon={KeyRound}
               title="Reset Password"
-              description="Request a password reset email through Supabase authentication."
+              description="Update your password from the secure reset screen."
               status="Available"
+              href="/auth/reset-password"
             />
 
             <SecurityCard
               icon={Lock}
               title="Email Verification"
-              description="Verify and maintain a trusted login email address."
+              description="Manage your primary login email and alternate email usage."
               status="Connected"
+              href="/dashboard/settings/security/email"
             />
 
             <SecurityCard
               icon={ShieldCheck}
               title="Two-Factor Authentication"
-              description="Additional login protection planned for future release."
-              status="Planned"
+              description="Enable or manage authenticator app protection for login."
+              status="Available"
+              href="/dashboard/settings/security/two-factor"
             />
 
             <SecurityCard
               icon={MonitorSmartphone}
               title="Device Management"
               description="Review and manage active login sessions."
-              status="Planned"
+              status="Available"
+              href="/dashboard/settings/security/devices"
             />
 
           </section>
@@ -112,6 +125,7 @@ function SecurityCard({
   title,
   description,
   status,
+  href,
 }: {
   icon: React.ComponentType<{
     size?: number
@@ -120,21 +134,25 @@ function SecurityCard({
   title: string
   description: string
   status: string
+  href: string
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <Link
+      href={href}
+      className="group rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
+    >
       <div className="flex items-start gap-4">
-        <div className="rounded-2xl bg-blue-50 p-3 text-blue-700">
+        <div className="rounded-2xl bg-blue-50 p-3 text-blue-700 transition group-hover:bg-blue-600 group-hover:text-white">
           <Icon size={20} />
         </div>
 
-        <div>
-          <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-black text-slate-950">
               {title}
             </h3>
 
-            <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-black text-slate-600">
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-600">
               {status}
             </span>
           </div>
@@ -143,7 +161,11 @@ function SecurityCard({
             {description}
           </p>
         </div>
+
+        <div className="hidden rounded-full border border-slate-200 bg-slate-50 p-2 text-slate-400 transition group-hover:border-blue-200 group-hover:bg-blue-50 group-hover:text-blue-700 sm:block">
+          <ArrowRight size={16} />
+        </div>
       </div>
-    </div>
+    </Link>
   )
 }

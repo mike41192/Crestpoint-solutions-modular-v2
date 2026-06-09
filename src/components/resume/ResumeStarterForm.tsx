@@ -471,18 +471,14 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
           BLOCK: Resume Workspace Layout
       ===================================================== */}
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">
+      <WorkspacePanelTabs
+        panels={panels}
+        activePanel={activePanel}
+        onPanelChange={setActivePanel}
+      />
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_430px]">
         <main className="min-w-0 space-y-5">
-          {/* =====================================================
-              BLOCK: Workspace Panel Tabs
-          ===================================================== */}
-
-          <WorkspacePanelTabs
-            panels={panels}
-            activePanel={activePanel}
-            onPanelChange={setActivePanel}
-          />
-
           {/* =====================================================
               BLOCK: Save / Server Message Panel
           ===================================================== */}
@@ -556,7 +552,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
           ===================================================== */}
 
           {activePanel === "preview" && (
-            <div className="xl:hidden">
+            <div className="lg:hidden">
               <WorkspaceCard
                 icon={LayoutTemplate}
                 title="Live Preview"
@@ -664,7 +660,7 @@ export function ResumeStarterForm({ data }: ResumeStarterFormProps) {
             BLOCK: Desktop Sticky Preview
         ===================================================== */}
 
-        <aside className="hidden min-w-0 xl:sticky xl:top-6 xl:block xl:h-fit">
+        <aside className="hidden min-w-0 lg:sticky lg:top-6 lg:block lg:h-fit">
           <WorkspaceCard
             icon={LayoutTemplate}
             title="Live Preview"

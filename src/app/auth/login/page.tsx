@@ -5,7 +5,7 @@
 // =====================================================
 
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 // =====================================================
 // BLOCK: Icon Imports
@@ -32,31 +32,41 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 // BLOCK: Production URL Helper
 // =====================================================
 
-    function getAppUrl() {
+function getAppUrl() {
   // Vercel production URL from environment variable
-    if (
-      process.env.NEXT_PUBLIC_SITE_URL &&
-      process.env.NEXT_PUBLIC_SITE_URL.length > 0
-      ) {
+  if (
+    process.env.NEXT_PUBLIC_SITE_URL &&
+    process.env.NEXT_PUBLIC_SITE_URL.length > 0
+  ) {
     return process.env.NEXT_PUBLIC_SITE_URL
-    }
+  }
 
   // Browser fallback
-    if (typeof window !== "undefined") {
-      const host = window.location.hostname
-
-      if (
-        host.includes("github.dev") ||
-        host.includes("app.github.dev") ||
-        host.includes("localhost")
-      ) {
-        return "https://crestpoint-solutions.vercel.app"
-      }
-
+  if (typeof window !== "undefined") {
     return window.location.origin
   }
 
   return "https://crestpoint-solutions.vercel.app"
+}
+
+// =====================================================
+// BLOCK: Redirect Helper
+// =====================================================
+
+function getDashboardRedirectPath() {
+  if (typeof window === "undefined") {
+    return "/dashboard"
+  }
+
+  const redirectTo = new URLSearchParams(window.location.search).get(
+    "redirectTo",
+  )
+
+  if (!redirectTo || !redirectTo.startsWith("/") || redirectTo.startsWith("//")) {
+    return "/dashboard"
+  }
+
+  return redirectTo
 }
 // =====================================================
 // BLOCK: Page Component
@@ -75,44 +85,36 @@ export default function LoginPage() {
   // BLOCK: Email / Password Auth Handler
   // =====================================================
 
-  async function handleAuth() {
-    setLoading(true)
+  async function handleSignup() {
     setMessage("")
+    const normalizedEmail = email.trim()
+
+    if (!normalizedEmail || !password) {
+      setMessage("Enter your email address and password to continue.")
+      return
+    }
+
+    setLoading(true)
 
     try {
       const supabase = createSupabaseBrowserClient()
 
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-            },
+      const { error } = await supabase.auth.signUp({
+        email: normalizedEmail,
+        password,
+        options: {
+          data: {
+            full_name: fullName.trim(),
           },
-        })
+        },
+      })
 
-        if (error) {
-          setMessage(error.message)
-        } else {
-          setMessage(
-            "Account created. If email confirmation is enabled, confirm your email before signing in.",
-          )
-        }
-      }
-
-      if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-
-        if (error) {
-          setMessage(error.message)
-        } else {
-          window.location.href = "/dashboard/resume"
-        }
+      if (error) {
+        setMessage(error.message)
+      } else {
+        setMessage(
+          "Account created. If email confirmation is enabled, confirm your email before signing in.",
+        )
       }
     } catch {
       setMessage("Authentication request failed.")
@@ -125,43 +127,50 @@ export default function LoginPage() {
   // BLOCK: Forgot Password Handler
   // =====================================================
 
-    async function handleForgotPassword() {
-      if (!email.trim()) {
-        setMessage(
-          "Enter your email address first, then click Forgot Password."
-        )
-        return
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      setMessage("Enter your email address first, then click Forgot Password.")
+      return
+    }
+
+    setResetLoading(true)
+    setMessage("")
+
+    try {
+      const supabase = createSupabaseBrowserClient()
+
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        {
+          redirectTo: `${getAppUrl()}/auth/callback?next=/auth/reset-password`,
+        },
+      )
+
+      if (error) {
+        setMessage(error.message)
+      } else {
+        setMessage("Password reset email sent. Check your inbox.")
       }
-
-      setResetLoading(true)
-      setMessage("")
-
-      try {
-        const supabase = createSupabaseBrowserClient()
-
-        const { error } =
-          await supabase.auth.resetPasswordForEmail(
-            email,
-            {
-            redirectTo: `${getAppUrl()}/auth/callback?next=/auth/reset-password`,
-            }
-          )
-
-        if (error) {
-          setMessage(error.message)
-        } else {
-          setMessage(
-            "Password reset email sent. Check your inbox."
-          )
-        }
-      }  catch {
-        setMessage(
-          "Password reset request failed."
-        )
+    } catch {
+      setMessage("Password reset request failed.")
     }
 
-      setResetLoading(false)
+    setResetLoading(false)
+  }
+
+  // =====================================================
+  // BLOCK: URL Message Handler
+  // =====================================================
+
+  useEffect(() => {
+    const messageParam = new URLSearchParams(window.location.search).get(
+      "message",
+    )
+
+    if (messageParam) {
+      setMessage(messageParam)
     }
+  }, [])
 
   // =====================================================
   // BLOCK: Render
@@ -284,34 +293,52 @@ export default function LoginPage() {
               </button>
             </div>
 
-            <div className="mt-6 grid gap-4">
+            <form
+              action="/api/auth/login"
+              method="post"
+              className="mt-6 grid gap-4"
+            >
+              <input
+                type="hidden"
+                name="redirectTo"
+                value={getDashboardRedirectPath()}
+              />
+
               {mode === "signup" && (
                 <Field
                   label="Full Name"
+                  name="name"
                   type="text"
                   value={fullName}
                   onChange={setFullName}
                   placeholder="Michael Rodriguez"
                   icon={UserRound}
+                  autoComplete="name"
                 />
               )}
 
               <Field
                 label="Email Address"
+                name="email"
                 type="email"
                 value={email}
                 onChange={setEmail}
                 placeholder="name@example.com"
                 icon={Mail}
+                autoComplete="email"
               />
 
               <Field
                 label="Password"
+                name="password"
                 type="password"
                 value={password}
                 onChange={setPassword}
                 placeholder="Enter password"
                 icon={Lock}
+                autoComplete={
+                  mode === "signin" ? "current-password" : "new-password"
+                }
               />
 
               {mode === "signin" && (
@@ -326,9 +353,9 @@ export default function LoginPage() {
               )}
 
               <button
-                type="button"
-                disabled={loading || !email || !password}
-                onClick={handleAuth}
+                type={mode === "signin" ? "submit" : "button"}
+                onClick={mode === "signup" ? handleSignup : undefined}
+                disabled={loading}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none disabled:hover:translate-y-0"
               >
                 {loading
@@ -339,7 +366,7 @@ export default function LoginPage() {
 
                 {!loading && <ArrowRight size={17} />}
               </button>
-            </div>
+            </form>
 
             {message && (
               <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold leading-6 text-slate-700">
@@ -364,20 +391,24 @@ export default function LoginPage() {
 
 type FieldProps = {
   label: string
+  name: string
   type: string
   value: string
   placeholder: string
   onChange: (value: string) => void
   icon: React.ComponentType<{ size?: number; className?: string }>
+  autoComplete: string
 }
 
 function Field({
   label,
+  name,
   type,
   value,
   placeholder,
   onChange,
   icon: Icon,
+  autoComplete,
 }: FieldProps) {
   return (
     <label className="block">
@@ -389,10 +420,12 @@ function Field({
         <Icon size={17} className="shrink-0 text-slate-400" />
 
         <input
+          name={name}
           type={type}
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
+          autoComplete={autoComplete}
           className="w-full min-w-0 bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400"
         />
       </div>

@@ -4,7 +4,6 @@
 
 import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
 import { ProfileSettingsForm } from "@/components/settings/ProfileSettingsForm"
-import { SettingsBackLink } from "@/components/settings/SettingsBackLink"
 import { SettingsPageShell } from "@/components/settings/SettingsPageShell"
 
 // =====================================================
@@ -22,8 +21,6 @@ export default function ProfileSettingsPage() {
         title="Profile Information"
         description="Update your account profile, contact details, and career identity."
       >
-        <SettingsBackLink />
-
         <ProfileSettingsForm />
       </SettingsPageShell>
     </ModulePageLayout>

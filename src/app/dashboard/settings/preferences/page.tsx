@@ -16,6 +16,7 @@ import {
   Mail,
   Megaphone,
   MessageSquare,
+  Save,
 } from "lucide-react"
 
 // =====================================================
@@ -23,7 +24,6 @@ import {
 // =====================================================
 
 import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
-import { SettingsBackLink } from "@/components/settings/SettingsBackLink"
 import { SettingsPageShell } from "@/components/settings/SettingsPageShell"
 
 // =====================================================
@@ -161,19 +161,23 @@ export default function PreferencesSettingsPage() {
         title="Notification Preferences"
         description="Control email updates, job alerts, interview reminders, product updates, and marketing preferences."
       >
-        <SettingsBackLink />
-
         <div className="grid gap-5">
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div>
-              <h3 className="text-lg font-black text-slate-950">
-                Communication Preferences
-              </h3>
+            <div className="flex items-start gap-3 border-b border-slate-200 pb-5">
+              <div className="rounded-2xl bg-blue-50 p-3 text-blue-700">
+                <Bell size={20} />
+              </div>
 
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                These settings are saved to your Crestpoint account and can be
-                used for future alerts, reminders, and platform notifications.
-              </p>
+              <div>
+                <h3 className="text-lg font-black text-slate-950">
+                  Communication Preferences
+                </h3>
+
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                  These settings are saved to your Crestpoint account and can be
+                  used for future alerts, reminders, and platform notifications.
+                </p>
+              </div>
             </div>
 
             {loading ? (
@@ -191,7 +195,7 @@ export default function PreferencesSettingsPage() {
                       key={option.key}
                       type="button"
                       onClick={() => togglePreference(option.key)}
-                      className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-blue-200 hover:bg-white"
+                      className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-blue-200 hover:bg-white"
                     >
                       <div className="flex items-start gap-3">
                         <div className="rounded-2xl bg-blue-50 p-3 text-blue-700">
@@ -210,13 +214,17 @@ export default function PreferencesSettingsPage() {
                       </div>
 
                       <span
-                        className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${
+                        className={`relative h-7 w-12 shrink-0 rounded-full transition ${
                           enabled
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-slate-200 text-slate-500"
+                            ? "bg-blue-600"
+                            : "bg-slate-300"
                         }`}
                       >
-                        {enabled ? "On" : "Off"}
+                        <span
+                          className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition ${
+                            enabled ? "left-6" : "left-1"
+                          }`}
+                        />
                       </span>
                     </button>
                   )
@@ -235,8 +243,9 @@ export default function PreferencesSettingsPage() {
             type="button"
             onClick={savePreferences}
             disabled={saving || loading}
-            className="w-fit rounded-full bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="inline-flex w-fit items-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
+            <Save size={16} />
             {saving ? "Saving..." : "Save Preferences"}
           </button>
         </div>

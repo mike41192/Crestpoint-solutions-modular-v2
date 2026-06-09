@@ -29,6 +29,24 @@ export default async function DashboardLayout({
   const supabase = await createSupabaseServerClient()
 
   const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  if (!session) {
+    redirect("/auth/login")
+  }
+
+  const { data: aalData } =
+    await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+
+  if (
+    aalData?.nextLevel === "aal2" &&
+    aalData.currentLevel !== aalData.nextLevel
+  ) {
+    redirect("/mfa?redirectTo=/dashboard")
+  }
+
+  const {
     data: { user },
     error,
   } = await supabase.auth.getUser()

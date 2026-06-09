@@ -224,7 +224,7 @@ export default function AccountSettingsPage() {
                           {section.title}
                         </h2>
 
-                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-extrabold text-slate-600">
+                        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-extrabold text-blue-700">
                           {section.status}
                         </span>
                       </div>

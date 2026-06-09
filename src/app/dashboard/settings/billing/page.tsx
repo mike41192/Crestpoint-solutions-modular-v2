@@ -26,7 +26,6 @@ import {
 // =====================================================
 
 import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
-import { SettingsBackLink } from "@/components/settings/SettingsBackLink"
 import { SettingsPageShell } from "@/components/settings/SettingsPageShell"
 
 // =====================================================
@@ -109,12 +108,15 @@ export default function BillingSettingsPage() {
         title="Membership Access"
         description="View your current plan, module access, and future billing controls."
       >
-        <SettingsBackLink />
-
         <div className="grid gap-5">
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
+              <div className="flex items-start gap-3">
+                <div className="rounded-2xl bg-blue-50 p-3 text-blue-700">
+                  <CreditCard size={20} />
+                </div>
+
+                <div>
                 <div className="mb-3 flex w-fit items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-blue-700">
                   <CreditCard size={14} />
                   Current Plan
@@ -128,6 +130,7 @@ export default function BillingSettingsPage() {
                   Your membership controls access to Crestpoint resume, ATS,
                   interview, and career optimization modules.
                 </p>
+                </div>
               </div>
 
               <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-4">
@@ -203,15 +206,23 @@ export default function BillingSettingsPage() {
           </section>
 
           <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-            <h3 className="text-lg font-black text-amber-950">
-              Billing Portal Coming Soon
-            </h3>
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-white p-3 text-amber-700 shadow-sm">
+                <CreditCard size={20} />
+              </div>
 
-            <p className="mt-2 text-sm leading-6 text-amber-800">
-              Stripe checkout, subscription management, plan upgrades, and
-              invoice access will be connected during the billing integration
-              phase.
-            </p>
+              <div>
+                <h3 className="text-lg font-black text-amber-950">
+                  Billing Portal Coming Soon
+                </h3>
+
+                <p className="mt-2 text-sm leading-6 text-amber-800">
+                  Stripe checkout, subscription management, plan upgrades, and
+                  invoice access will be connected during the billing
+                  integration phase.
+                </p>
+              </div>
+            </div>
           </section>
         </div>
       </SettingsPageShell>
@@ -245,7 +256,7 @@ function UsageCard({
     : Math.min(Math.round((used / safeLimit) * 100), 100)
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-200 hover:shadow-md">
       <div className="flex items-center justify-between gap-3">
         <div className="rounded-2xl bg-blue-50 p-3 text-blue-700">
           <Icon size={20} />
@@ -266,7 +277,7 @@ function UsageCard({
         <div
           className="h-full rounded-full bg-blue-600"
           style={{
-            width: `${percent}%`,
+            width: `${isUnlimited ? 100 : percent}%`,
           }}
         />
       </div>

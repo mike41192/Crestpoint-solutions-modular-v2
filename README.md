@@ -1,7 +1,7 @@
 Crestpoint Solutions
 
-Version: 1.6.4
-Branch: modular-v2-build
+Version: 1.10.0
+Branch: main
 Status: Active Development
 Architecture: Modular V2
 License: Proprietary
@@ -18,6 +18,7 @@ Crestpoint Solutions is an AI-powered career optimization platform that helps jo
 - Generate achievement-focused resume content
 - Prepare for interviews
 - Manage career growth workflows
+- Track job applications, follow-ups, and career contacts
 
 The platform is built around a modular architecture designed for scalability, maintainability, security, and future expansion into a complete Career Operating System.
 
@@ -26,10 +27,10 @@ The platform is built around a modular architecture designed for scalability, ma
 Current Release
 
 Item| Value
-Current Version| 1.6.4
-Development Branch| modular-v2-build
-Stable Branch| stable/v1.5.5
-Release Target| v1.7.0
+Current Version| 1.10.0
+Development Branch| main
+Stable Checkpoint| stable-v1.9.9-ai-followup-assistant
+Release Target| v1.10.0 Career CRM Foundation
 Deployment| Vercel
 Database| Supabase
 
@@ -48,18 +49,22 @@ Production Ready
 - Resume Export
 - ATS Scoring Engine
 - Achievement Intelligence V1
+- Job Description Library
+- Job Tracker / Kaizen Board
+- Activity Timeline
+- AI Follow-Up Assistant
 
 Active Development
 
-- ATS Gap Analyzer
-- ATS Intelligence Layer
-- Industry Detection Engine
-- ATS Validation Dashboard
+- Career CRM Foundation
+- Contact relationship tracking
+- Recruiter and networking workflow support
 
 MVP
 
 - AI Resume Optimization
 - Resume Feedback
+- Career Contacts Dashboard
 
 Scaffold
 
@@ -158,6 +163,23 @@ Features:
 
 ---
 
+Career CRM Foundation
+
+Features:
+
+- Career contact CRUD
+- Recruiter and hiring manager tracking
+- Mentor, coworker, and networking contact tracking
+- Relationship status management
+- Follow-up date tracking
+- Supabase-backed persistence with user-owned records
+
+Purpose:
+
+Establishes the relationship-management layer for the broader Career Operating System. Future phases will connect contacts to applications, follow-ups, outreach campaigns, and AI relationship management.
+
+---
+
 Technology Stack
 
 Frontend
@@ -222,8 +244,10 @@ src/modules/
 ├── ats-engine/
 ├── ats-intelligence/
 ├── gap-analyzer/
-├── achievement-intelligence/
-├── interview-system/
+├── job-tracker/
+├── job-followup-ai/
+├── career-crm/
+├── job-application-events/
 
 ---
 
@@ -409,6 +433,20 @@ Planned:
 
 ---
 
+v1.10.0
+
+Career CRM Foundation
+
+Planned:
+
+- Career Contacts Dashboard
+- Career contact API routes
+- Recruiter, hiring manager, mentor, coworker, and networking contact records
+- Relationship status and follow-up tracking
+- Modular CRM foundation for future AI relationship workflows
+
+---
+
 v2.0.0
 
 Platform Ecosystem
@@ -455,5 +493,3 @@ Overall Health Score
 8.5 / 10
 
 Current focus is continued ATS Intelligence development and preparation for the v1.7.0 Intelligence Layer release.
-
-

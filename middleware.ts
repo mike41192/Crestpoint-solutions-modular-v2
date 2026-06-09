@@ -42,7 +42,14 @@ function isProtectedRoute(pathname: string): boolean {
 
 function hasSupabaseAuthCookie(request: NextRequest): boolean {
   return request.cookies.getAll().some((cookie) => {
-    return cookie.name.startsWith("sb-") && Boolean(cookie.value)
+    const normalizedName = cookie.name.toLowerCase()
+
+    return (
+      Boolean(cookie.value) &&
+      (normalizedName.startsWith("sb-") ||
+        normalizedName.includes("supabase") ||
+        normalizedName.includes("auth-token"))
+    )
   })
 }
 

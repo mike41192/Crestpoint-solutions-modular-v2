@@ -47,8 +47,8 @@ export function WorkspacePanelTabs({
   onPanelChange,
 }: WorkspacePanelTabsProps) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-      <div className="grid min-w-max grid-cols-7 gap-3 xl:min-w-0">
+    <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7">
         {panels.map((panel) => {
           const Icon = panel.icon
           const active = activePanel === panel.id

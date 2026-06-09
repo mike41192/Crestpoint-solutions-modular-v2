@@ -7,6 +7,20 @@
 import { useEffect, useState } from "react"
 
 // =====================================================
+// BLOCK: Icon Imports
+// =====================================================
+
+import {
+  Globe,
+  Link2,
+  Mail,
+  MapPin,
+  Phone,
+  Save,
+  UserRound,
+} from "lucide-react"
+
+// =====================================================
 // BLOCK: Profile Management Imports
 // =====================================================
 
@@ -82,19 +96,29 @@ export function ProfileSettingsForm() {
 
   return (
     <div className="grid gap-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div>
-        <h3 className="text-lg font-black text-slate-950">
-          Personal Profile
-        </h3>
+      <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="rounded-2xl bg-blue-50 p-3 text-blue-700">
+            <UserRound size={20} />
+          </div>
 
-        <p className="mt-2 text-sm leading-6 text-slate-500">
-          Keep your contact details and public career identity updated.
-        </p>
+          <div>
+            <h3 className="text-lg font-black text-slate-950">
+              Personal Profile
+            </h3>
+
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+              Keep your contact details and career identity ready for resumes,
+              applications, and future CRM workflows.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <ProfileField
           label="Full Name"
+          icon={UserRound}
           value={profile.fullName}
           onChange={(value) => updateField("fullName", value)}
           placeholder="Michael Rodriguez"
@@ -102,6 +126,7 @@ export function ProfileSettingsForm() {
 
         <ProfileField
           label="Email Address"
+          icon={Mail}
           value={profile.email}
           onChange={(value) => updateField("email", value)}
           placeholder="name@example.com"
@@ -109,6 +134,7 @@ export function ProfileSettingsForm() {
 
         <ProfileField
           label="Phone Number"
+          icon={Phone}
           value={profile.phone}
           onChange={(value) => updateField("phone", value)}
           placeholder="555-555-5555"
@@ -116,6 +142,7 @@ export function ProfileSettingsForm() {
 
         <ProfileField
           label="Location"
+          icon={MapPin}
           value={profile.location}
           onChange={(value) => updateField("location", value)}
           placeholder="Decatur, IL"
@@ -123,6 +150,7 @@ export function ProfileSettingsForm() {
 
         <ProfileField
           label="LinkedIn"
+          icon={Link2}
           value={profile.linkedIn}
           onChange={(value) => updateField("linkedIn", value)}
           placeholder="https://linkedin.com/in/username"
@@ -130,6 +158,7 @@ export function ProfileSettingsForm() {
 
         <ProfileField
           label="Website"
+          icon={Globe}
           value={profile.website}
           onChange={(value) => updateField("website", value)}
           placeholder="https://yourwebsite.com"
@@ -146,8 +175,9 @@ export function ProfileSettingsForm() {
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="w-fit rounded-full bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+        className="inline-flex w-fit items-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
+        <Save size={16} />
         {saving ? "Saving..." : "Save Profile"}
       </button>
     </div>
@@ -160,11 +190,13 @@ export function ProfileSettingsForm() {
 
 function ProfileField({
   label,
+  icon: Icon,
   value,
   placeholder,
   onChange,
 }: {
   label: string
+  icon: React.ComponentType<{ size?: number; className?: string }>
   value: string
   placeholder: string
   onChange: (value: string) => void
@@ -175,12 +207,16 @@ function ProfileField({
         {label}
       </span>
 
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
-      />
+      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 transition focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-100">
+        <Icon size={17} className="shrink-0 text-slate-400" />
+
+        <input
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          className="w-full min-w-0 bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400"
+        />
+      </div>
     </label>
   )
 }
