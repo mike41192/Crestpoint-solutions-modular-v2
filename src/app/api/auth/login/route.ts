@@ -67,7 +67,7 @@ function buildMfaRedirectPath(redirectTo: string) {
     redirectTo,
   })
 
-  return `/mfa?${params.toString()}`
+  return `/auth/mfa?${params.toString()}`
 }
 
 function getHeaderValue(request: NextRequest, name: string) {

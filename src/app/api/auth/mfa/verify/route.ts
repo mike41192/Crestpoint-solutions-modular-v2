@@ -53,7 +53,7 @@ function buildMfaRedirectPath(redirectTo: string, message: string) {
     message,
   })
 
-  return `/mfa?${params.toString()}`
+  return `/auth/mfa?${params.toString()}`
 }
 
 function buildLoginRedirectPath(redirectTo: string, message: string) {

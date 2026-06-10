@@ -21,31 +21,24 @@ import { ArrowRight, KeyRound, ShieldCheck, Sparkles } from "lucide-react"
 
 export default function MfaPage() {
   const [code, setCode] = useState("")
+  const [redirectTo, setRedirectTo] = useState("/dashboard")
   const [message, setMessage] = useState("")
 
-  function getRedirectTo() {
-    if (typeof window === "undefined") {
-      return "/dashboard"
-    }
-
-    const redirectTo = new URLSearchParams(window.location.search).get(
-      "redirectTo",
-    )
-
-    if (!redirectTo || !redirectTo.startsWith("/") || redirectTo.startsWith("//")) {
-      return "/dashboard"
-    }
-
-    return redirectTo
-  }
-
   useEffect(() => {
-    const messageParam = new URLSearchParams(window.location.search).get(
-      "message",
-    )
+    const params = new URLSearchParams(window.location.search)
+    const messageParam = params.get("message")
+    const redirectToParam = params.get("redirectTo")
 
     if (messageParam) {
       setMessage(messageParam)
+    }
+
+    if (
+      redirectToParam &&
+      redirectToParam.startsWith("/") &&
+      !redirectToParam.startsWith("//")
+    ) {
+      setRedirectTo(redirectToParam)
     }
   }, [])
 
@@ -100,7 +93,7 @@ export default function MfaPage() {
             method="post"
             className="mt-6 grid gap-4"
           >
-            <input type="hidden" name="redirectTo" value={getRedirectTo()} />
+            <input type="hidden" name="redirectTo" value={redirectTo} />
 
             <label className="block">
               <span className="mb-2 block text-sm font-extrabold text-slate-700">
