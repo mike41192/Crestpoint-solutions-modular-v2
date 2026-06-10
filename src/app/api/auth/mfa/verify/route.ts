@@ -21,6 +21,16 @@ type CookieWrite = {
 // BLOCK: Helpers
 // =====================================================
 
+function getRequiredEnvValue(key: string) {
+  const value = process.env[key]?.trim()
+
+  if (!value) {
+    throw new Error(`${key} is not configured.`)
+  }
+
+  return value
+}
+
 function cleanRedirectPath(value: unknown) {
   if (typeof value !== "string") {
     return "/dashboard"
@@ -98,8 +108,8 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      getRequiredEnvValue("NEXT_PUBLIC_SUPABASE_URL"),
+      getRequiredEnvValue("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
       {
         cookies: {
           getAll() {
@@ -193,10 +203,17 @@ export async function POST(request: NextRequest) {
     }
 
     return redirectWithCookies(request, redirectTo, cookieWrites)
-  } catch {
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "MFA verification request failed."
+
+    console.error("MFA verification request failed:", message)
+
     return NextResponse.redirect(
       new URL(
-        buildMfaRedirectPath("/dashboard", "MFA verification request failed."),
+        buildMfaRedirectPath("/dashboard", message),
         request.url,
       ),
       {
