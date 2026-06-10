@@ -80,13 +80,17 @@ export async function GET() {
       .maybeSingle()
 
     if (error) {
+      console.error("Membership row lookup failed:", error.message)
+
       return Response.json(
         {
-          status: "error",
-          message: error.message,
+          status: "success",
+          message:
+            "Membership row could not be loaded. Free editable limits were applied.",
+          source: "fallback_membership_lookup_error",
           membership: await createFallbackMembership(),
         },
-        { status: 500, headers: NO_STORE_HEADERS },
+        { headers: NO_STORE_HEADERS },
       )
     }
 
