@@ -1,13 +1,7 @@
 // =====================================================
-// BLOCK: Supabase Imports
-// Crestpoint Solutions V2
-// Version: 1.7.5
-// =====================================================
-
-import { createSupabaseBrowserClient } from "@/lib/supabase/client"
-
-// =====================================================
 // BLOCK: Type Imports
+// Crestpoint Solutions V2
+// Version: 1.10.0
 // =====================================================
 
 import type { ProfileSaveResult, UserProfileData } from "./types"
@@ -28,36 +22,22 @@ export function createEmptyUserProfile(): UserProfileData {
 }
 
 // =====================================================
-// BLOCK: Database Row Type
+// BLOCK: Response Mapping
 // =====================================================
 
-type ProfileRow = {
-  id: string
-  full_name: string | null
-  phone: string | null
-  location: string | null
-  linkedin_url: string | null
-  website_url: string | null
-}
+function mapProfileResponse(value: unknown): UserProfileData {
+  const profile =
+    value && typeof value === "object"
+      ? (value as Partial<UserProfileData>)
+      : {}
 
-// =====================================================
-// BLOCK: Database Mapper
-// =====================================================
-
-function mapProfileRowToUserProfile({
-  row,
-  email,
-}: {
-  row: ProfileRow | null
-  email: string
-}): UserProfileData {
   return {
-    fullName: row?.full_name || "",
-    email,
-    phone: row?.phone || "",
-    location: row?.location || "",
-    linkedIn: row?.linkedin_url || "",
-    website: row?.website_url || "",
+    fullName: profile.fullName || "",
+    email: profile.email || "",
+    phone: profile.phone || "",
+    location: profile.location || "",
+    linkedIn: profile.linkedIn || "",
+    website: profile.website || "",
   }
 }
 
@@ -66,34 +46,22 @@ function mapProfileRowToUserProfile({
 // =====================================================
 
 export async function loadCurrentUserProfile(): Promise<UserProfileData> {
-  const supabase = createSupabaseBrowserClient()
+  try {
+    const response = await fetch("/api/user/profile", {
+      method: "GET",
+      cache: "no-store",
+    })
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
+    const result = await response.json()
 
-  if (userError || !user) {
+    if (!response.ok || result.status !== "success") {
+      return createEmptyUserProfile()
+    }
+
+    return mapProfileResponse(result.profile)
+  } catch {
     return createEmptyUserProfile()
   }
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, full_name, phone, location, linkedin_url, website_url")
-    .eq("id", user.id)
-    .maybeSingle()
-
-  if (error) {
-    return {
-      ...createEmptyUserProfile(),
-      email: user.email || "",
-    }
-  }
-
-  return mapProfileRowToUserProfile({
-    row: data,
-    email: user.email || "",
-  })
 }
 
 // =====================================================
@@ -103,39 +71,33 @@ export async function loadCurrentUserProfile(): Promise<UserProfileData> {
 export async function saveCurrentUserProfile(
   profile: UserProfileData,
 ): Promise<ProfileSaveResult> {
-  const supabase = createSupabaseBrowserClient()
+  try {
+    const response = await fetch("/api/user/profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ profile }),
+    })
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
+    const result = await response.json()
 
-  if (userError || !user) {
+    if (!response.ok || result.status !== "success") {
+      return {
+        status: "error",
+        message: result.message || "Profile could not be saved.",
+      }
+    }
+
+    return {
+      status: "success",
+      message: result.message || "Profile saved successfully.",
+    }
+  } catch {
     return {
       status: "error",
-      message: "You must be signed in to update your profile.",
+      message: "Profile update request failed.",
     }
-  }
-
-  const { error } = await supabase.from("profiles").upsert({
-    id: user.id,
-    full_name: profile.fullName,
-    phone: profile.phone,
-    location: profile.location,
-    linkedin_url: profile.linkedIn,
-    website_url: profile.website,
-  })
-
-  if (error) {
-    return {
-      status: "error",
-      message: error.message,
-    }
-  }
-
-  return {
-    status: "success",
-    message: "Profile saved successfully.",
   }
 }
 
