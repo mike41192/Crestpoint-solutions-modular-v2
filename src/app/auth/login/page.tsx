@@ -53,27 +53,13 @@ function getAppUrl() {
 // BLOCK: Redirect Helper
 // =====================================================
 
-function getDashboardRedirectPath() {
-  if (typeof window === "undefined") {
-    return "/dashboard"
-  }
-
-  const redirectTo = new URLSearchParams(window.location.search).get(
-    "redirectTo",
-  )
-
-  if (!redirectTo || !redirectTo.startsWith("/") || redirectTo.startsWith("//")) {
-    return "/dashboard"
-  }
-
-  return redirectTo
-}
 // =====================================================
 // BLOCK: Page Component
 // =====================================================
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin")
+  const [redirectTo, setRedirectTo] = useState("/dashboard")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
@@ -163,12 +149,25 @@ export default function LoginPage() {
   // =====================================================
 
   useEffect(() => {
-    const messageParam = new URLSearchParams(window.location.search).get(
-      "message",
-    )
+    const params = new URLSearchParams(window.location.search)
+    const messageParam = params.get("message")
+    const modeParam = params.get("mode")
+    const redirectToParam = params.get("redirectTo")
 
     if (messageParam) {
       setMessage(messageParam)
+    }
+
+    if (modeParam === "signup") {
+      setMode("signup")
+    }
+
+    if (
+      redirectToParam &&
+      redirectToParam.startsWith("/") &&
+      !redirectToParam.startsWith("//")
+    ) {
+      setRedirectTo(redirectToParam)
     }
   }, [])
 
@@ -301,7 +300,7 @@ export default function LoginPage() {
               <input
                 type="hidden"
                 name="redirectTo"
-                value={getDashboardRedirectPath()}
+                value={redirectTo}
               />
 
               {mode === "signup" && (
