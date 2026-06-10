@@ -36,6 +36,7 @@ export default function DashboardAnalyticsPage() {
 
   return (
     <ModulePageLayout
+      moduleKey="analytics_dashboard"
       title="Career Analytics"
       description="View readiness scores, activity insights, application progress, and career growth metrics."
     >

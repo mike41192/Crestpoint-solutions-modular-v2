@@ -103,3 +103,24 @@ export function canCreateResume(
     allowed: true,
   }
 }
+
+// =====================================================
+// BLOCK: Tracked Job Access
+// =====================================================
+
+export function canTrackJob(
+  membership: MembershipData,
+  trackedJobCount: number,
+): FeatureAccessResult {
+  if (hasReachedLimit(trackedJobCount, membership.trackedJobsLimit)) {
+    return {
+      allowed: false,
+      reason:
+        "Tracked job limit reached. Upgrade your membership to track more applications.",
+    }
+  }
+
+  return {
+    allowed: true,
+  }
+}

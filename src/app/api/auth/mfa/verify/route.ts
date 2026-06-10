@@ -56,12 +56,16 @@ function buildMfaRedirectPath(redirectTo: string, message: string) {
   return `/mfa?${params.toString()}`
 }
 
-function buildLoginRedirectPath(message: string) {
+function buildLoginRedirectPath(redirectTo: string, message: string) {
   const params = new URLSearchParams({
     message,
   })
 
-  return `/auth/login?${params.toString()}`
+  const loginPath = redirectTo.startsWith("/admin")
+    ? "/admin/login"
+    : "/auth/login"
+
+  return `${loginPath}?${params.toString()}`
 }
 
 // =====================================================
@@ -117,6 +121,7 @@ export async function POST(request: NextRequest) {
         return redirectWithCookies(
           request,
           buildLoginRedirectPath(
+            redirectTo,
             "Sign in again to continue MFA verification.",
           ),
           cookieWrites,

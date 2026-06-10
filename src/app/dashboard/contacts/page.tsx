@@ -14,6 +14,7 @@ import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
 export default function ContactsPage() {
   return (
     <ModulePageLayout
+      moduleKey="career_crm"
       title="Career Contacts"
       description="Manage recruiters, hiring managers, mentors, coworkers, and networking relationships across your career search."
     >

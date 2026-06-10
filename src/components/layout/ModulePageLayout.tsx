@@ -7,6 +7,7 @@
 // =====================================================
 
 import type { ReactNode } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -34,6 +35,14 @@ import {
 // =====================================================
 
 import { LogoutButton } from "@/components/auth/LogoutButton"
+import { getModuleAccess } from "@/lib/access/getModuleAccess"
+import { normalizeMembershipTier } from "@/lib/config/limits.config"
+import {
+  createEmptyMembership,
+  loadCurrentMembership,
+} from "@/modules/membership-management/membership-service"
+import type { MembershipData } from "@/modules/membership-management/types"
+import type { ModuleKey } from "@/types/modules"
 
 // =====================================================
 // BLOCK: Component Types
@@ -42,6 +51,7 @@ import { LogoutButton } from "@/components/auth/LogoutButton"
 type ModulePageLayoutProps = {
   title: string
   description: string
+  moduleKey?: ModuleKey
   children?: ReactNode
 }
 
@@ -81,9 +91,46 @@ const navItems = [
 export function ModulePageLayout({
   title,
   description,
+  moduleKey,
   children,
 }: ModulePageLayoutProps) {
   const pathname = usePathname()
+  const [membership, setMembership] = useState<MembershipData>(
+    createEmptyMembership(),
+  )
+  const [loadingAccess, setLoadingAccess] = useState(Boolean(moduleKey))
+
+  useEffect(() => {
+    let mounted = true
+
+    async function loadAccess() {
+      if (!moduleKey) {
+        return
+      }
+
+      const result = await loadCurrentMembership()
+
+      if (mounted) {
+        setMembership(result)
+        setLoadingAccess(false)
+      }
+    }
+
+    loadAccess()
+
+    return () => {
+      mounted = false
+    }
+  }, [moduleKey])
+
+  const userTier = normalizeMembershipTier(membership.planName)
+  const moduleAccess = moduleKey
+    ? getModuleAccess({
+        userTier,
+        moduleKey,
+        isAdmin: userTier === "admin",
+      })
+    : null
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -193,9 +240,53 @@ export function ModulePageLayout({
             </div>
           </header>
 
-          {children}
+          {loadingAccess ? (
+            <FeatureGateStatus title="Checking access..." />
+          ) : moduleAccess && !moduleAccess.access.allowed ? (
+            <FeatureGateStatus
+              title="Upgrade required"
+              description={
+                moduleAccess.access.reason ||
+                "Your current membership tier does not include this feature."
+              }
+              moduleName={moduleAccess.module?.name}
+            />
+          ) : (
+            children
+          )}
         </main>
       </div>
     </div>
+  )
+}
+
+function FeatureGateStatus({
+  title,
+  description = "Loading your membership and feature access.",
+  moduleName,
+}: {
+  title: string
+  description?: string
+  moduleName?: string
+}) {
+  return (
+    <section className="rounded-[32px] border border-amber-200 bg-amber-50 p-6 shadow-sm">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-700">
+        {moduleName || "Feature Access"}
+      </p>
+
+      <h2 className="mt-2 text-2xl font-black text-amber-950">{title}</h2>
+
+      <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-amber-800">
+        {description}
+      </p>
+
+      <Link
+        href="/dashboard/settings/billing"
+        className="mt-5 inline-flex rounded-full bg-amber-600 px-5 py-3 text-sm font-black text-white transition hover:bg-amber-700"
+      >
+        Review Billing
+      </Link>
+    </section>
   )
 }

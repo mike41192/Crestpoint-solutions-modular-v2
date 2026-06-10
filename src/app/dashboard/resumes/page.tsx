@@ -5,6 +5,7 @@ import { ResumeLibrary } from "@/components/resume/library/ResumeLibrary"
 export default function ResumeLibraryPage() {
   return (
     <ModulePageLayout
+      moduleKey="resume_library"
       title="Resume Library"
       description="Manage saved resumes, job-specific copies, and future version history."
     >

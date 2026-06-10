@@ -13,10 +13,12 @@ import Link from "next/link"
 
 import {
   BarChart3,
+  BriefcaseBusiness,
   CheckCircle2,
   CreditCard,
   ExternalLink,
   FileText,
+  MessageSquare,
   Sparkles,
   Target,
 } from "lucide-react"
@@ -54,7 +56,9 @@ import type { UserUsageData } from "@/modules/usage-tracking"
 
 async function loadSavedResumeCount(): Promise<number> {
   try {
-    const response = await fetch("/api/resume/load")
+    const response = await fetch("/api/resume/load", {
+      cache: "no-store",
+    })
     const result = await response.json()
 
     if (result.status !== "success") {
@@ -62,6 +66,25 @@ async function loadSavedResumeCount(): Promise<number> {
     }
 
     return Array.isArray(result.resumes) ? result.resumes.length : 0
+  } catch {
+    return 0
+  }
+}
+
+async function loadTrackedJobCount(): Promise<number> {
+  try {
+    const response = await fetch("/api/job-applications/list", {
+      cache: "no-store",
+    })
+    const result = await response.json()
+
+    if (result.status !== "success") {
+      return 0
+    }
+
+    return Array.isArray(result.applications)
+      ? result.applications.length
+      : 0
   } catch {
     return 0
   }
@@ -78,20 +101,28 @@ export default function BillingSettingsPage() {
 
   const [usage, setUsage] = useState<UserUsageData>(createEmptyUsage())
   const [savedResumeCount, setSavedResumeCount] = useState(0)
+  const [trackedJobCount, setTrackedJobCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function loadMembershipData() {
-      const [membershipResult, usageResult, resumeCountResult] =
+      const [
+        membershipResult,
+        usageResult,
+        resumeCountResult,
+        trackedJobCountResult,
+      ] =
         await Promise.all([
           loadCurrentMembership(),
           loadCurrentUsage(),
           loadSavedResumeCount(),
+          loadTrackedJobCount(),
         ])
 
       setMembership(membershipResult)
       setUsage(usageResult)
       setSavedResumeCount(resumeCountResult)
+      setTrackedJobCount(trackedJobCountResult)
       setLoading(false)
     }
 
@@ -171,6 +202,24 @@ export default function BillingSettingsPage() {
               icon={Sparkles}
               used={usage.aiRewritesUsed}
               limit={membership.rewriteLimit}
+            />
+
+            <UsageCard
+              title="Tracked Jobs"
+              icon={BriefcaseBusiness}
+              used={trackedJobCount}
+              limit={membership.trackedJobsLimit}
+              actionHref="/dashboard/jobs"
+              actionLabel="Open Job Tracker"
+            />
+
+            <UsageCard
+              title="Mock Interviews"
+              icon={MessageSquare}
+              used={0}
+              limit={membership.mockInterviewLimit}
+              actionHref="/dashboard/interview"
+              actionLabel="Open Interviewer"
             />
           </section>
 

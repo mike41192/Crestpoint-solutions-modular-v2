@@ -64,6 +64,7 @@ const workflowLinks = [
 export default function LinkedInDashboardPage() {
   return (
     <ModulePageLayout
+      moduleKey="linkedin_optimizer"
       title="LinkedIn Optimizer"
       description="Improve your LinkedIn profile, headline, about section, and recruiter visibility."
     >

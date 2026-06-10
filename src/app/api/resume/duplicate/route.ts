@@ -3,6 +3,10 @@
 // =====================================================
 
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { isConfiguredAdminEmail } from "@/lib/security/admin-auth"
+import {
+  loadMembershipLimitSnapshotForPlan,
+} from "@/lib/config/usage-limits-service"
 
 // =====================================================
 // BLOCK: Type Imports
@@ -10,24 +14,18 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 import type { MembershipData } from "@/modules/membership-management/types"
 
-// =====================================================
-// BLOCK: Membership Helpers
-// =====================================================
-
-function createFallbackMembership(): MembershipData {
-  return {
-    planName: "Free",
-    status: "Active",
-    atsLimit: 10,
-    rewriteLimit: 5,
-    resumeLimit: 3,
-  }
-}
-
 async function loadServerMembership(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   userId: string,
+  userEmail: string | null | undefined,
 ): Promise<MembershipData> {
+  if (isConfiguredAdminEmail(userEmail)) {
+    return {
+      ...(await loadMembershipLimitSnapshotForPlan("admin")),
+      status: "Active",
+    }
+  }
+
   const { data } = await supabase
     .from("memberships")
     .select("*")
@@ -35,15 +33,15 @@ async function loadServerMembership(
     .maybeSingle()
 
   if (!data) {
-    return createFallbackMembership()
+    return {
+      ...(await loadMembershipLimitSnapshotForPlan("free")),
+      status: "Active",
+    }
   }
 
   return {
-    planName: data.plan_name || "Free",
+    ...(await loadMembershipLimitSnapshotForPlan(data.plan_name)),
     status: data.status || "Active",
-    atsLimit: Number(data.ats_limit ?? 10),
-    rewriteLimit: Number(data.rewrite_limit ?? 5),
-    resumeLimit: Number(data.resume_limit ?? 3),
   }
 }
 
@@ -135,7 +133,11 @@ export async function POST(request: Request) {
       )
     }
 
-    const membership = await loadServerMembership(supabase, user.id)
+    const membership = await loadServerMembership(
+      supabase,
+      user.id,
+      user.email,
+    )
     const currentResumeCount = await loadCurrentResumeCount(supabase, user.id)
 
     const access = canCreateAnotherResume(membership, currentResumeCount)

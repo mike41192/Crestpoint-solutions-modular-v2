@@ -9,6 +9,7 @@ export default function ResumeDashboardPage() {
 
   return (
     <ModulePageLayout
+      moduleKey="resume_builder"
       title="Resume Builder"
       description="Build, import, optimize, score, and export professional resumes."
     >

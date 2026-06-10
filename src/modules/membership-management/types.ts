@@ -9,4 +9,6 @@ export type MembershipData = {
   atsLimit: number
   rewriteLimit: number
   resumeLimit: number
+  trackedJobsLimit: number
+  mockInterviewLimit: number
 }

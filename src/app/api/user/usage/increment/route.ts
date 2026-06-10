@@ -3,6 +3,13 @@
 // =====================================================
 
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { isConfiguredAdminEmail } from "@/lib/security/admin-auth"
+import {
+  hasReachedUsageLimit,
+} from "@/lib/config/limits.config"
+import {
+  loadMembershipLimitSnapshotForPlan,
+} from "@/lib/config/usage-limits-service"
 
 // =====================================================
 // BLOCK: Usage Action Types
@@ -19,6 +26,13 @@ const ALLOWED_USAGE_COLUMNS: UsageColumn[] = [
   "resumes_created",
 ]
 
+type UsageRow = {
+  user_id: string
+  ats_scans_used: number | null
+  ai_rewrites_used: number | null
+  resumes_created: number | null
+}
+
 // =====================================================
 // BLOCK: Validation Helpers
 // =====================================================
@@ -28,6 +42,43 @@ function isAllowedUsageColumn(value: unknown): value is UsageColumn {
     typeof value === "string" &&
     ALLOWED_USAGE_COLUMNS.includes(value as UsageColumn)
   )
+}
+
+function getUsageValue(row: UsageRow, column: UsageColumn) {
+  return Number(row[column] ?? 0)
+}
+
+function getLimitForColumn(
+  column: UsageColumn,
+  limits: Awaited<ReturnType<typeof loadMembershipLimitSnapshotForPlan>>,
+) {
+  if (column === "ats_scans_used") {
+    return limits.atsLimit
+  }
+
+  if (column === "ai_rewrites_used") {
+    return limits.rewriteLimit
+  }
+
+  return limits.resumeLimit
+}
+
+async function loadUserPlanName(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  userId: string,
+  userEmail: string | null | undefined,
+) {
+  if (isConfiguredAdminEmail(userEmail)) {
+    return "admin"
+  }
+
+  const { data } = await supabase
+    .from("memberships")
+    .select("plan_name")
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  return data?.plan_name || "free"
 }
 
 // =====================================================
@@ -88,6 +139,9 @@ export async function POST(request: Request) {
 
     await ensureUsageRow(supabase, user.id)
 
+    const planName = await loadUserPlanName(supabase, user.id, user.email)
+    const limits = await loadMembershipLimitSnapshotForPlan(planName)
+
     const { data: currentRow, error: loadError } = await supabase
       .from("user_usage")
       .select("user_id, ats_scans_used, ai_rewrites_used, resumes_created")
@@ -116,7 +170,22 @@ export async function POST(request: Request) {
       )
     }
 
-    const currentValue = Number(currentRow[column] ?? 0)
+    const currentValue = getUsageValue(currentRow, column)
+    const limit = getLimitForColumn(column, limits)
+
+    if (hasReachedUsageLimit(currentValue, limit)) {
+      return Response.json(
+        {
+          status: "limit_reached",
+          message: `Usage limit reached for your ${limits.planName} plan.`,
+          column,
+          value: currentValue,
+          limit,
+        },
+        { status: 403 },
+      )
+    }
+
     const nextValue = currentValue + 1
 
     const { data: updatedRows, error: updateError } = await supabase

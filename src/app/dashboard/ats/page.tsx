@@ -18,6 +18,7 @@ import { ATSDashboardClient } from "@/components/ats/ATSDashboardClient"
 export default function ATSDashboardPage() {
   return (
     <ModulePageLayout
+      moduleKey="ats_scoring"
       title="ATS Scoring"
       description="Score your resume against job descriptions and improve keyword alignment."
     >

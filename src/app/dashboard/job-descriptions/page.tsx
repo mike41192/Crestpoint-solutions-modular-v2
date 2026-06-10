@@ -14,6 +14,7 @@ import { JobDescriptionLibrary } from "@/components/jobs/JobDescriptionLibrary"
 export default function JobDescriptionsPage() {
   return (
     <ModulePageLayout
+      moduleKey="job_description_library"
       title="Job Description Library"
       description="Save, search, edit, and reuse job descriptions for ATS scoring, resume tailoring, and future job-tracker workflows."
     >

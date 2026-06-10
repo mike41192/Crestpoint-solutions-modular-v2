@@ -34,6 +34,7 @@ export default function InterviewDashboardPage() {
 
   return (
     <ModulePageLayout
+      moduleKey="ai_interviewer"
       title="AI Interviewer"
       description="Practice interviews with AI-generated questions and feedback."
     >

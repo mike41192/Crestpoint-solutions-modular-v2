@@ -30,13 +30,21 @@ export type AdminAuthResult =
 // BLOCK: Admin Configuration
 // =====================================================
 
-function getConfiguredAdminEmails(): string[] {
+export function getConfiguredAdminEmails(): string[] {
   const configuredEmails = process.env.ADMIN_EMAILS || ""
 
   return configuredEmails
     .split(",")
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean)
+}
+
+export function isConfiguredAdminEmail(email: string | null | undefined) {
+  if (!email) {
+    return false
+  }
+
+  return getConfiguredAdminEmails().includes(email.toLowerCase())
 }
 
 // =====================================================
@@ -64,10 +72,9 @@ export async function requireAdminUser(): Promise<AdminAuthResult> {
     }
   }
 
-  const adminEmails = getConfiguredAdminEmails()
   const userEmail = user.email?.toLowerCase() || null
 
-  if (!userEmail || !adminEmails.includes(userEmail)) {
+  if (!isConfiguredAdminEmail(userEmail)) {
     return {
       ok: false,
       response: NextResponse.json(

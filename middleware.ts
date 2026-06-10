@@ -9,7 +9,7 @@ import type { NextRequest } from "next/server"
 // BLOCK: Public Route Rules
 // =====================================================
 
-const PUBLIC_ROUTES = new Set(["/", "/login", "/pricing"])
+const PUBLIC_ROUTES = new Set(["/", "/login", "/pricing", "/admin/login"])
 
 const PUBLIC_ROUTE_PREFIXES = ["/auth", "/api/auth"]
 
@@ -56,7 +56,9 @@ function hasSupabaseAuthCookie(request: NextRequest): boolean {
 function buildLoginRedirect(request: NextRequest): NextResponse {
   const loginUrl = request.nextUrl.clone()
 
-  loginUrl.pathname = "/auth/login"
+  loginUrl.pathname = request.nextUrl.pathname.startsWith("/admin")
+    ? "/admin/login"
+    : "/auth/login"
   loginUrl.searchParams.set("redirectTo", request.nextUrl.pathname)
 
   return NextResponse.redirect(loginUrl)

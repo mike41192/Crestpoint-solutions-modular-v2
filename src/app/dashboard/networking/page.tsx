@@ -63,6 +63,7 @@ const workflowLinks = [
 export default function NetworkingDashboardPage() {
   return (
     <ModulePageLayout
+      moduleKey="networking_outreach"
       title="Networking Assistant"
       description="Create recruiter messages, referral requests, follow-ups, and professional outreach."
     >

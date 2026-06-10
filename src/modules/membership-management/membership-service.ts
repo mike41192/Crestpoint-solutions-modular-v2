@@ -1,13 +1,10 @@
 // =====================================================
-// BLOCK: Supabase Imports
-// =====================================================
-
-import { createSupabaseBrowserClient } from "@/lib/supabase/client"
-
-// =====================================================
 // BLOCK: Type Imports
+// Crestpoint Solutions V2
+// Version: 1.10.0
 // =====================================================
 
+import { createMembershipLimitSnapshot } from "@/lib/config/limits.config"
 import type { MembershipData } from "./types"
 
 // =====================================================
@@ -15,13 +12,16 @@ import type { MembershipData } from "./types"
 // =====================================================
 
 export function createEmptyMembership(): MembershipData {
-  return {
-    planName: "Free",
-    status: "Active",
+  const limits = createMembershipLimitSnapshot("free")
 
-    atsLimit: 10,
-    rewriteLimit: 5,
-    resumeLimit: 3,
+  return {
+    planName: limits.planName,
+    status: "Active",
+    atsLimit: limits.atsLimit,
+    rewriteLimit: limits.rewriteLimit,
+    resumeLimit: limits.resumeLimit,
+    trackedJobsLimit: limits.trackedJobsLimit,
+    mockInterviewLimit: limits.mockInterviewLimit,
   }
 }
 
@@ -30,32 +30,28 @@ export function createEmptyMembership(): MembershipData {
 // =====================================================
 
 export async function loadCurrentMembership(): Promise<MembershipData> {
-  const supabase = createSupabaseBrowserClient()
+  try {
+    const response = await fetch("/api/user/membership", {
+      method: "GET",
+      cache: "no-store",
+    })
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    const result = await response.json()
 
-  if (!user) {
+    if (!response.ok || !result?.membership) {
+      return createEmptyMembership()
+    }
+
+    return {
+      planName: result.membership.planName || "Free",
+      status: result.membership.status || "Active",
+      atsLimit: Number(result.membership.atsLimit ?? 10),
+      rewriteLimit: Number(result.membership.rewriteLimit ?? 5),
+      resumeLimit: Number(result.membership.resumeLimit ?? 3),
+      trackedJobsLimit: Number(result.membership.trackedJobsLimit ?? 5),
+      mockInterviewLimit: Number(result.membership.mockInterviewLimit ?? 0),
+    }
+  } catch {
     return createEmptyMembership()
-  }
-
-  const { data } = await supabase
-    .from("memberships")
-    .select("*")
-    .eq("user_id", user.id)
-    .maybeSingle()
-
-  if (!data) {
-    return createEmptyMembership()
-  }
-
-  return {
-    planName: data.plan_name,
-    status: data.status,
-
-    atsLimit: data.ats_limit,
-    rewriteLimit: data.rewrite_limit,
-    resumeLimit: data.resume_limit,
   }
 }

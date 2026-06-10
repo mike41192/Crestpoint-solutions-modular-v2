@@ -34,6 +34,7 @@ export default function InterviewAcademyPage() {
 
   return (
     <ModulePageLayout
+      moduleKey="interview_academy"
       title="Interview Academy"
       description="Learn how to prepare for interviews, improve confidence, answer difficult questions, and increase your chances of getting hired."
     >

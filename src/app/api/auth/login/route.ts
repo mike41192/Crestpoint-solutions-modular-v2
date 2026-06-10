@@ -8,6 +8,8 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { createHash } from "crypto"
 
+import { isConfiguredAdminEmail } from "@/lib/security/admin-auth"
+
 // =====================================================
 // BLOCK: Types
 // =====================================================
@@ -48,8 +50,12 @@ function redirectWithCookies(
   return response
 }
 
-function redirectToLogin(request: NextRequest, message: string) {
-  const url = new URL("/auth/login", request.url)
+function redirectToLogin(
+  request: NextRequest,
+  message: string,
+  path = "/auth/login",
+) {
+  const url = new URL(path, request.url)
 
   url.searchParams.set("message", message)
 
@@ -194,9 +200,15 @@ export async function POST(request: NextRequest) {
     const email = String(formData.get("email") || "").trim()
     const password = String(formData.get("password") || "")
     const redirectTo = cleanRedirectPath(formData.get("redirectTo"))
+    const isAdminLogin = String(formData.get("adminLogin") || "") === "true"
+    const loginPath = isAdminLogin ? "/admin/login" : "/auth/login"
 
     if (!email || !password) {
-      return redirectToLogin(request, "Email and password are required.")
+      return redirectToLogin(
+        request,
+        "Email and password are required.",
+        loginPath,
+      )
     }
 
     const supabase = createServerClient(
@@ -226,13 +238,24 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
-      return redirectToLogin(request, error.message)
+      return redirectToLogin(request, error.message, loginPath)
     }
 
     if (!data.session) {
       return redirectToLogin(
         request,
         "Sign in completed, but no active session was returned.",
+        loginPath,
+      )
+    }
+
+    if (isAdminLogin && !isConfiguredAdminEmail(data.session.user.email)) {
+      await supabase.auth.signOut()
+
+      return redirectWithCookies(
+        request,
+        "/admin/login?message=Admin access is not enabled for this account.",
+        cookieWrites,
       )
     }
 
@@ -240,7 +263,7 @@ export async function POST(request: NextRequest) {
       await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
 
     if (aalError) {
-      return redirectToLogin(request, aalError.message)
+      return redirectToLogin(request, aalError.message, loginPath)
     }
 
     const sessionRegistrationError = await registerAuthenticatedSession({
@@ -253,6 +276,7 @@ export async function POST(request: NextRequest) {
       return redirectToLogin(
         request,
         `Sign in succeeded, but device tracking failed: ${sessionRegistrationError.message}`,
+        loginPath,
       )
     }
 

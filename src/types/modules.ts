@@ -8,10 +8,13 @@ export type MembershipTier =
 
 export type ModuleKey =
   | "resume_builder"
+  | "resume_library"
   | "ai_resume_parser"
   | "ats_scoring"
   | "ai_interviewer"
   | "interview_academy"
+  | "job_description_library"
+  | "career_crm"
   | "cover_letter_generator"
   | "linkedin_optimizer"
   | "job_tracker"

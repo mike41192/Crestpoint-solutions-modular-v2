@@ -66,3 +66,75 @@ export const usageLimits: TierUsageLimits[] = [
     trackedJobs: -1,
   },
 ]
+
+export type MembershipLimitSnapshot = {
+  planName: string
+  atsLimit: number
+  rewriteLimit: number
+  resumeLimit: number
+  trackedJobsLimit: number
+  mockInterviewLimit: number
+}
+
+export function normalizeMembershipTier(
+  value: string | null | undefined,
+): MembershipTier {
+  const normalized = (value || "free").toLowerCase().trim()
+
+  if (
+    normalized === "starter" ||
+    normalized === "pro" ||
+    normalized === "premium" ||
+    normalized === "business" ||
+    normalized === "admin"
+  ) {
+    return normalized
+  }
+
+  return "free"
+}
+
+export function formatMembershipTierName(tier: MembershipTier) {
+  return tier.charAt(0).toUpperCase() + tier.slice(1)
+}
+
+export function getUsageLimitsForTier(tier: MembershipTier) {
+  return (
+    usageLimits.find((limits) => limits.tier === tier) ||
+    usageLimits.find((limits) => limits.tier === "free") ||
+    usageLimits[0]
+  )
+}
+
+export function createMembershipLimitSnapshot(
+  tier: MembershipTier,
+): MembershipLimitSnapshot {
+  const limits = getUsageLimitsForTier(tier)
+
+  return {
+    planName: formatMembershipTierName(tier),
+    atsLimit: limits.atsScansPerMonth,
+    rewriteLimit: limits.aiCreditsPerMonth,
+    resumeLimit: limits.resumeUploadsPerMonth,
+    trackedJobsLimit: limits.trackedJobs,
+    mockInterviewLimit: limits.mockInterviewsPerMonth,
+  }
+}
+
+export function createMembershipLimitSnapshotFromPlan(
+  planName: string | null | undefined,
+) {
+  return createMembershipLimitSnapshot(normalizeMembershipTier(planName))
+}
+
+export function isUnlimitedLimit(limit: number) {
+  return limit < 0
+}
+
+export function hasReachedUsageLimit(used: number, limit: number) {
+  if (isUnlimitedLimit(limit)) {
+    return false
+  }
+
+  return used >= limit
+}
