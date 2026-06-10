@@ -41,7 +41,9 @@ function redirectWithCookies(
   path: string,
   cookieWrites: CookieWrite[],
 ) {
-  const response = NextResponse.redirect(new URL(path, request.url))
+  const response = NextResponse.redirect(new URL(path, request.url), {
+    status: 303,
+  })
 
   cookieWrites.forEach(({ name, value, options }) => {
     response.cookies.set(name, value, options)
@@ -59,7 +61,9 @@ function redirectToLogin(
 
   url.searchParams.set("message", message)
 
-  return NextResponse.redirect(url)
+  return NextResponse.redirect(url, {
+    status: 303,
+  })
 }
 
 function buildMfaRedirectPath(redirectTo: string) {

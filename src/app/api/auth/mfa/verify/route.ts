@@ -38,7 +38,9 @@ function redirectWithCookies(
   path: string,
   cookieWrites: CookieWrite[],
 ) {
-  const response = NextResponse.redirect(new URL(path, request.url))
+  const response = NextResponse.redirect(new URL(path, request.url), {
+    status: 303,
+  })
 
   cookieWrites.forEach(({ name, value, options }) => {
     response.cookies.set(name, value, options)
@@ -89,6 +91,9 @@ export async function POST(request: NextRequest) {
           ),
           request.url,
         ),
+        {
+          status: 303,
+        },
       )
     }
 
@@ -194,6 +199,9 @@ export async function POST(request: NextRequest) {
         buildMfaRedirectPath("/dashboard", "MFA verification request failed."),
         request.url,
       ),
+      {
+        status: 303,
+      },
     )
   }
 }
