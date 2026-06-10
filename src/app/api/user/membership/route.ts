@@ -5,11 +5,9 @@
 // =====================================================
 
 import { isConfiguredAdminEmail } from "@/lib/security/admin-auth"
+import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
-import {
-  createMembershipLimitSnapshot,
-  normalizeMembershipTier,
-} from "@/lib/config/limits.config"
+import { normalizeMembershipTier } from "@/lib/config/limits.config"
 import { loadMembershipLimitSnapshotForPlan } from "@/lib/config/usage-limits-service"
 
 // =====================================================
@@ -33,13 +31,8 @@ async function createMembershipResponse(
   }
 }
 
-function createFallbackMembership() {
-  const limits = createMembershipLimitSnapshot("free")
-
-  return {
-    ...limits,
-    status: "Active",
-  }
+async function createFallbackMembership() {
+  return createMembershipResponse("free")
 }
 
 // =====================================================
@@ -60,7 +53,7 @@ export async function GET() {
         {
           status: "unauthorized",
           message: "You must be signed in to load membership.",
-          membership: createFallbackMembership(),
+          membership: await createFallbackMembership(),
         },
         { status: 401, headers: NO_STORE_HEADERS },
       )
@@ -78,7 +71,9 @@ export async function GET() {
       )
     }
 
-    const { data, error } = await supabase
+    const adminSupabase = createSupabaseAdminClient()
+
+    const { data, error } = await adminSupabase
       .from("memberships")
       .select("*")
       .eq("user_id", user.id)
@@ -89,7 +84,7 @@ export async function GET() {
         {
           status: "error",
           message: error.message,
-          membership: createFallbackMembership(),
+          membership: await createFallbackMembership(),
         },
         { status: 500, headers: NO_STORE_HEADERS },
       )
@@ -126,7 +121,7 @@ export async function GET() {
       {
         status: "error",
         message: "Membership request failed.",
-        membership: createFallbackMembership(),
+        membership: await createFallbackMembership(),
       },
       { status: 500, headers: NO_STORE_HEADERS },
     )
