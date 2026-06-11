@@ -65,10 +65,14 @@ export async function recordInterviewLearningSignal(payload: LearningPayload) {
     if (error) {
       throw new Error(error.message)
     }
+
+    return true
   } catch (error) {
     console.error(
       "AI interviewer learning signal was not recorded:",
       error instanceof Error ? error.message : "Unknown error",
     )
+
+    return false
   }
 }

@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       )
     }
 
-    await recordInterviewLearningSignal({
+    const recorded = await recordInterviewLearningSignal({
       userId: user.id,
       eventType: "user_feedback",
       question,
@@ -51,6 +51,16 @@ export async function POST(request: Request) {
       feedbackRating: Math.max(1, Math.min(feedbackRating, 5)),
       feedbackNote,
     })
+
+    if (!recorded) {
+      return Response.json(
+        {
+          status: "error",
+          message: "Feedback could not be saved to the learning table.",
+        },
+        { status: 500 },
+      )
+    }
 
     return Response.json({
       status: "success",
