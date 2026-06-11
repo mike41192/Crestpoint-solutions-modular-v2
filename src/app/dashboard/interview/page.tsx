@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 
 import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
+import { AIInterviewPracticeWorkspace } from "@/components/interview/AIInterviewPracticeWorkspace"
 import { FirstUseTutorial } from "@/components/onboarding/FirstUseTutorial"
 import {
   getAIInterviewerPageContent,
@@ -77,6 +78,8 @@ export default function InterviewDashboardPage() {
         </section>
 
         <FirstUseTutorial moduleKey="ai_interviewer" />
+
+        <AIInterviewPracticeWorkspace />
 
         <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {practiceModes.map((mode) => {

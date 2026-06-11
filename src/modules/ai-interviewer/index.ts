@@ -4,8 +4,13 @@ export type {
   AIInterviewWorkflowLink,
   AIInterviewerIconKey,
   InterviewDifficulty,
+  InterviewEvaluationRequest,
+  InterviewEvaluationResult,
+  InterviewPracticeQuestion,
   InterviewQuestionCategory,
+  InterviewQuestionRequest,
   InterviewQuestionTaxonomyEntry,
+  InterviewSessionMode,
 } from "./types"
 
 export {
@@ -18,6 +23,11 @@ export { interviewQuestionTaxonomy } from "./interview-taxonomy"
 
 export {
   getAIInterviewerPageContent,
+  createFallbackInterviewEvaluation,
+  createFallbackInterviewQuestion,
+  evaluateInterviewAnswer,
   listInterviewQuestionTaxonomy,
   listInterviewQuestionsByCategory,
+  requestInterviewQuestion,
+  selectTaxonomyQuestion,
 } from "./service"
