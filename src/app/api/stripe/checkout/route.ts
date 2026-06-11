@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import {
   getStripeBillingEnvStatus,
   getStripePriceEnvKey,
@@ -8,6 +9,10 @@ import {
 } from "@/lib/stripe/stripe-env"
 import { getStripeClient } from "@/lib/stripe/stripe-client"
 import { getStripeReturnBaseUrl } from "@/lib/stripe/stripe-urls"
+
+type MembershipCheckoutRow = {
+  stripe_customer_id: string | null
+}
 
 export async function POST(request: Request) {
   try {
@@ -67,6 +72,21 @@ export async function POST(request: Request) {
     }
 
     const stripe = getStripeClient()
+    let customerId = ""
+
+    try {
+      const adminSupabase = createSupabaseAdminClient()
+      const { data: membership } = await adminSupabase
+        .from("memberships")
+        .select("stripe_customer_id")
+        .eq("user_id", user.id)
+        .maybeSingle<MembershipCheckoutRow>()
+
+      customerId = membership?.stripe_customer_id || ""
+    } catch {
+      customerId = ""
+    }
+
     const baseUrl = getStripeReturnBaseUrl(request)
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -76,7 +96,8 @@ export async function POST(request: Request) {
           quantity: 1,
         },
       ],
-      customer_email: user.email || undefined,
+      customer: customerId || undefined,
+      customer_email: customerId ? undefined : user.email || undefined,
       client_reference_id: user.id,
       metadata: {
         userId: user.id,

@@ -132,6 +132,40 @@ export function getStripeProductId(tier: StripeBillingTier) {
   return readEnv(getStripeProductEnvKey(tier))
 }
 
+export function getStripeTierForPriceId(priceId: string | null | undefined) {
+  if (!priceId) {
+    return null
+  }
+
+  for (const tier of stripeBillingTiers) {
+    for (const interval of stripeBillingIntervals) {
+      if (getStripePriceId(tier, interval) === priceId) {
+        return tier
+      }
+    }
+  }
+
+  return null
+}
+
+export function getStripeIntervalForPriceId(
+  priceId: string | null | undefined,
+) {
+  if (!priceId) {
+    return null
+  }
+
+  for (const tier of stripeBillingTiers) {
+    for (const interval of stripeBillingIntervals) {
+      if (getStripePriceId(tier, interval) === priceId) {
+        return interval
+      }
+    }
+  }
+
+  return null
+}
+
 export function getMissingStripeEnvKeys() {
   const priceKeys = stripeBillingTiers.flatMap((tier) =>
     stripeBillingIntervals.map((interval) =>

@@ -29,6 +29,8 @@ import {
 
 import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
 import { SettingsPageShell } from "@/components/settings/SettingsPageShell"
+import { BillingPortalPanel } from "@/components/billing/BillingPortalPanel"
+import { PlanChangePanel } from "@/components/billing/PlanChangePanel"
 
 // =====================================================
 // BLOCK: Membership Imports
@@ -148,19 +150,19 @@ export default function BillingSettingsPage() {
                 </div>
 
                 <div>
-                <div className="mb-3 flex w-fit items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-blue-700">
-                  <CreditCard size={14} />
-                  Current Plan
-                </div>
+                  <div className="mb-3 flex w-fit items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-blue-700">
+                    <CreditCard size={14} />
+                    Current Plan
+                  </div>
 
-                <h3 className="text-2xl font-black capitalize text-slate-950">
-                  {loading ? "Loading..." : membership.planName}
-                </h3>
+                  <h3 className="text-2xl font-black capitalize text-slate-950">
+                    {loading ? "Loading..." : membership.planName}
+                  </h3>
 
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Your membership controls access to Crestpoint resume, ATS,
-                  interview, and career optimization modules.
-                </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    Your membership controls access to Crestpoint resume, ATS,
+                    interview, and career optimization modules.
+                  </p>
                 </div>
               </div>
 
@@ -174,10 +176,15 @@ export default function BillingSettingsPage() {
                 </p>
 
                 <p className="mt-1 text-sm font-semibold text-emerald-700">
-                  Billing portal coming soon
+                  Stripe billing enabled
                 </p>
               </div>
             </div>
+          </section>
+
+          <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <PlanChangePanel currentPlanName={membership.planName} />
+            <BillingPortalPanel />
           </section>
 
           <section className="grid gap-5 lg:grid-cols-3">
@@ -254,25 +261,6 @@ export default function BillingSettingsPage() {
             </div>
           </section>
 
-          <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-            <div className="flex items-start gap-3">
-              <div className="rounded-2xl bg-white p-3 text-amber-700 shadow-sm">
-                <CreditCard size={20} />
-              </div>
-
-              <div>
-                <h3 className="text-lg font-black text-amber-950">
-                  Billing Portal Coming Soon
-                </h3>
-
-                <p className="mt-2 text-sm leading-6 text-amber-800">
-                  Stripe checkout, subscription management, plan upgrades, and
-                  invoice access will be connected during the billing
-                  integration phase.
-                </p>
-              </div>
-            </div>
-          </section>
         </div>
       </SettingsPageShell>
     </ModulePageLayout>

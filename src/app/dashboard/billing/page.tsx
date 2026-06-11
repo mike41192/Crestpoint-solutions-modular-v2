@@ -6,7 +6,6 @@ import {
   ArrowRight,
   BarChart3,
   BriefcaseBusiness,
-  CreditCard,
   FileText,
   MessageSquare,
   ShieldCheck,
@@ -14,6 +13,8 @@ import {
   Target,
 } from "lucide-react"
 import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
+import { BillingPortalPanel } from "@/components/billing/BillingPortalPanel"
+import { PlanChangePanel } from "@/components/billing/PlanChangePanel"
 import {
   createEmptyMembership,
   loadCurrentMembership,
@@ -201,21 +202,10 @@ export default function BillingDashboardPage() {
             href="/dashboard/interview"
           />
 
-          <article className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="rounded-2xl bg-blue-50 p-3 text-blue-700 w-fit">
-              <CreditCard size={20} />
-            </div>
-
-            <h2 className="mt-4 text-lg font-black text-slate-950">
-              Stripe Portal
-            </h2>
-
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              Subscription checkout and billing portal controls are ready for
-              the Stripe integration pass.
-            </p>
-          </article>
+          <BillingPortalPanel />
         </section>
+
+        <PlanChangePanel currentPlanName={membership.planName} />
 
         <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-start gap-4">
