@@ -132,6 +132,18 @@ export function getStripeProductId(tier: StripeBillingTier) {
   return readEnv(getStripeProductEnvKey(tier))
 }
 
+export function isStripeSecretKeyFormatValid() {
+  return getStripeSecretKey().startsWith("sk_")
+}
+
+export function isStripePublishableKeyFormatValid() {
+  return getStripePublishableKey().startsWith("pk_")
+}
+
+export function isStripeWebhookSecretFormatValid() {
+  return getStripeWebhookSecret().startsWith("whsec_")
+}
+
 export function getStripeTierForPriceId(priceId: string | null | undefined) {
   if (!priceId) {
     return null
@@ -188,8 +200,11 @@ export function getStripeBillingEnvStatus() {
   return {
     core: {
       secretKey: Boolean(getStripeSecretKey()),
+      secretKeyFormatValid: isStripeSecretKeyFormatValid(),
       webhookSecret: Boolean(getStripeWebhookSecret()),
+      webhookSecretFormatValid: isStripeWebhookSecretFormatValid(),
       publishableKey: Boolean(getStripePublishableKey()),
+      publishableKeyFormatValid: isStripePublishableKeyFormatValid(),
     },
     prices: stripeBillingTiers.map((tier) => ({
       tier,

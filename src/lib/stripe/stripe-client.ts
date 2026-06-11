@@ -1,6 +1,9 @@
 import Stripe from "stripe"
 
-import { getStripeSecretKey } from "@/lib/stripe/stripe-env"
+import {
+  getStripeSecretKey,
+  isStripeSecretKeyFormatValid,
+} from "@/lib/stripe/stripe-env"
 
 let stripeClient: Stripe | null = null
 
@@ -9,6 +12,10 @@ export function getStripeClient() {
 
   if (!secretKey) {
     throw new Error("Stripe secret key is not configured.")
+  }
+
+  if (!isStripeSecretKeyFormatValid()) {
+    throw new Error("Stripe secret key must start with sk_.")
   }
 
   if (!stripeClient) {
