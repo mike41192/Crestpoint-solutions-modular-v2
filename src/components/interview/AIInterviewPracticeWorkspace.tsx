@@ -1,8 +1,9 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   Brain,
+  BriefcaseBusiness,
   CheckCircle2,
   ClipboardList,
   MessageSquare,
@@ -22,6 +23,10 @@ import {
   type InterviewQuestionCategory,
   type InterviewSessionMode,
 } from "@/modules/ai-interviewer"
+import {
+  loadJobDescriptions,
+  type JobDescriptionRecord,
+} from "@/modules/job-description-library"
 
 const categoryOptions: {
   label: string
@@ -67,6 +72,11 @@ function getScoreColor(score: number) {
 }
 
 export function AIInterviewPracticeWorkspace() {
+  const [jobDescriptions, setJobDescriptions] = useState<
+    JobDescriptionRecord[]
+  >([])
+  const [selectedJobDescriptionId, setSelectedJobDescriptionId] = useState("")
+  const [loadingJobDescriptions, setLoadingJobDescriptions] = useState(true)
   const [roleTitle, setRoleTitle] = useState("")
   const [companyName, setCompanyName] = useState("")
   const [interviewMode, setInterviewMode] =
@@ -95,7 +105,48 @@ export function AIInterviewPracticeWorkspace() {
     return answer.trim().split(/\s+/).filter(Boolean).length
   }, [answer])
 
-  async function handleGenerateQuestion() {
+  const selectedJobDescription = useMemo(() => {
+    return (
+      jobDescriptions.find((item) => item.id === selectedJobDescriptionId) ||
+      null
+    )
+  }, [jobDescriptions, selectedJobDescriptionId])
+
+  async function loadSavedJobDescriptions() {
+    setLoadingJobDescriptions(true)
+
+    const records = await loadJobDescriptions()
+
+    setJobDescriptions(records)
+    setLoadingJobDescriptions(false)
+  }
+
+  useEffect(() => {
+    loadSavedJobDescriptions()
+  }, [])
+
+  function buildJobContextFromDescription(jobDescription: JobDescriptionRecord) {
+    const contextParts = [
+      jobDescription.title ? `Title: ${jobDescription.title}` : "",
+      jobDescription.company ? `Company: ${jobDescription.company}` : "",
+      jobDescription.role ? `Role: ${jobDescription.role}` : "",
+      jobDescription.location ? `Location: ${jobDescription.location}` : "",
+      jobDescription.description,
+    ].filter(Boolean)
+
+    return contextParts.join("\n\n")
+  }
+
+  async function generateQuestionWithContext(
+    overrides: Partial<{
+      nextRoleTitle: string
+      nextCompanyName: string
+      nextJobContext: string
+      nextInterviewMode: InterviewSessionMode
+      nextCategory: InterviewQuestionCategory
+      nextDifficulty: InterviewDifficulty
+    }> = {},
+  ) {
     setLoadingQuestion(true)
     setMessage("")
     setEvaluation(null)
@@ -104,13 +155,20 @@ export function AIInterviewPracticeWorkspace() {
     setFeedbackNote("")
 
     try {
+      const nextRoleTitle = overrides.nextRoleTitle ?? roleTitle
+      const nextCompanyName = overrides.nextCompanyName ?? companyName
+      const nextJobContext = overrides.nextJobContext ?? jobContext
+      const nextInterviewMode = overrides.nextInterviewMode ?? interviewMode
+      const nextCategory = overrides.nextCategory ?? category
+      const nextDifficulty = overrides.nextDifficulty ?? difficulty
+
       const nextQuestion = await requestInterviewQuestion({
-        roleTitle: roleTitle || "Target role",
-        companyName,
-        interviewMode,
-        category,
-        difficulty,
-        jobContext,
+        roleTitle: nextRoleTitle || "Target role",
+        companyName: nextCompanyName,
+        interviewMode: nextInterviewMode,
+        category: nextCategory,
+        difficulty: nextDifficulty,
+        jobContext: nextJobContext,
         resumeContext,
         previousQuestionIds,
       })
@@ -131,6 +189,38 @@ export function AIInterviewPracticeWorkspace() {
     } finally {
       setLoadingQuestion(false)
     }
+  }
+
+  async function handleGenerateQuestion() {
+    await generateQuestionWithContext()
+  }
+
+  async function handleStartFromSavedJobDescription() {
+    if (!selectedJobDescription) {
+      setMessage("Select a saved job description first.")
+      return
+    }
+
+    const nextRoleTitle =
+      selectedJobDescription.role || selectedJobDescription.title
+    const nextCompanyName = selectedJobDescription.company
+    const nextJobContext = buildJobContextFromDescription(selectedJobDescription)
+
+    setRoleTitle(nextRoleTitle)
+    setCompanyName(nextCompanyName)
+    setJobContext(nextJobContext)
+    setInterviewMode("role_based")
+    setCategory("behavioral")
+    setDifficulty("foundation")
+
+    await generateQuestionWithContext({
+      nextRoleTitle,
+      nextCompanyName,
+      nextJobContext,
+      nextInterviewMode: "role_based",
+      nextCategory: "behavioral",
+      nextDifficulty: "foundation",
+    })
   }
 
   async function handleEvaluateAnswer() {
@@ -234,6 +324,79 @@ export function AIInterviewPracticeWorkspace() {
         </div>
 
         <div className="mt-5 grid gap-4">
+          <div className="rounded-[24px] border border-blue-100 bg-blue-50 p-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-white p-2 text-blue-700 shadow-sm">
+                <BriefcaseBusiness size={18} />
+              </div>
+
+              <div>
+                <p className="text-sm font-black text-slate-950">
+                  Saved Job Description
+                </p>
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
+                  Auto-fill the interviewer and start a mock interview from a
+                  saved target role.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-2">
+              <select
+                value={selectedJobDescriptionId}
+                onChange={(event) =>
+                  setSelectedJobDescriptionId(event.target.value)
+                }
+                disabled={
+                  loadingJobDescriptions || jobDescriptions.length === 0
+                }
+                className="min-h-12 min-w-0 rounded-2xl border border-blue-200 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+              >
+                <option value="">
+                  {loadingJobDescriptions
+                    ? "Loading saved job descriptions..."
+                    : jobDescriptions.length === 0
+                      ? "No saved job descriptions yet"
+                      : "Select a saved job description"}
+                </option>
+
+                {jobDescriptions.map((jobDescription) => (
+                  <option key={jobDescription.id} value={jobDescription.id}>
+                    {jobDescription.title}
+                    {jobDescription.company
+                      ? ` - ${jobDescription.company}`
+                      : ""}
+                  </option>
+                ))}
+              </select>
+
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                <button
+                  type="button"
+                  onClick={loadSavedJobDescriptions}
+                  disabled={loadingJobDescriptions}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-blue-200 bg-white px-4 text-sm font-black text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <RefreshCcw
+                    size={15}
+                    className={loadingJobDescriptions ? "animate-spin" : ""}
+                  />
+                  Refresh
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleStartFromSavedJobDescription}
+                  disabled={!selectedJobDescription || loadingQuestion}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 text-sm font-black text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                >
+                  Start Mock Interview
+                  <Sparkles size={15} />
+                </button>
+              </div>
+            </div>
+          </div>
+
           <label className="grid gap-2">
             <span className="text-sm font-black text-slate-700">
               Target Role
