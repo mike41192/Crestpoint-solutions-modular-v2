@@ -64,7 +64,7 @@ export function JobTrackerColumn({
         event.preventDefault()
         onDrop(status)
       }}
-      className={`flex min-h-[640px] flex-col rounded-[28px] border p-3 transition ${
+      className={`flex min-h-[360px] flex-col rounded-[28px] border p-3 transition lg:min-h-[520px] ${
         isDragOver ? styles.drag : styles.surface
       }`}
     >

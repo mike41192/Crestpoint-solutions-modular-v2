@@ -8,10 +8,13 @@
 
 import { useEffect, useState } from "react"
 import {
+  Archive,
   ArrowRight,
   BriefcaseBusiness,
   CheckCircle2,
   Clock3,
+  Columns3,
+  LayoutGrid,
   Plus,
   Sparkles,
 } from "lucide-react"
@@ -54,6 +57,37 @@ type JobTrackerBoardProps = {
   onOpenApplication?: (application: JobApplicationRecord) => void
 }
 
+type BoardView = "active" | "all" | "closed"
+
+const BOARD_VIEW_CONFIG: Record<
+  BoardView,
+  {
+    label: string
+    description: string
+    icon: React.ComponentType<{ size?: number; className?: string }>
+    statuses: JobApplicationStatus[]
+  }
+> = {
+  active: {
+    label: "Active Pipeline",
+    description: "Open roles from saved through offer.",
+    icon: LayoutGrid,
+    statuses: ["saved", "applied", "follow_up", "interviewing", "offer"],
+  },
+  all: {
+    label: "All Stages",
+    description: "Every stage in the full job-search workflow.",
+    icon: Columns3,
+    statuses: JOB_TRACKER_COLUMN_ORDER,
+  },
+  closed: {
+    label: "Closed",
+    description: "Rejected and archived opportunities.",
+    icon: Archive,
+    statuses: ["rejected", "archived"],
+  },
+}
+
 // =====================================================
 // BLOCK: Job Tracker Board
 // =====================================================
@@ -66,6 +100,7 @@ export function JobTrackerBoard({
   const [loading, setLoading] = useState(!initialApplications)
   const [showForm, setShowForm] = useState(false)
   const [message, setMessage] = useState("")
+  const [activeView, setActiveView] = useState<BoardView>("active")
   const [selectedApplication, setSelectedApplication] =
     useState<JobApplicationRecord | null>(null)
 
@@ -299,6 +334,8 @@ export function JobTrackerBoard({
   const offerCount = applications.filter((application) => {
     return application.status === "offer"
   }).length
+  const boardView = BOARD_VIEW_CONFIG[activeView]
+  const visibleStatuses = boardView.statuses
 
   // =====================================================
   // BLOCK: Loading
@@ -375,6 +412,61 @@ export function JobTrackerBoard({
             helper="Decision stage"
           />
         </div>
+
+        <div className="border-t border-slate-100 p-4">
+          <div className="grid gap-2 lg:grid-cols-3">
+            {(Object.keys(BOARD_VIEW_CONFIG) as BoardView[]).map((view) => {
+              const config = BOARD_VIEW_CONFIG[view]
+              const Icon = config.icon
+              const count = applications.filter((application) =>
+                config.statuses.includes(application.status),
+              ).length
+              const active = activeView === view
+
+              return (
+                <button
+                  key={view}
+                  type="button"
+                  onClick={() => setActiveView(view)}
+                  className={`flex items-start gap-3 rounded-[22px] border p-4 text-left transition ${
+                    active
+                      ? "border-blue-200 bg-blue-50 text-blue-950 shadow-sm"
+                      : "border-slate-200 bg-slate-50 text-slate-600 hover:border-blue-200 hover:bg-white"
+                  }`}
+                >
+                  <div
+                    className={`rounded-2xl p-3 ${
+                      active
+                        ? "bg-white text-blue-700"
+                        : "bg-white text-slate-500"
+                    }`}
+                  >
+                    <Icon size={18} />
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-black">{config.label}</p>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-black ${
+                          active
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </div>
+
+                    <p className="mt-1 text-xs font-semibold leading-5">
+                      {config.description}
+                    </p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
       </section>
 
       {message && (
@@ -410,22 +502,22 @@ export function JobTrackerBoard({
           <div className="mb-3 flex flex-col gap-2 px-2 pt-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-600">
-                Drag and Drop Workflow
+                {boardView.label}
               </p>
 
               <h3 className="mt-1 text-lg font-black text-slate-950">
-                Pipeline Board
+                {boardView.description}
               </h3>
             </div>
 
             <p className="text-xs font-bold text-slate-500">
-              {JOB_TRACKER_COLUMN_ORDER.length} stages from saved to archive
+              {visibleStatuses.length} visible stages
             </p>
           </div>
 
-          <div className="overflow-x-auto pb-2">
-            <div className="grid min-w-[1820px] grid-cols-7 gap-4">
-              {JOB_TRACKER_COLUMN_ORDER.map((status) => (
+          <div className="pb-2">
+            <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+              {visibleStatuses.map((status) => (
                 <JobTrackerColumn
                   key={status}
                   status={status}
