@@ -1,33 +1,54 @@
 import Link from "next/link"
+import type { ComponentType } from "react"
 import {
   ArrowRight,
   BookOpenCheck,
   Brain,
+  BriefcaseBusiness,
   CheckCircle2,
+  ClipboardList,
+  Handshake,
   MessageSquare,
   Mic,
+  Phone,
   Sparkles,
   Target,
+  Trophy,
+  Users,
 } from "lucide-react"
 
 import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
 import { FirstUseTutorial } from "@/components/onboarding/FirstUseTutorial"
 import {
   getInterviewAcademyPageContent,
+  type InterviewAcademyDifficulty,
   type InterviewAcademyIconKey,
 } from "@/modules/interview-academy"
 
 const iconMap: Record<
   InterviewAcademyIconKey,
-  React.ComponentType<{ size?: number; className?: string }>
+  ComponentType<{ size?: number; className?: string }>
 > = {
   book: BookOpenCheck,
   brain: Brain,
+  briefcase: BriefcaseBusiness,
+  clipboard: ClipboardList,
+  handshake: Handshake,
   message: MessageSquare,
   mic: Mic,
+  phone: Phone,
   sparkles: Sparkles,
   target: Target,
+  trophy: Trophy,
+  users: Users,
 }
+
+const difficultyOrder: InterviewAcademyDifficulty[] = [
+  "Foundation",
+  "Intermediate",
+  "Advanced",
+  "Career Closing",
+]
 
 export default function InterviewAcademyPage() {
   const { hero, tracks, frameworks } = getInterviewAcademyPageContent()
@@ -78,42 +99,91 @@ export default function InterviewAcademyPage() {
 
         <FirstUseTutorial moduleKey="interview_academy" />
 
-        <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {tracks.map((track) => {
-            const Icon = iconMap[track.iconKey]
+        <section className="grid gap-5">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-600">
+              Career Readiness Curriculum
+            </p>
+
+            <h3 className="mt-1 text-2xl font-black text-slate-950">
+              Learn, drill, and practice by interview stage
+            </h3>
+          </div>
+
+          {difficultyOrder.map((difficulty) => {
+            const difficultyTracks = tracks.filter(
+              (track) => track.difficulty === difficulty,
+            )
+
+            if (difficultyTracks.length === 0) {
+              return null
+            }
 
             return (
-              <article
-                key={track.title}
-                className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
-              >
-                <div className="w-fit rounded-2xl bg-blue-50 p-3 text-blue-700">
-                  <Icon size={20} />
+              <div key={difficulty} className="grid gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="h-px flex-1 bg-slate-200" />
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-slate-500">
+                    {difficulty}
+                  </span>
+                  <span className="h-px flex-1 bg-slate-200" />
                 </div>
 
-                <h3 className="mt-4 text-lg font-black text-slate-950">
-                  {track.title}
-                </h3>
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {difficultyTracks.map((track) => {
+                    const Icon = iconMap[track.iconKey]
 
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  {track.description}
-                </p>
+                    return (
+                      <Link
+                        key={track.id}
+                        href={track.href}
+                        className="group rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="w-fit rounded-2xl bg-blue-50 p-3 text-blue-700">
+                            <Icon size={20} />
+                          </div>
 
-                <div className="mt-4 grid gap-2 border-t border-slate-100 pt-4">
-                  {track.lessons.map((lesson) => (
-                    <div
-                      key={lesson}
-                      className="flex items-start gap-2 text-xs font-semibold leading-5 text-slate-600"
-                    >
-                      <CheckCircle2
-                        size={14}
-                        className="mt-0.5 shrink-0 text-emerald-600"
-                      />
-                      {lesson}
-                    </div>
-                  ))}
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+                            {track.lessons.length} lessons
+                          </span>
+                        </div>
+
+                        <h4 className="mt-4 text-lg font-black text-slate-950">
+                          {track.title}
+                        </h4>
+
+                        <p className="mt-2 text-sm leading-6 text-slate-500">
+                          {track.description}
+                        </p>
+
+                        <div className="mt-4 grid gap-2 border-t border-slate-100 pt-4">
+                          {track.lessons.map((lesson) => (
+                            <div
+                              key={lesson}
+                              className="flex items-start gap-2 text-xs font-semibold leading-5 text-slate-600"
+                            >
+                              <CheckCircle2
+                                size={14}
+                                className="mt-0.5 shrink-0 text-emerald-600"
+                              />
+                              {lesson}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-5 inline-flex items-center gap-2 text-sm font-black text-blue-700">
+                          {track.ctaLabel}
+                          <ArrowRight
+                            size={16}
+                            className="transition group-hover:translate-x-1"
+                          />
+                        </div>
+                      </Link>
+                    )
+                  })}
                 </div>
-              </article>
+              </div>
             )
           })}
         </section>
