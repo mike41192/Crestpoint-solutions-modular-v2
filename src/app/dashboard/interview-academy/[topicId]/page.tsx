@@ -145,49 +145,77 @@ export default async function InterviewAcademyTopicPage({
         </section>
 
         <section className="grid gap-4 lg:grid-cols-2">
-          {topic.videos.map((video) => (
-            <article
-              key={video.title}
-              className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"
-            >
-              <div className="aspect-video bg-slate-950">
-                <iframe
-                  className="h-full w-full"
-                  src={video.embedUrl}
-                  title={video.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
-              </div>
+          {topic.videos.map((video) => {
+            const isSearchCollection =
+              video.embedUrl.includes("listType=search")
 
-              <div className="p-5">
-                <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-blue-600">
-                  <PlayCircle size={14} />
-                  {video.provider}
-                  <span className="text-slate-300">/</span>
-                  {video.durationLabel}
+            return (
+              <article
+                key={video.title}
+                className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"
+              >
+                {isSearchCollection ? (
+                  <Link
+                    href={video.watchUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group flex aspect-video items-center justify-center bg-slate-950 p-6 text-center text-white"
+                  >
+                    <div>
+                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg shadow-blue-950/30 transition group-hover:scale-105 group-hover:bg-blue-400">
+                        <PlayCircle size={32} />
+                      </div>
+
+                      <p className="mt-4 text-xs font-black uppercase tracking-[0.16em] text-blue-100">
+                        Curated YouTube Resource
+                      </p>
+
+                      <p className="mt-2 text-sm font-semibold leading-6 text-slate-300">
+                        Open a curated video search in a new tab.
+                      </p>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="aspect-video bg-slate-950">
+                    <iframe
+                      className="h-full w-full"
+                      src={video.embedUrl}
+                      title={video.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  </div>
+                )}
+
+                <div className="p-5">
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-blue-600">
+                    <PlayCircle size={14} />
+                    {video.provider}
+                    <span className="text-slate-300">/</span>
+                    {video.durationLabel}
+                  </div>
+
+                  <h3 className="mt-3 text-lg font-black text-slate-950">
+                    {video.title}
+                  </h3>
+
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    {video.objective}
+                  </p>
+
+                  <Link
+                    href={video.watchUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-flex items-center gap-2 text-sm font-black text-blue-700"
+                  >
+                    {isSearchCollection ? "Open curated videos" : "Open video"}
+                    <ExternalLink size={15} />
+                  </Link>
                 </div>
-
-                <h3 className="mt-3 text-lg font-black text-slate-950">
-                  {video.title}
-                </h3>
-
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  {video.objective}
-                </p>
-
-                <Link
-                  href={video.watchUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-4 inline-flex items-center gap-2 text-sm font-black text-blue-700"
-                >
-                  Open video search
-                  <ExternalLink size={15} />
-                </Link>
-              </div>
-            </article>
-          ))}
+              </article>
+            )
+          })}
         </section>
 
         <section className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm">
