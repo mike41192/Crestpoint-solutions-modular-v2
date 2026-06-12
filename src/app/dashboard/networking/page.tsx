@@ -1,66 +1,44 @@
 import Link from "next/link"
+import type { ComponentType } from "react"
 import {
   ArrowRight,
   CalendarClock,
+  CheckCircle2,
+  Clock3,
+  ContactRound,
   MessageSquareText,
   Send,
   Sparkles,
   UserPlus,
   Users,
+  BriefcaseBusiness,
 } from "lucide-react"
 
 import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
 import { FirstUseTutorial } from "@/components/onboarding/FirstUseTutorial"
+import {
+  getNetworkingOutreachPageContent,
+  type NetworkingOutreachIconKey,
+} from "@/modules/networking-outreach"
 
-const outreachTypes = [
-  {
-    title: "Recruiter Outreach",
-    description:
-      "Start a concise conversation with recruiters connected to target roles or companies.",
-    icon: Send,
-  },
-  {
-    title: "Referral Request",
-    description:
-      "Ask for a referral with clear context, role alignment, and respectful timing.",
-    icon: UserPlus,
-  },
-  {
-    title: "Follow-Up Message",
-    description:
-      "Keep applications warm after submitting, interviewing, or connecting with a contact.",
-    icon: CalendarClock,
-  },
-  {
-    title: "Networking Check-In",
-    description:
-      "Maintain relationships with mentors, coworkers, and professional contacts.",
-    icon: MessageSquareText,
-  },
-]
-
-const workflowLinks = [
-  {
-    title: "Manage Contacts",
-    description: "Open your Career CRM to review people, notes, and follow-up dates.",
-    href: "/dashboard/contacts",
-    icon: Users,
-  },
-  {
-    title: "Review Job Pipeline",
-    description: "Use application status and next actions to decide who to message.",
-    href: "/dashboard/jobs",
-    icon: CalendarClock,
-  },
-  {
-    title: "Prepare LinkedIn",
-    description: "Align your profile before outreach so contacts see a clear story.",
-    href: "/dashboard/linkedin",
-    icon: Sparkles,
-  },
-]
+const iconMap: Record<
+  NetworkingOutreachIconKey,
+  ComponentType<{ size?: number; className?: string }>
+> = {
+  calendar: CalendarClock,
+  contacts: ContactRound,
+  linkedin: Users,
+  message: MessageSquareText,
+  pipeline: BriefcaseBusiness,
+  send: Send,
+  sparkles: Sparkles,
+  "user-plus": UserPlus,
+  users: Users,
+}
 
 export default function NetworkingDashboardPage() {
+  const { hero, playbooks, workflowLinks } = getNetworkingOutreachPageContent()
+
   return (
     <ModulePageLayout
       moduleKey="networking_outreach"
@@ -73,16 +51,15 @@ export default function NetworkingDashboardPage() {
             <div>
               <div className="mb-4 flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-blue-100">
                 <Users size={14} />
-                Relationship Workflow
+                {hero.eyebrow}
               </div>
 
               <h2 className="text-3xl font-black tracking-tight">
-                Turn contacts into a consistent search rhythm
+                {hero.title}
               </h2>
 
               <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
-                Use Career CRM contacts, application status, and saved notes to
-                plan outreach without losing context between conversations.
+                {hero.description}
               </p>
             </div>
 
@@ -92,14 +69,14 @@ export default function NetworkingDashboardPage() {
               </p>
 
               <h3 className="mt-2 text-xl font-black">
-                Review contacts with upcoming follow-ups
+                {hero.nextStepTitle}
               </h3>
 
               <Link
-                href="/dashboard/contacts"
+                href={hero.nextStepHref}
                 className="mt-4 inline-flex items-center gap-2 rounded-full bg-blue-500 px-4 py-2.5 text-sm font-black text-white transition hover:bg-blue-400"
               >
-                Open Contacts
+                {hero.nextStepLabel}
                 <ArrowRight size={16} />
               </Link>
             </div>
@@ -108,29 +85,71 @@ export default function NetworkingDashboardPage() {
 
         <FirstUseTutorial moduleKey="networking_outreach" />
 
-        <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {outreachTypes.map((type) => {
-            const Icon = type.icon
+        <section className="grid gap-5">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-600">
+              Outreach Template Library
+            </p>
 
-            return (
-              <article
-                key={type.title}
-                className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
-              >
-                <div className="w-fit rounded-2xl bg-blue-50 p-3 text-blue-700">
-                  <Icon size={20} />
-                </div>
+            <h3 className="mt-1 text-2xl font-black text-slate-950">
+              Use resume proof points and saved job details to write faster
+            </h3>
+          </div>
 
-                <h3 className="mt-4 text-lg font-black text-slate-950">
-                  {type.title}
-                </h3>
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {playbooks.map((playbook) => {
+              const Icon = iconMap[playbook.iconKey]
 
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  {type.description}
-                </p>
-              </article>
-            )
-          })}
+              return (
+                <Link
+                  key={playbook.id}
+                  href={playbook.href}
+                  className="group rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="w-fit rounded-2xl bg-blue-50 p-3 text-blue-700">
+                      <Icon size={20} />
+                    </div>
+
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+                      <Clock3 size={13} />
+                      {playbook.estimatedTime}
+                    </span>
+                  </div>
+
+                  <p className="mt-4 text-xs font-black uppercase tracking-[0.14em] text-blue-600">
+                    {playbook.cardLabel}
+                  </p>
+
+                  <h3 className="mt-2 text-lg font-black text-slate-950">
+                    {playbook.title}
+                  </h3>
+
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    {playbook.description}
+                  </p>
+
+                  <div className="mt-4 border-t border-slate-100 pt-4">
+                    <div className="flex items-start gap-2 text-xs font-semibold leading-5 text-slate-600">
+                      <CheckCircle2
+                        size={14}
+                        className="mt-0.5 shrink-0 text-emerald-600"
+                      />
+                      {playbook.outcome}
+                    </div>
+                  </div>
+
+                  <div className="mt-5 inline-flex items-center gap-2 text-sm font-black text-blue-700">
+                    Open templates
+                    <ArrowRight
+                      size={16}
+                      className="transition group-hover:translate-x-1"
+                    />
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
         </section>
 
         <section className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm">
@@ -146,7 +165,7 @@ export default function NetworkingDashboardPage() {
 
           <div className="grid gap-4 lg:grid-cols-3">
             {workflowLinks.map((item) => {
-              const Icon = item.icon
+              const Icon = iconMap[item.iconKey]
 
               return (
                 <Link
