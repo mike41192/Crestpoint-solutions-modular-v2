@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { getOpenAIClient, getOpenAIModel } from "@/lib/ai/openai-client"
 import { isOpenAIConfigured } from "@/lib/ai/openai-env"
+import { getApprovedPromptGuidance } from "@/modules/ai-learning"
 import {
   buildInterviewQuestionPrompt,
   AI_INTERVIEWER_PROMPT_VERSION,
@@ -124,15 +125,26 @@ export async function POST(request: Request) {
 
     if (isOpenAIConfigured()) {
       try {
+        const approvedGuidance = await getApprovedPromptGuidance(
+          "ai_interviewer",
+          "question_generation",
+        )
         const openai = getOpenAIClient()
+        const model = getOpenAIModel()
         const completion = await openai.chat.completions.create({
-          model: getOpenAIModel(),
+          model,
           temperature: 0.6,
           messages: [
             {
               role: "system",
-              content:
+              content: [
                 "You create structured, safe, job-search interview practice questions. Return valid JSON only.",
+                approvedGuidance
+                  ? `Approved quality guidance:\n${approvedGuidance}`
+                  : "",
+              ]
+                .filter(Boolean)
+                .join("\n\n"),
             },
             {
               role: "user",

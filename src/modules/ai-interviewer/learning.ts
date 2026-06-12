@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { recordAILearningEvent } from "@/modules/ai-learning"
 
 import {
   AI_INTERVIEWER_PROMPT_VERSION,
@@ -35,6 +36,38 @@ function truncate(value: string | undefined, maxLength: number) {
 }
 
 export async function recordInterviewLearningSignal(payload: LearningPayload) {
+  await recordAILearningEvent({
+    userId: payload.userId,
+    moduleKey: "ai_interviewer",
+    featureKey:
+      payload.eventType === "question_generated"
+        ? "question_generation"
+        : payload.eventType === "answer_evaluated"
+          ? "answer_evaluation"
+          : "user_feedback",
+    eventType: payload.eventType,
+    promptVersion: AI_INTERVIEWER_PROMPT_VERSION,
+    rubricVersion: AI_INTERVIEWER_RUBRIC_VERSION,
+    inputSummary: truncate(
+      payload.questionRequest?.jobContext ||
+        payload.questionRequest?.resumeContext ||
+        payload.question?.question,
+      2000,
+    ),
+    outputSummary: truncate(
+      payload.evaluation?.summary || payload.question?.question,
+      2000,
+    ),
+    score: payload.evaluation?.score ?? null,
+    userRating: payload.feedbackRating ?? null,
+    userFeedback: payload.feedbackNote ?? null,
+    metadata: {
+      question: payload.question || null,
+      questionRequest: payload.questionRequest || null,
+      evaluation: payload.evaluation || null,
+    },
+  })
+
   try {
     const supabase = createSupabaseAdminClient()
 
