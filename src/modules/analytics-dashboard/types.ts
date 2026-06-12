@@ -13,9 +13,16 @@ export type AnalyticsDashboardIconKey =
   | "users"
 
 export type AnalyticsDashboardInsightArea = {
+  id: string
   title: string
+  subtitle: string
   description: string
+  href: string
   iconKey: AnalyticsDashboardIconKey
+  sourceLabel: string
+  sourceHref: string
+  metricLabels: string[]
+  recommendedActions: string[]
 }
 
 export type AnalyticsDashboardWorkflowLink = {

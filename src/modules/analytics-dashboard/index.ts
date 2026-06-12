@@ -11,4 +11,8 @@ export {
   ANALYTICS_DASHBOARD_WORKFLOW_LINKS,
 } from "./constants"
 
-export { getAnalyticsDashboardPageContent } from "./service"
+export {
+  getAnalyticsDashboardInsightAreaById,
+  getAnalyticsDashboardPageContent,
+  listAnalyticsDashboardInsightAreas,
+} from "./service"

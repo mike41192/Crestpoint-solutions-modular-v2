@@ -85,12 +85,20 @@ export default function DashboardAnalyticsPage() {
             const Icon = iconMap[area.iconKey]
 
             return (
-              <article
+              <Link
                 key={area.title}
-                className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
+                href={area.href}
+                className="group rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
               >
-                <div className="w-fit rounded-2xl bg-blue-50 p-3 text-blue-700">
-                  <Icon size={20} />
+                <div className="flex items-start justify-between gap-4">
+                  <div className="w-fit rounded-2xl bg-blue-50 p-3 text-blue-700">
+                    <Icon size={20} />
+                  </div>
+
+                  <ArrowRight
+                    size={18}
+                    className="mt-3 text-slate-300 transition group-hover:translate-x-1 group-hover:text-blue-600"
+                  />
                 </div>
 
                 <h3 className="mt-4 text-lg font-black text-slate-950">
@@ -100,7 +108,7 @@ export default function DashboardAnalyticsPage() {
                 <p className="mt-2 text-sm leading-6 text-slate-500">
                   {area.description}
                 </p>
-              </article>
+              </Link>
             )
           })}
         </section>

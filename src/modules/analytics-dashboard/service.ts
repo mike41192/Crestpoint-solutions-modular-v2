@@ -17,3 +17,11 @@ export function getAnalyticsDashboardPageContent() {
     workflowLinks: ANALYTICS_DASHBOARD_WORKFLOW_LINKS,
   }
 }
+
+export function listAnalyticsDashboardInsightAreas() {
+  return ANALYTICS_DASHBOARD_INSIGHT_AREAS
+}
+
+export function getAnalyticsDashboardInsightAreaById(id: string) {
+  return ANALYTICS_DASHBOARD_INSIGHT_AREAS.find((area) => area.id === id)
+}
