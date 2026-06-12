@@ -228,6 +228,69 @@ async function loadOrganizationMembers(organizationId: string) {
   return loadMembers([organizationId])
 }
 
+async function saveOrganizationMember({
+  organizationId,
+  userId,
+  email,
+  role,
+  status,
+  invitedBy,
+}: {
+  organizationId: string
+  userId: string | null
+  email: string
+  role: MemberRole
+  status: MemberStatus
+  invitedBy: string
+}) {
+  const supabase = createSupabaseAdminClient()
+  const timestamp = new Date().toISOString()
+  const { data: existingMember, error: lookupError } = await supabase
+    .from("organization_members")
+    .select("id")
+    .eq("organization_id", organizationId)
+    .eq("email", email)
+    .maybeSingle()
+
+  if (lookupError) {
+    throw new Error(lookupError.message)
+  }
+
+  if (existingMember?.id) {
+    const { error } = await supabase
+      .from("organization_members")
+      .update({
+        user_id: userId,
+        role,
+        status,
+        invited_by: invitedBy,
+        joined_at: userId ? timestamp : null,
+        updated_at: timestamp,
+      })
+      .eq("id", existingMember.id)
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return
+  }
+
+  const { error } = await supabase.from("organization_members").insert({
+    organization_id: organizationId,
+    user_id: userId,
+    email,
+    role,
+    status,
+    invited_by: invitedBy,
+    joined_at: userId ? timestamp : null,
+  })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
 async function loadProfiles(userIds: string[]) {
   if (userIds.length === 0) {
     return []
@@ -673,26 +736,23 @@ export async function POST(request: Request) {
         ? cleanTier(organization?.tier)
         : tier
 
-      const { error: memberError } = await supabase
-        .from("organization_members")
-        .upsert(
-          {
-            organization_id: organizationId,
-            user_id: userId,
-            email,
-            role: isCompanyScope(manager.scope) ? "member" : role,
-            status: userId ? "active" : "invited",
-            invited_by: manager.userId,
-            joined_at: userId ? new Date().toISOString() : null,
-          },
-          { onConflict: "organization_id,email" },
-        )
-
-      if (memberError) {
+      try {
+        await saveOrganizationMember({
+          organizationId,
+          userId,
+          email,
+          role: isCompanyScope(manager.scope) ? "member" : role,
+          status: userId ? "active" : "invited",
+          invitedBy: manager.userId,
+        })
+      } catch (error) {
         return Response.json(
           {
             status: "error",
-            message: memberError.message,
+            message:
+              error instanceof Error
+                ? error.message
+                : "Unable to save organization member.",
           },
           { status: 500, headers: NO_STORE_HEADERS },
         )
