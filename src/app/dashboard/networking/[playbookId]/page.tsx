@@ -18,7 +18,7 @@ import {
 } from "lucide-react"
 
 import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
-import { NetworkingTemplateSources } from "@/components/networking/NetworkingTemplateSources"
+import { NetworkingAssistantWorkspace } from "@/components/networking/NetworkingAssistantWorkspace"
 import {
   getNetworkingOutreachPlaybookById,
   getRelatedNetworkingOutreachPlaybooks,
@@ -155,11 +155,7 @@ export default async function NetworkingPlaybookPage({
           </div>
         </section>
 
-        <NetworkingTemplateSources
-          resumeHints={playbook.resumeSourceHints}
-          jobDescriptionHints={playbook.jobDescriptionSourceHints}
-          customizationFields={playbook.customizationFields}
-        />
+        <NetworkingAssistantWorkspace playbook={playbook} />
 
         <section className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4">

@@ -31,12 +31,7 @@ export type NetworkingOutreachPlaybook = {
   resumeSourceHints: string[]
   jobDescriptionSourceHints: string[]
   checklist: string[]
-  templates: {
-    label: string
-    bestFor: string
-    subject: string
-    body: string
-  }[]
+  templates: NetworkingOutreachTemplate[]
   customizationFields: string[]
   nextActions: string[]
   usageNote: string
@@ -47,6 +42,13 @@ export type NetworkingOutreachPlaybook = {
     iconKey: NetworkingOutreachIconKey
   }[]
   relatedPlaybookIds: string[]
+}
+
+export type NetworkingOutreachTemplate = {
+  label: string
+  bestFor: string
+  subject: string
+  body: string
 }
 
 export type NetworkingOutreachWorkflowLink = {

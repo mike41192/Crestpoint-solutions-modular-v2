@@ -2,6 +2,7 @@ export type {
   NetworkingOutreachHeroContent,
   NetworkingOutreachIconKey,
   NetworkingOutreachPlaybook,
+  NetworkingOutreachTemplate,
   NetworkingOutreachWorkflowLink,
 } from "./types"
 
