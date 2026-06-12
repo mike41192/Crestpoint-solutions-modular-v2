@@ -193,12 +193,20 @@ export default function LoginPage() {
           </div>
         </Link>
 
-        <Link
-          href="/"
-          className="rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-700"
-        >
-          Back Home
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/company-admin/login"
+            className="rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-700"
+          >
+            Business Admin
+          </Link>
+          <Link
+            href="/"
+            className="rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-700"
+          >
+            Back Home
+          </Link>
+        </div>
       </header>
 
       <section className="mx-auto grid min-h-[calc(100vh-90px)] max-w-[1400px] gap-8 px-5 pb-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:px-8">

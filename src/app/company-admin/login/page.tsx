@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import {
   ArrowRight,
+  Building2,
   CheckCircle2,
   LockKeyhole,
   Mail,
@@ -11,16 +12,25 @@ import {
   Sparkles,
 } from "lucide-react"
 
-export default function AdminLoginPage() {
+export default function CompanyAdminLoginPage() {
   const [message, setMessage] = useState("")
+  const [redirectTo, setRedirectTo] = useState("/company-admin/access")
 
   useEffect(() => {
-    const messageParam = new URLSearchParams(window.location.search).get(
-      "message",
-    )
+    const params = new URLSearchParams(window.location.search)
+    const messageParam = params.get("message")
+    const redirectToParam = params.get("redirectTo")
 
     if (messageParam) {
       setMessage(messageParam)
+    }
+
+    if (
+      redirectToParam &&
+      redirectToParam.startsWith("/company-admin") &&
+      !redirectToParam.startsWith("//")
+    ) {
+      setRedirectTo(redirectToParam)
     }
   }, [])
 
@@ -37,23 +47,23 @@ export default function AdminLoginPage() {
               Crestpoint Solutions
             </p>
             <p className="text-xs font-semibold text-slate-500">
-              Admin Control Center
+              Business Access Portal
             </p>
           </div>
         </Link>
 
         <div className="flex items-center gap-2">
           <Link
-            href="/company-admin/login"
-            className="rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-700"
-          >
-            Business Admin
-          </Link>
-          <Link
             href="/auth/login"
             className="rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-700"
           >
             User Login
+          </Link>
+          <Link
+            href="/admin/login"
+            className="rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-700"
+          >
+            Platform Admin
           </Link>
         </div>
       </header>
@@ -63,24 +73,24 @@ export default function AdminLoginPage() {
           <div className="rounded-[36px] border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/70">
             <div className="rounded-[30px] bg-slate-950 p-8 text-white">
               <div className="mb-5 flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-blue-100">
-                <ShieldCheck size={14} />
-                Owner Access
+                <Building2 size={14} />
+                Business Admin
               </div>
 
               <h1 className="max-w-xl text-4xl font-black tracking-tight">
-                Sign in to manage Crestpoint operations.
+                Manage your company access list.
               </h1>
 
               <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">
-                Secure owner access for system settings, diagnostics, and
-                operational controls.
+                Sign in with your company admin account to add seats, suspend
+                access, and keep your organization roster current.
               </p>
 
               <div className="mt-8 grid gap-3">
                 {[
-                  "Manage system settings and diagnostics",
-                  "Review billing, Supabase, GitHub, and Vercel readiness",
-                  "Access owner-only AI and module controls",
+                  "Add and remove member seats within company limits",
+                  "Manage only your assigned organization",
+                  "Platform admins retain company tier and seat authority",
                 ].map((item) => (
                   <div
                     key={item}
@@ -98,15 +108,15 @@ export default function AdminLoginPage() {
         <div className="mx-auto w-full max-w-[500px]">
           <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/70 sm:p-8">
             <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
-              <LockKeyhole size={24} />
+              <ShieldCheck size={24} />
             </div>
 
             <h2 className="text-3xl font-black tracking-tight text-slate-950">
-              Admin sign in
+              Business admin sign in
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              Use your owner account to access the admin command center.
+              Use your company admin account to open the business access portal.
             </p>
 
             <form
@@ -114,12 +124,11 @@ export default function AdminLoginPage() {
               method="post"
               className="mt-6 grid gap-4"
             >
-              <input type="hidden" name="redirectTo" value="/admin" />
-              <input type="hidden" name="adminLogin" value="true" />
+              <input type="hidden" name="redirectTo" value={redirectTo} />
 
               <label className="block">
                 <span className="mb-2 block text-sm font-extrabold text-slate-700">
-                  Admin Email
+                  Business Admin Email
                 </span>
 
                 <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 transition focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-100">
@@ -129,7 +138,7 @@ export default function AdminLoginPage() {
                     type="email"
                     autoComplete="email"
                     required
-                    placeholder="owner@example.com"
+                    placeholder="admin@company.com"
                     className="w-full min-w-0 bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400"
                   />
                 </div>
@@ -157,7 +166,7 @@ export default function AdminLoginPage() {
                 type="submit"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700"
               >
-                Open Admin
+                Open Business Portal
                 <ArrowRight size={17} />
               </button>
             </form>

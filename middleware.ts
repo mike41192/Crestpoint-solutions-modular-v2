@@ -9,7 +9,13 @@ import type { NextRequest } from "next/server"
 // BLOCK: Public Route Rules
 // =====================================================
 
-const PUBLIC_ROUTES = new Set(["/", "/login", "/pricing", "/admin/login"])
+const PUBLIC_ROUTES = new Set([
+  "/",
+  "/login",
+  "/pricing",
+  "/admin/login",
+  "/company-admin/login",
+])
 
 const PUBLIC_ROUTE_PREFIXES = ["/auth", "/api/auth"]
 
@@ -20,6 +26,7 @@ const PUBLIC_ROUTE_PREFIXES = ["/auth", "/api/auth"]
 const PROTECTED_ROUTE_PREFIXES = [
   "/dashboard",
   "/admin",
+  "/company-admin",
   "/administration",
   "/settings",
 ]
@@ -56,9 +63,14 @@ function hasSupabaseAuthCookie(request: NextRequest): boolean {
 function buildLoginRedirect(request: NextRequest): NextResponse {
   const loginUrl = request.nextUrl.clone()
 
-  loginUrl.pathname = request.nextUrl.pathname.startsWith("/admin")
-    ? "/admin/login"
-    : "/auth/login"
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    loginUrl.pathname = "/admin/login"
+  } else if (request.nextUrl.pathname.startsWith("/company-admin")) {
+    loginUrl.pathname = "/company-admin/login"
+  } else {
+    loginUrl.pathname = "/auth/login"
+  }
+
   loginUrl.searchParams.set("redirectTo", request.nextUrl.pathname)
 
   return NextResponse.redirect(loginUrl)
@@ -94,6 +106,7 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/admin/:path*",
+    "/company-admin/:path*",
     "/administration/:path*",
     "/settings/:path*",
   ],
