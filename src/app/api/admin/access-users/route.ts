@@ -14,7 +14,12 @@ const NO_STORE_HEADERS = {
 const MEMBER_ROLES = ["owner", "admin", "member"] as const
 const MEMBER_STATUSES = ["invited", "active", "suspended", "removed"] as const
 
-type AccessAction = "create_org" | "invite_user" | "update_user" | "delete_user"
+type AccessAction =
+  | "create_org"
+  | "update_org"
+  | "invite_user"
+  | "update_user"
+  | "delete_user"
 type MemberRole = (typeof MEMBER_ROLES)[number]
 type MemberStatus = (typeof MEMBER_STATUSES)[number]
 
@@ -101,6 +106,40 @@ function canManageOrganization(scope: AccessManagerScope, organizationId: string
   )
 }
 
+function isPlatformOwner(scope: AccessManagerScope) {
+  return scope.kind === "owner"
+}
+
+function isCompanyScope(scope: AccessManagerScope) {
+  return scope.kind === "organization"
+}
+
+function cleanOrganizationStatus(value: unknown) {
+  const status = cleanText(value).toLowerCase()
+
+  if (status === "active" || status === "paused" || status === "archived") {
+    return status
+  }
+
+  return "active"
+}
+
+function getActiveSeatCount(members: OrganizationMemberRow[]) {
+  return members.filter((member) => member.status !== "removed").length
+}
+
+function ensureCompanyCanManageOrganization(organization: OrganizationRow | null) {
+  if (!organization) {
+    return "Organization could not be loaded."
+  }
+
+  if (organization.status !== "active") {
+    return "This company access list is paused or revoked by the platform owner."
+  }
+
+  return null
+}
+
 async function writeAudit({
   action,
   actorUserId,
@@ -168,6 +207,25 @@ async function loadMembers(organizationIds: string[]) {
   }
 
   return (data || []) as OrganizationMemberRow[]
+}
+
+async function loadOrganization(organizationId: string) {
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from("organizations")
+    .select("id, name, slug, status, tier, seat_limit, created_at")
+    .eq("id", organizationId)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data as OrganizationRow | null
+}
+
+async function loadOrganizationMembers(organizationId: string) {
+  return loadMembers([organizationId])
 }
 
 async function loadProfiles(userIds: string[]) {
@@ -247,7 +305,7 @@ export async function GET() {
       memberships.map((membership) => [membership.user_id, membership]),
     )
 
-    const organizationSummaries = organizations.map((organization) => {
+      const organizationSummaries = organizations.map((organization) => {
       const activeSeatCount = members.filter(
         (member) =>
           member.organization_id === organization.id &&
@@ -263,6 +321,7 @@ export async function GET() {
         seatLimit: Number(organization.seat_limit ?? 0),
         activeSeatCount,
         createdAt: organization.created_at,
+        canCompanyManage: organization.status === "active",
       }
     })
 
@@ -296,6 +355,7 @@ export async function GET() {
         tiers: membershipTiers,
         roles: MEMBER_ROLES,
         statuses: MEMBER_STATUSES,
+        companyPortalHref: "/company-admin/access",
       },
       { headers: NO_STORE_HEADERS },
     )
@@ -389,6 +449,115 @@ export async function POST(request: Request) {
       )
     }
 
+    if (action === "update_org") {
+      if (!isPlatformOwner(manager.scope)) {
+        return Response.json(
+          {
+            status: "error",
+            message: "Only platform owners can change company access settings.",
+          },
+          { status: 403, headers: NO_STORE_HEADERS },
+        )
+      }
+
+      const organizationId = cleanText(body?.organizationId)
+      const tier = cleanTier(body?.tier)
+      const organizationStatus = cleanOrganizationStatus(body?.organizationStatus)
+      const seatLimit = Math.max(-1, Math.trunc(Number(body?.seatLimit ?? 25)))
+
+      if (!organizationId) {
+        return Response.json(
+          {
+            status: "error",
+            message: "Organization id is required.",
+          },
+          { status: 400, headers: NO_STORE_HEADERS },
+        )
+      }
+
+      const { error } = await supabase
+        .from("organizations")
+        .update({
+          tier,
+          status: organizationStatus,
+          seat_limit: seatLimit,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", organizationId)
+
+      if (error) {
+        return Response.json(
+          {
+            status: "error",
+            message: error.message,
+          },
+          { status: 500, headers: NO_STORE_HEADERS },
+        )
+      }
+
+      if (organizationStatus !== "active") {
+        const { data: members, error: memberLoadError } = await supabase
+          .from("organization_members")
+          .select("user_id, email")
+          .eq("organization_id", organizationId)
+          .neq("status", "removed")
+
+        if (memberLoadError) {
+          return Response.json(
+            {
+              status: "error",
+              message: memberLoadError.message,
+            },
+            { status: 500, headers: NO_STORE_HEADERS },
+          )
+        }
+
+        const userIds = (members || [])
+          .map((member) => member.user_id)
+          .filter((value): value is string => Boolean(value))
+
+        await supabase
+          .from("organization_members")
+          .update({
+            status: "suspended",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("organization_id", organizationId)
+          .neq("status", "removed")
+
+        if (userIds.length > 0) {
+          await supabase
+            .from("memberships")
+            .update({
+              plan_name: "free",
+              status: "paused",
+              assigned_by: manager.userId,
+              assigned_at: new Date().toISOString(),
+            })
+            .in("user_id", userIds)
+        }
+      }
+
+      await writeAudit({
+        action,
+        actorUserId: manager.userId,
+        actorEmail: manager.email,
+        organizationId,
+        details: { tier, organizationStatus, seatLimit },
+      })
+
+      return Response.json(
+        {
+          status: "success",
+          message:
+            organizationStatus === "active"
+              ? "Company access settings updated."
+              : "Company access revoked and member accounts were suspended.",
+        },
+        { headers: NO_STORE_HEADERS },
+      )
+    }
+
     if (action === "invite_user") {
       const organizationId = cleanText(body?.organizationId)
       const email = cleanEmail(body?.email)
@@ -418,6 +587,62 @@ export async function POST(request: Request) {
         )
       }
 
+      const organization = await loadOrganization(organizationId)
+
+      if (isCompanyScope(manager.scope)) {
+        const organizationError = ensureCompanyCanManageOrganization(organization)
+
+        if (organizationError) {
+          return Response.json(
+            {
+              status: "error",
+              message: organizationError,
+            },
+            { status: 403, headers: NO_STORE_HEADERS },
+          )
+        }
+
+        if (role !== "member") {
+          return Response.json(
+            {
+              status: "error",
+              message: "Company admins can only add member seats.",
+            },
+            { status: 403, headers: NO_STORE_HEADERS },
+          )
+        }
+
+        const existingMembers = await loadOrganizationMembers(organizationId)
+        const existingMember = existingMembers.find(
+          (member) => member.email.toLowerCase() === email,
+        )
+
+        if (existingMember && existingMember.role !== "member") {
+          return Response.json(
+            {
+              status: "error",
+              message: "Company admins cannot modify owner or admin seats.",
+            },
+            { status: 403, headers: NO_STORE_HEADERS },
+          )
+        }
+
+        const seatLimit = Number(organization?.seat_limit ?? 0)
+        const seatCount = getActiveSeatCount(existingMembers)
+
+        if (!existingMember || existingMember.status === "removed") {
+          if (seatLimit >= 0 && seatCount >= seatLimit) {
+            return Response.json(
+              {
+                status: "error",
+                message: "Seat limit reached. Ask the platform admin to increase this company's seat allowance.",
+              },
+              { status: 403, headers: NO_STORE_HEADERS },
+            )
+          }
+        }
+      }
+
       let authUser = await findAuthUserByEmail(email)
 
       if (!authUser && createLogin) {
@@ -444,6 +669,9 @@ export async function POST(request: Request) {
       }
 
       const userId = authUser?.id || null
+      const assignedTier = isCompanyScope(manager.scope)
+        ? cleanTier(organization?.tier)
+        : tier
 
       const { error: memberError } = await supabase
         .from("organization_members")
@@ -452,7 +680,7 @@ export async function POST(request: Request) {
             organization_id: organizationId,
             user_id: userId,
             email,
-            role,
+            role: isCompanyScope(manager.scope) ? "member" : role,
             status: userId ? "active" : "invited",
             invited_by: manager.userId,
             joined_at: userId ? new Date().toISOString() : null,
@@ -483,7 +711,7 @@ export async function POST(request: Request) {
         await supabase.from("memberships").upsert(
           {
             user_id: userId,
-            plan_name: tier,
+            plan_name: assignedTier,
             status: "active",
             organization_id: organizationId,
             assigned_by: manager.userId,
@@ -540,6 +768,57 @@ export async function POST(request: Request) {
         )
       }
 
+      const organization = await loadOrganization(organizationId)
+
+      if (isCompanyScope(manager.scope)) {
+        const organizationError = ensureCompanyCanManageOrganization(organization)
+
+        if (organizationError) {
+          return Response.json(
+            {
+              status: "error",
+              message: organizationError,
+            },
+            { status: 403, headers: NO_STORE_HEADERS },
+          )
+        }
+
+        if (role !== "member") {
+          return Response.json(
+            {
+              status: "error",
+              message: "Company admins cannot promote users to admin or owner.",
+            },
+            { status: 403, headers: NO_STORE_HEADERS },
+          )
+        }
+
+        if (tier !== cleanTier(organization?.tier)) {
+          return Response.json(
+            {
+              status: "error",
+              message: "Company admins cannot change membership tiers.",
+            },
+            { status: 403, headers: NO_STORE_HEADERS },
+          )
+        }
+
+        const existingMembers = await loadOrganizationMembers(organizationId)
+        const existingMember = existingMembers.find(
+          (member) => member.email.toLowerCase() === email,
+        )
+
+        if (existingMember && existingMember.role !== "member") {
+          return Response.json(
+            {
+              status: "error",
+              message: "Company admins cannot modify owner or admin seats.",
+            },
+            { status: 403, headers: NO_STORE_HEADERS },
+          )
+        }
+      }
+
       const { error: memberError } = await supabase
         .from("organization_members")
         .update({
@@ -573,7 +852,9 @@ export async function POST(request: Request) {
         await supabase.from("memberships").upsert(
           {
             user_id: userId,
-            plan_name: tier,
+            plan_name: isCompanyScope(manager.scope)
+              ? cleanTier(organization?.tier)
+              : tier,
             status: status === "suspended" ? "paused" : "active",
             organization_id: organizationId,
             assigned_by: manager.userId,
@@ -626,6 +907,47 @@ export async function POST(request: Request) {
           },
           { status: 400, headers: NO_STORE_HEADERS },
         )
+      }
+
+      const organization = await loadOrganization(organizationId)
+
+      if (isCompanyScope(manager.scope)) {
+        const organizationError = ensureCompanyCanManageOrganization(organization)
+
+        if (organizationError) {
+          return Response.json(
+            {
+              status: "error",
+              message: organizationError,
+            },
+            { status: 403, headers: NO_STORE_HEADERS },
+          )
+        }
+
+        if (deleteLogin) {
+          return Response.json(
+            {
+              status: "error",
+              message: "Company admins can remove seats, but only platform admins can delete login accounts.",
+            },
+            { status: 403, headers: NO_STORE_HEADERS },
+          )
+        }
+
+        const existingMembers = await loadOrganizationMembers(organizationId)
+        const existingMember = existingMembers.find(
+          (member) => member.email.toLowerCase() === email,
+        )
+
+        if (existingMember && existingMember.role !== "member") {
+          return Response.json(
+            {
+              status: "error",
+              message: "Company admins cannot remove owner or admin seats.",
+            },
+            { status: 403, headers: NO_STORE_HEADERS },
+          )
+        }
       }
 
       const { error: memberError } = await supabase

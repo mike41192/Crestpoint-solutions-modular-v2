@@ -9,6 +9,12 @@ const adminSections = [
     href: "/admin/settings/users",
   },
   {
+    title: "Company Admin Portal",
+    description:
+      "Limited roster-management portal for customer organization admins.",
+    href: "/company-admin/access",
+  },
+  {
     title: "System Settings",
     description:
       "Manage modules, access tiers, diagnostics, backups, cleanup rules, and platform controls.",

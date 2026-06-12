@@ -24,6 +24,7 @@ type Organization = {
   tier: string
   seatLimit: number
   activeSeatCount: number
+  canCompanyManage?: boolean
   createdAt: string
 }
 
@@ -107,6 +108,11 @@ export default function UsersSettingsPage() {
     tier: "business",
     seatLimit: 25,
   })
+  const [orgSettings, setOrgSettings] = useState({
+    tier: "business",
+    status: "active",
+    seatLimit: 25,
+  })
 
   const selectedOrg = useMemo(
     () =>
@@ -147,6 +153,18 @@ export default function UsersSettingsPage() {
   const pendingInvites = visibleUsers.filter(
     (user) => user.accessStatus === "invited",
   ).length
+
+  useEffect(() => {
+    if (!selectedOrg) {
+      return
+    }
+
+    setOrgSettings({
+      tier: selectedOrg.tier,
+      status: selectedOrg.status,
+      seatLimit: selectedOrg.seatLimit,
+    })
+  }, [selectedOrg])
 
   async function loadAccessLists() {
     setLoading(true)
@@ -429,6 +447,88 @@ export default function UsersSettingsPage() {
                 </div>
               </div>
             </div>
+
+            {selectedOrg && payload.scope === "owner" ? (
+              <form
+                className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  runAction({
+                    action: "update_org",
+                    organizationId: selectedOrg.id,
+                    tier: orgSettings.tier,
+                    organizationStatus: orgSettings.status,
+                    seatLimit: orgSettings.seatLimit,
+                  })
+                }}
+              >
+                <div className="mb-4 flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-600">
+                      Platform Control
+                    </p>
+                    <h3 className="mt-1 text-lg font-black text-slate-950">
+                      Company authority and seat cap
+                    </h3>
+                    <p className="mt-1 text-sm font-bold leading-6 text-slate-500">
+                      Pausing or archiving a company suspends its roster and
+                      reduces member memberships to free/paused.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 lg:grid-cols-[180px_180px_160px_180px]">
+                  <select
+                    value={orgSettings.tier}
+                    onChange={(event) =>
+                      setOrgSettings((current) => ({
+                        ...current,
+                        tier: event.target.value,
+                      }))
+                    }
+                    className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-blue-400"
+                  >
+                    {payload.tiers.map((tier) => (
+                      <option key={tier} value={tier}>
+                        {titleCase(tier)}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={orgSettings.status}
+                    onChange={(event) =>
+                      setOrgSettings((current) => ({
+                        ...current,
+                        status: event.target.value,
+                      }))
+                    }
+                    className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-blue-400"
+                  >
+                    <option value="active">Active</option>
+                    <option value="paused">Paused</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                  <input
+                    type="number"
+                    value={orgSettings.seatLimit}
+                    onChange={(event) =>
+                      setOrgSettings((current) => ({
+                        ...current,
+                        seatLimit: Number(event.target.value),
+                      }))
+                    }
+                    className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-blue-400"
+                  />
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-black text-white hover:bg-slate-800 disabled:opacity-60"
+                  >
+                    Save company
+                  </button>
+                </div>
+              </form>
+            ) : null}
 
             {selectedOrg ? (
               <form
