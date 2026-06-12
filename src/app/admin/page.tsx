@@ -3,6 +3,12 @@ import { SectionCard } from "@/components/layout/SectionCard"
 
 const adminSections = [
   {
+    title: "Access Management",
+    description:
+      "Manage company access lists, users, admins, invites, and membership tiers.",
+    href: "/admin/settings/users",
+  },
+  {
     title: "System Settings",
     description:
       "Manage modules, access tiers, diagnostics, backups, cleanup rules, and platform controls.",
