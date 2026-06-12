@@ -92,6 +92,41 @@ function severityColor(severity: string) {
   }
 }
 
+function strengthColor(strength: string) {
+  if (strength === "strong") {
+    return {
+      background: "#dcfce7",
+      color: "#166534",
+    }
+  }
+
+  if (strength === "healthy") {
+    return {
+      background: "#e0f2fe",
+      color: "#075985",
+    }
+  }
+
+  if (strength === "weak") {
+    return {
+      background: "#fee2e2",
+      color: "#991b1b",
+    }
+  }
+
+  if (strength === "watch") {
+    return {
+      background: "#fef3c7",
+      color: "#92400e",
+    }
+  }
+
+  return {
+    background: "#f1f5f9",
+    color: "#475569",
+  }
+}
+
 export default async function AdminAIQualityPage() {
   const admin = await requireAdminUser()
 
@@ -198,6 +233,8 @@ export default async function AdminAIQualityPage() {
               label="Approved Guidance"
               value={summary.approvedGuidance}
             />
+            <MetricCard label="Strong Prompts" value={summary.strongPrompts} />
+            <MetricCard label="Watch / Weak" value={summary.weakPrompts} />
           </section>
 
           <section
@@ -336,6 +373,40 @@ export default async function AdminAIQualityPage() {
                         Priority {suggestion.priority} · {suggestion.module_key} /{" "}
                         {suggestion.feature_key}
                       </p>
+                      <div
+                        style={{
+                          alignItems: "center",
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "8px",
+                          marginTop: "12px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            ...strengthColor(suggestion.strength_signal),
+                            borderRadius: "999px",
+                            fontSize: "11px",
+                            fontWeight: 900,
+                            padding: "5px 9px",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {suggestion.strength_signal} ·{" "}
+                          {suggestion.quality_score}/100
+                        </span>
+                        <span
+                          style={{
+                            color: "#64748b",
+                            fontSize: "12px",
+                            fontWeight: 800,
+                          }}
+                        >
+                          {suggestion.positive_signal_count} positive ·{" "}
+                          {suggestion.negative_signal_count} weak ·{" "}
+                          {suggestion.total_signal_count} total signals
+                        </span>
+                      </div>
                       {suggestion.status === "pending" && (
                         <form
                           action={updateSuggestionStatus}

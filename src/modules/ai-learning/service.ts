@@ -4,11 +4,13 @@ import type {
   AILearningEventPayload,
   AILearningEventRecord,
   AILearningSeverity,
+  AIPromptStrengthSignal,
   AIQualitySummary,
   AIPromptImprovementSuggestion,
 } from "./types"
 
 const MAX_TEXT_LENGTH = 2000
+const SCORING_EVENT_LIMIT = 100
 
 function truncate(value: string | null | undefined, maxLength = MAX_TEXT_LENGTH) {
   if (!value) {
@@ -118,6 +120,135 @@ function buildSuggestionFromEvent(event: AILearningEventRecord) {
   }
 }
 
+function eventQualityScore(event: AILearningEventRecord) {
+  if (typeof event.user_rating === "number") {
+    return event.user_rating * 20
+  }
+
+  if (typeof event.score === "number") {
+    return event.score
+  }
+
+  if (event.severity === "positive") {
+    return 88
+  }
+
+  if (event.severity === "needs_review") {
+    return 58
+  }
+
+  if (event.severity === "critical") {
+    return 32
+  }
+
+  return 70
+}
+
+function strengthSignal({
+  qualityScore,
+  positiveSignalCount,
+  negativeSignalCount,
+  totalSignalCount,
+}: {
+  qualityScore: number
+  positiveSignalCount: number
+  negativeSignalCount: number
+  totalSignalCount: number
+}): AIPromptStrengthSignal {
+  if (totalSignalCount === 0) {
+    return "unproven"
+  }
+
+  if (qualityScore >= 84 && positiveSignalCount >= negativeSignalCount) {
+    return "strong"
+  }
+
+  if (qualityScore >= 72 && negativeSignalCount === 0) {
+    return "healthy"
+  }
+
+  if (qualityScore < 58 || negativeSignalCount > positiveSignalCount) {
+    return "weak"
+  }
+
+  return "watch"
+}
+
+export async function recalculatePromptGuidanceScores(
+  moduleKey: string,
+  featureKey: string,
+) {
+  try {
+    const supabase = createSupabaseAdminClient()
+    const { data, error } = await supabase
+      .from("ai_learning_events")
+      .select("*")
+      .eq("module_key", moduleKey)
+      .eq("feature_key", featureKey)
+      .order("created_at", { ascending: false })
+      .limit(SCORING_EVENT_LIMIT)
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    const events = (data || []) as AILearningEventRecord[]
+    const scoredEvents = events.filter(
+      (event) =>
+        typeof event.user_rating === "number" ||
+        typeof event.score === "number" ||
+        event.severity !== "info",
+    )
+    const totalSignalCount = scoredEvents.length
+    const qualityScore =
+      totalSignalCount === 0
+        ? 70
+        : Math.round(
+            scoredEvents.reduce(
+              (total, event) => total + eventQualityScore(event),
+              0,
+            ) / totalSignalCount,
+          )
+    const positiveSignalCount = scoredEvents.filter(
+      (event) => eventQualityScore(event) >= 80 || event.severity === "positive",
+    ).length
+    const negativeSignalCount = scoredEvents.filter(
+      (event) =>
+        eventQualityScore(event) < 60 ||
+        ["needs_review", "critical"].includes(event.severity),
+    ).length
+    const signal = strengthSignal({
+      qualityScore,
+      positiveSignalCount,
+      negativeSignalCount,
+      totalSignalCount,
+    })
+
+    const { error: updateError } = await supabase
+      .from("ai_prompt_improvement_suggestions")
+      .update({
+        quality_score: qualityScore,
+        strength_signal: signal,
+        positive_signal_count: positiveSignalCount,
+        negative_signal_count: negativeSignalCount,
+        total_signal_count: totalSignalCount,
+        last_scored_at: new Date().toISOString(),
+      })
+      .eq("module_key", moduleKey)
+      .eq("feature_key", featureKey)
+      .neq("status", "rejected")
+
+    if (updateError) {
+      throw new Error(updateError.message)
+    }
+  } catch (error) {
+    console.error(
+      "AI prompt guidance scores were not updated:",
+      error instanceof Error ? error.message : "Unknown error",
+    )
+  }
+}
+
 export async function recordAILearningEvent(payload: AILearningEventPayload) {
   try {
     const supabase = createSupabaseAdminClient()
@@ -157,6 +288,8 @@ export async function recordAILearningEvent(payload: AILearningEventPayload) {
       await supabase.from("ai_prompt_improvement_suggestions").insert(suggestion)
     }
 
+    await recalculatePromptGuidanceScores(payload.moduleKey, payload.featureKey)
+
     return event
   } catch (error) {
     console.error(
@@ -181,6 +314,7 @@ export async function getApprovedPromptGuidance(
       .eq("module_key", moduleKey)
       .eq("feature_key", featureKey)
       .in("status", ["approved", "applied"])
+      .order("quality_score", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(5)
 
@@ -243,6 +377,12 @@ export async function getAIQualitySummary(): Promise<AIQualitySummary> {
     ).length,
     approvedGuidance: suggestions.filter((suggestion) =>
       ["approved", "applied"].includes(suggestion.status),
+    ).length,
+    strongPrompts: suggestions.filter(
+      (suggestion) => suggestion.strength_signal === "strong",
+    ).length,
+    weakPrompts: suggestions.filter((suggestion) =>
+      ["weak", "watch"].includes(suggestion.strength_signal),
     ).length,
     recentEvents: events.slice(0, 12),
     suggestions: suggestions.slice(0, 12),

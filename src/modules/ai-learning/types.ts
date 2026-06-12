@@ -10,6 +10,13 @@ export type AIPromptSuggestionStatus =
   | "rejected"
   | "applied"
 
+export type AIPromptStrengthSignal =
+  | "strong"
+  | "healthy"
+  | "watch"
+  | "weak"
+  | "unproven"
+
 export type AILearningEventPayload = {
   userId?: string | null
   moduleKey: string
@@ -60,6 +67,12 @@ export type AIPromptImprovementSuggestion = {
   rationale: string
   prompt_guidance: string
   evidence: Record<string, unknown>
+  quality_score: number
+  strength_signal: AIPromptStrengthSignal
+  positive_signal_count: number
+  negative_signal_count: number
+  total_signal_count: number
+  last_scored_at: string | null
   reviewer_note: string | null
   reviewed_at: string | null
   applied_at: string | null
@@ -75,6 +88,8 @@ export type AIQualitySummary = {
   averageScore: number | null
   pendingSuggestions: number
   approvedGuidance: number
+  strongPrompts: number
+  weakPrompts: number
   recentEvents: AILearningEventRecord[]
   suggestions: AIPromptImprovementSuggestion[]
 }

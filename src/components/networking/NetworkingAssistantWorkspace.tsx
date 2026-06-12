@@ -11,6 +11,7 @@ import {
   FileText,
   RefreshCcw,
   Sparkles,
+  Star,
 } from "lucide-react"
 
 import type {
@@ -75,6 +76,10 @@ export function NetworkingAssistantWorkspace({
   const [activeTab, setActiveTab] = useState<
     "draft" | "sources" | "templates" | "followup"
   >("draft")
+  const [feedbackRating, setFeedbackRating] = useState(0)
+  const [feedbackNote, setFeedbackNote] = useState("")
+  const [feedbackMessage, setFeedbackMessage] = useState("")
+  const [submittingFeedback, setSubmittingFeedback] = useState(false)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
 
@@ -193,6 +198,60 @@ export function NetworkingAssistantWorkspace({
       ...current,
       [field]: value,
     }))
+  }
+
+  async function submitDraftFeedback() {
+    if (feedbackRating < 1) {
+      setFeedbackMessage("Choose a rating before saving feedback.")
+      return
+    }
+
+    setSubmittingFeedback(true)
+    setFeedbackMessage("")
+
+    try {
+      const response = await fetch("/api/ai/feedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          moduleKey: "networking_outreach",
+          featureKey: getNetworkingFeatureKey(playbook.id),
+          feedbackRating,
+          feedbackNote,
+          inputSummary: [
+            playbook.title,
+            formState.company,
+            formState.role,
+            selectedTemplate?.label,
+          ]
+            .filter(Boolean)
+            .join(" | "),
+          outputSummary: `${assistantDraft.subject}\n\n${assistantDraft.body}`,
+          metadata: {
+            playbookId: playbook.id,
+            templateLabel: selectedTemplate?.label || null,
+            selectedResumeId: selectedResume?.id || null,
+            selectedJobId: selectedJobDescription?.id || null,
+          },
+        }),
+      })
+      const result = await response.json()
+
+      if (!response.ok || result.status !== "success") {
+        throw new Error(result.message || "Feedback request failed.")
+      }
+
+      setFeedbackMessage("Feedback saved for prompt scoring.")
+      setFeedbackNote("")
+    } catch (error) {
+      setFeedbackMessage(
+        error instanceof Error ? error.message : "Feedback could not be saved.",
+      )
+    } finally {
+      setSubmittingFeedback(false)
+    }
   }
 
   return (
@@ -346,6 +405,62 @@ export function NetworkingAssistantWorkspace({
               emptyText=""
               items={playbook.checklist.slice(0, 3)}
             />
+
+            <div className="rounded-[22px] border border-slate-200 bg-white p-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
+                    Prompt Score Signal
+                  </p>
+                  <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                    Rate this draft so the prompt library can identify strong
+                    and weak guidance.
+                  </p>
+                </div>
+
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      key={rating}
+                      type="button"
+                      onClick={() => setFeedbackRating(rating)}
+                      className={`rounded-full p-1.5 transition ${
+                        feedbackRating >= rating
+                          ? "bg-amber-100 text-amber-600"
+                          : "bg-slate-50 text-slate-300 hover:text-amber-500"
+                      }`}
+                      aria-label={`Rate draft ${rating} out of 5`}
+                    >
+                      <Star size={16} fill="currentColor" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                <input
+                  value={feedbackNote}
+                  onChange={(event) => setFeedbackNote(event.target.value)}
+                  placeholder="Optional note about what helped or missed"
+                  className="min-h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-800 outline-none transition focus:border-blue-300 focus:bg-white"
+                />
+
+                <button
+                  type="button"
+                  onClick={submitDraftFeedback}
+                  disabled={submittingFeedback || feedbackRating < 1}
+                  className="inline-flex min-h-10 items-center justify-center rounded-full bg-slate-950 px-4 text-xs font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                >
+                  {submittingFeedback ? "Saving" : "Save Rating"}
+                </button>
+              </div>
+
+              {feedbackMessage && (
+                <p className="mt-2 text-xs font-bold leading-5 text-slate-500">
+                  {feedbackMessage}
+                </p>
+              )}
+            </div>
           </AssistantPanel>
         </div>
       )}
@@ -768,6 +883,22 @@ function buildAssistantDraft({
     subject,
     body,
   }
+}
+
+function getNetworkingFeatureKey(playbookId: string) {
+  if (playbookId === "recruiter-outreach") {
+    return "recruiter_outreach"
+  }
+
+  if (playbookId === "referral-request") {
+    return "referral_request"
+  }
+
+  if (playbookId === "follow-up-message") {
+    return "follow_up"
+  }
+
+  return "check_in"
 }
 
 function replaceTemplateFields(
