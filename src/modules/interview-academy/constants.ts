@@ -231,6 +231,16 @@ export const INTERVIEW_ACADEMY_TOPICS: InterviewAcademyTopic[] = [
         "how to answer tell me about yourself job interview",
         "Build a concise opening answer connected to the target role.",
       ),
+      video(
+        "Company research before an interview",
+        "how to research a company before a job interview",
+        "Learn what to research so your answers and questions sound specific.",
+      ),
+      video(
+        "Best questions to ask interviewers",
+        "best questions to ask at the end of a job interview",
+        "Prepare closing questions that show judgment, interest, and fit.",
+      ),
     ],
     guide: [
       {
@@ -299,6 +309,16 @@ export const INTERVIEW_ACADEMY_TOPICS: InterviewAcademyTopic[] = [
         "Behavioral interview story bank",
         "behavioral interview story bank examples",
         "Choose reusable stories for common interview competencies.",
+      ),
+      video(
+        "STAR method answer examples",
+        "STAR method interview answer examples conflict leadership teamwork",
+        "Study complete sample answers and see how each STAR section works.",
+      ),
+      video(
+        "Turn resume bullets into interview stories",
+        "turn resume bullet points into interview stories STAR method",
+        "Convert achievement bullets into clear, credible spoken examples.",
       ),
     ],
     guide: [
@@ -369,6 +389,16 @@ export const INTERVIEW_ACADEMY_TOPICS: InterviewAcademyTopic[] = [
         "video interview tips job interview preparation",
         "Prepare camera, environment, eye line, notes, and delivery.",
       ),
+      video(
+        "Speak clearly under pressure",
+        "how to speak clearly in a job interview nervous confidence",
+        "Improve pacing, pauses, filler-word control, and answer delivery.",
+      ),
+      video(
+        "Recover from difficult interview moments",
+        "how to recover from a bad answer in a job interview",
+        "Practice calm recovery when an answer starts poorly or you need time.",
+      ),
     ],
     guide: [
       {
@@ -437,6 +467,16 @@ export const INTERVIEW_ACADEMY_TOPICS: InterviewAcademyTopic[] = [
         "Salary expectations recruiter screen",
         "how to answer salary expectations recruiter screen",
         "Handle compensation questions without weakening your position.",
+      ),
+      video(
+        "Recruiter screen questions",
+        "recruiter phone screen questions and answers",
+        "Prepare for the most common first-round recruiter questions.",
+      ),
+      video(
+        "Explain why you want the role",
+        "how to answer why do you want this job recruiter screen",
+        "Connect motivation, role fit, and company interest concisely.",
       ),
     ],
     guide: [
@@ -507,6 +547,16 @@ export const INTERVIEW_ACADEMY_TOPICS: InterviewAcademyTopic[] = [
         "how to answer conflict failure interview questions",
         "Prepare mature answers for difficult behavioral prompts.",
       ),
+      video(
+        "Teamwork behavioral interview answers",
+        "teamwork behavioral interview questions and answers examples",
+        "Show collaboration, ownership, and communication without sounding generic.",
+      ),
+      video(
+        "Problem solving interview answers",
+        "problem solving behavioral interview questions and answers examples",
+        "Structure examples that show judgment, process, and measurable outcomes.",
+      ),
     ],
     guide: [
       {
@@ -575,6 +625,16 @@ export const INTERVIEW_ACADEMY_TOPICS: InterviewAcademyTopic[] = [
         "Case and scenario interview tips",
         "case interview scenario interview tips job interview",
         "Practice structuring ambiguous work scenarios.",
+      ),
+      video(
+        "Explain technical decisions",
+        "how to explain technical decisions in an interview tradeoffs",
+        "Practice communicating process, assumptions, and tradeoffs clearly.",
+      ),
+      video(
+        "Portfolio and work sample walkthroughs",
+        "portfolio walkthrough interview tips work sample presentation",
+        "Prepare a concise walkthrough of work samples, outcomes, and decisions.",
       ),
     ],
     guide: [
@@ -645,6 +705,16 @@ export const INTERVIEW_ACADEMY_TOPICS: InterviewAcademyTopic[] = [
         "management interview preparation coaching delegation accountability",
         "Practice manager-level stories and decision examples.",
       ),
+      video(
+        "Leadership interview answer examples",
+        "leadership interview questions and answers examples coaching conflict",
+        "Study leadership examples that balance people context and outcomes.",
+      ),
+      video(
+        "Influence without authority",
+        "influence without authority interview answer example",
+        "Prepare stories about alignment, persuasion, and stakeholder trust.",
+      ),
     ],
     guide: [
       {
@@ -713,6 +783,16 @@ export const INTERVIEW_ACADEMY_TOPICS: InterviewAcademyTopic[] = [
         "How to answer employment gaps interview",
         "how to explain employment gap job interview",
         "Handle gaps and transitions directly and professionally.",
+      ),
+      video(
+        "How to answer why did you leave your job",
+        "how to answer why did you leave your last job interview",
+        "Keep job-change answers direct, mature, and forward-looking.",
+      ),
+      video(
+        "When you do not know the answer",
+        "what to say when you don't know the answer in an interview",
+        "Practice recovery language that protects credibility under pressure.",
       ),
     ],
     guide: [
@@ -783,6 +863,16 @@ export const INTERVIEW_ACADEMY_TOPICS: InterviewAcademyTopic[] = [
         "when to follow up after job interview",
         "Choose timing that is professional and effective.",
       ),
+      video(
+        "Thank-you email examples",
+        "job interview thank you email examples after interview",
+        "See specific message structures that reinforce fit after the interview.",
+      ),
+      video(
+        "Follow-up after no response",
+        "how to follow up after interview no response examples",
+        "Write status-check messages that are clear without sounding pushy.",
+      ),
     ],
     guide: [
       {
@@ -851,6 +941,16 @@ export const INTERVIEW_ACADEMY_TOPICS: InterviewAcademyTopic[] = [
         "How to evaluate a job offer",
         "how to evaluate a job offer benefits salary negotiation",
         "Compare compensation, benefits, growth, risk, and lifestyle factors.",
+      ),
+      video(
+        "Answer salary expectations",
+        "how to answer salary expectations interview question",
+        "Prepare compensation language for recruiter screens and final rounds.",
+      ),
+      video(
+        "Counteroffer message examples",
+        "job offer counteroffer email examples salary negotiation",
+        "Learn wording for respectful, evidence-based counteroffers.",
       ),
     ],
     guide: [
