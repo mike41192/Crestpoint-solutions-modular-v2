@@ -124,6 +124,7 @@ export default function CompanyAdminLoginPage() {
               method="post"
               className="mt-6 grid gap-4"
             >
+              <input type="hidden" name="companyAdminLogin" value="true" />
               <input type="hidden" name="redirectTo" value={redirectTo} />
 
               <label className="block">

@@ -215,7 +215,14 @@ export async function POST(request: NextRequest) {
     const password = String(formData.get("password") || "")
     const redirectTo = cleanRedirectPath(formData.get("redirectTo"))
     const isAdminLogin = String(formData.get("adminLogin") || "") === "true"
-    const loginPath = isAdminLogin ? "/admin/login" : "/auth/login"
+    const isCompanyAdminLogin =
+      String(formData.get("companyAdminLogin") || "") === "true" ||
+      redirectTo.startsWith("/company-admin")
+    const loginPath = isAdminLogin
+      ? "/admin/login"
+      : isCompanyAdminLogin
+        ? "/company-admin/login"
+        : "/auth/login"
 
     if (!email || !password) {
       return redirectToLogin(
