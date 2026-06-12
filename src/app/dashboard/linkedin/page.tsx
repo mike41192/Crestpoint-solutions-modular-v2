@@ -1,8 +1,11 @@
 import Link from "next/link"
+import type { ComponentType } from "react"
 import {
   ArrowRight,
   BadgeCheck,
   BriefcaseBusiness,
+  CheckCircle2,
+  Clock3,
   FileText,
   Search,
   Sparkles,
@@ -12,56 +15,27 @@ import {
 
 import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
 import { FirstUseTutorial } from "@/components/onboarding/FirstUseTutorial"
+import {
+  getLinkedInOptimizerPageContent,
+  type LinkedInOptimizerIconKey,
+} from "@/modules/linkedin-optimizer"
 
-const optimizationAreas = [
-  {
-    title: "Headline Positioning",
-    description:
-      "Shape a recruiter-friendly headline around target roles, industries, and searchable keywords.",
-    icon: Target,
-  },
-  {
-    title: "About Section",
-    description:
-      "Turn your summary into a concise career narrative that supports your resume and applications.",
-    icon: FileText,
-  },
-  {
-    title: "Keyword Visibility",
-    description:
-      "Align profile language with job descriptions, ATS findings, and recruiter search patterns.",
-    icon: Search,
-  },
-  {
-    title: "Relationship Signals",
-    description:
-      "Use contacts, companies, and outreach context to guide profile updates before networking.",
-    icon: Users,
-  },
-]
-
-const workflowLinks = [
-  {
-    title: "Review Target Jobs",
-    description: "Use saved job descriptions to identify recurring profile keywords.",
-    href: "/dashboard/job-descriptions",
-    icon: BriefcaseBusiness,
-  },
-  {
-    title: "Open Career CRM",
-    description: "Review recruiters and networking contacts before profile outreach.",
-    href: "/dashboard/contacts",
-    icon: Users,
-  },
-  {
-    title: "Run ATS Scoring",
-    description: "Use resume gaps to find missing LinkedIn positioning signals.",
-    href: "/dashboard/ats",
-    icon: BadgeCheck,
-  },
-]
+const iconMap: Record<
+  LinkedInOptimizerIconKey,
+  ComponentType<{ size?: number; className?: string }>
+> = {
+  badge: BadgeCheck,
+  briefcase: BriefcaseBusiness,
+  file: FileText,
+  search: Search,
+  sparkles: Sparkles,
+  target: Target,
+  users: Users,
+}
 
 export default function LinkedInDashboardPage() {
+  const { hero, sections, workflowLinks } = getLinkedInOptimizerPageContent()
+
   return (
     <ModulePageLayout
       moduleKey="linkedin_optimizer"
@@ -74,16 +48,15 @@ export default function LinkedInDashboardPage() {
             <div>
               <div className="mb-4 flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-blue-100">
                 <Sparkles size={14} />
-                Profile Visibility
+                {hero.eyebrow}
               </div>
 
               <h2 className="text-3xl font-black tracking-tight">
-                Build a recruiter-readable LinkedIn presence
+                {hero.title}
               </h2>
 
               <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
-                Use your resume, ATS gaps, target jobs, and Career CRM context
-                to tighten how you show up in recruiter searches and outreach.
+                {hero.description}
               </p>
             </div>
 
@@ -93,14 +66,14 @@ export default function LinkedInDashboardPage() {
               </p>
 
               <h3 className="mt-2 text-xl font-black">
-                Compare profile keywords against saved job descriptions
+                {hero.nextStepTitle}
               </h3>
 
               <Link
-                href="/dashboard/job-descriptions"
+                href={hero.nextStepHref}
                 className="mt-4 inline-flex items-center gap-2 rounded-full bg-blue-500 px-4 py-2.5 text-sm font-black text-white transition hover:bg-blue-400"
               >
-                Open Job Descriptions
+                {hero.nextStepLabel}
                 <ArrowRight size={16} />
               </Link>
             </div>
@@ -109,29 +82,71 @@ export default function LinkedInDashboardPage() {
 
         <FirstUseTutorial moduleKey="linkedin_optimizer" />
 
-        <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {optimizationAreas.map((area) => {
-            const Icon = area.icon
+        <section className="grid gap-5">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-600">
+              Profile Optimization Playbooks
+            </p>
 
-            return (
-              <article
-                key={area.title}
-                className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
-              >
-                <div className="w-fit rounded-2xl bg-blue-50 p-3 text-blue-700">
-                  <Icon size={20} />
-                </div>
+            <h3 className="mt-1 text-2xl font-black text-slate-950">
+              Tighten the profile sections recruiters inspect first
+            </h3>
+          </div>
 
-                <h3 className="mt-4 text-lg font-black text-slate-950">
-                  {area.title}
-                </h3>
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {sections.map((section) => {
+              const Icon = iconMap[section.iconKey]
 
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  {area.description}
-                </p>
-              </article>
-            )
-          })}
+              return (
+                <Link
+                  key={section.id}
+                  href={section.href}
+                  className="group rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="w-fit rounded-2xl bg-blue-50 p-3 text-blue-700">
+                      <Icon size={20} />
+                    </div>
+
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+                      <Clock3 size={13} />
+                      {section.estimatedTime}
+                    </span>
+                  </div>
+
+                  <p className="mt-4 text-xs font-black uppercase tracking-[0.14em] text-blue-600">
+                    {section.cardLabel}
+                  </p>
+
+                  <h3 className="mt-2 text-lg font-black text-slate-950">
+                    {section.title}
+                  </h3>
+
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    {section.description}
+                  </p>
+
+                  <div className="mt-4 border-t border-slate-100 pt-4">
+                    <div className="flex items-start gap-2 text-xs font-semibold leading-5 text-slate-600">
+                      <CheckCircle2
+                        size={14}
+                        className="mt-0.5 shrink-0 text-emerald-600"
+                      />
+                      {section.outcome}
+                    </div>
+                  </div>
+
+                  <div className="mt-5 inline-flex items-center gap-2 text-sm font-black text-blue-700">
+                    Open playbook
+                    <ArrowRight
+                      size={16}
+                      className="transition group-hover:translate-x-1"
+                    />
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
         </section>
 
         <section className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm">
@@ -147,7 +162,7 @@ export default function LinkedInDashboardPage() {
 
           <div className="grid gap-4 lg:grid-cols-3">
             {workflowLinks.map((item) => {
-              const Icon = item.icon
+              const Icon = iconMap[item.iconKey]
 
               return (
                 <Link
