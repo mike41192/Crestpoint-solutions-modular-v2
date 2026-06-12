@@ -72,6 +72,9 @@ export function NetworkingAssistantWorkspace({
   const [formState, setFormState] = useState<AssistantFormState>(
     defaultFormState,
   )
+  const [activeTab, setActiveTab] = useState<
+    "draft" | "sources" | "templates" | "followup"
+  >("draft")
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
 
@@ -216,67 +219,53 @@ export function NetworkingAssistantWorkspace({
         </div>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
-        <div className="grid gap-4">
-          <AssistantPanel
-            eyebrow="Source Data"
-            title="Resume and job context"
-            icon={Sparkles}
-          >
-            <SourceSelect
-              label="Resume Builder"
-              value={selectedResumeId}
-              emptyLabel="No saved resumes yet"
-              href="/dashboard/resume"
-              options={resumes.map((resume, index) => ({
-                value: resume.id || `resume-${index}`,
-                label: resume.title || `Saved resume ${index + 1}`,
-              }))}
-              onChange={setSelectedResumeId}
-            />
+      <div className="mb-5 grid grid-cols-2 gap-2 rounded-[24px] border border-slate-200 bg-slate-50 p-2 lg:grid-cols-4">
+        <TabButton
+          label="Draft"
+          active={activeTab === "draft"}
+          onClick={() => setActiveTab("draft")}
+        />
+        <TabButton
+          label="Sources"
+          active={activeTab === "sources"}
+          onClick={() => setActiveTab("sources")}
+        />
+        <TabButton
+          label="Templates"
+          active={activeTab === "templates"}
+          onClick={() => setActiveTab("templates")}
+        />
+        <TabButton
+          label="Follow-Up"
+          active={activeTab === "followup"}
+          onClick={() => setActiveTab("followup")}
+        />
+      </div>
 
-            <SourceSelect
-              label="Job Description Library"
-              value={selectedJobId}
-              emptyLabel="No saved job descriptions yet"
-              href="/dashboard/job-descriptions"
-              options={jobDescriptions.map((job, index) => ({
-                value: job.id || `job-${index}`,
-                label:
-                  [job.company, job.role || job.title].filter(Boolean).join(" - ") ||
-                  `Saved job ${index + 1}`,
-              }))}
-              onChange={(value) => {
-                setSelectedJobId(value)
-                const job = jobDescriptions.find((item) => item.id === value)
-                if (job) {
-                  setFormState((current) => ({
-                    ...current,
-                    company: job.company || current.company,
-                    role: job.role || job.title || current.role,
-                  }))
-                }
-              }}
-            />
-
-            <SignalList
-              title="Resume proof points"
-              emptyText="Save a resume to pull achievements, skills, and summary language."
-              items={resumeSignals.slice(0, 5)}
-            />
-
-            <SignalList
-              title="Job description signals"
-              emptyText="Save a job description to pull company, role, requirements, and keywords."
-              items={jobSignals.slice(0, 5)}
-            />
-          </AssistantPanel>
-
+      {activeTab === "draft" && (
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
           <AssistantPanel
             eyebrow="Personalization"
             title="Relationship details"
             icon={ContactRound}
           >
+            <label className="grid gap-2">
+              <span className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
+                Message type
+              </span>
+              <select
+                value={selectedTemplateLabel}
+                onChange={(event) => setSelectedTemplateLabel(event.target.value)}
+                className="min-h-11 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+              >
+                {playbook.templates.map((template) => (
+                  <option key={template.label} value={template.label}>
+                    {template.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
             <InputField
               label="Contact name"
               value={formState.contactName}
@@ -320,31 +309,12 @@ export function NetworkingAssistantWorkspace({
               onChange={(value) => updateField("personalUpdate", value)}
             />
           </AssistantPanel>
-        </div>
 
-        <div className="grid gap-4">
           <AssistantPanel
             eyebrow="Assistant Draft"
             title="Message composer"
             icon={FileText}
           >
-            <label className="grid gap-2">
-              <span className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                Message type
-              </span>
-              <select
-                value={selectedTemplateLabel}
-                onChange={(event) => setSelectedTemplateLabel(event.target.value)}
-                className="min-h-11 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-              >
-                {playbook.templates.map((template) => (
-                  <option key={template.label} value={template.label}>
-                    {template.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
             <div className="rounded-[24px] border border-blue-100 bg-blue-50 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -370,36 +340,179 @@ export function NetworkingAssistantWorkspace({
                 {assistantDraft.body}
               </p>
             </div>
+
+            <SignalList
+              title="Draft quality checks"
+              emptyText=""
+              items={playbook.checklist.slice(0, 3)}
+            />
+          </AssistantPanel>
+        </div>
+      )}
+
+      {activeTab === "sources" && (
+        <div className="grid gap-4 xl:grid-cols-2">
+          <AssistantPanel
+            eyebrow="Source Data"
+            title="Resume and job context"
+            icon={Sparkles}
+          >
+            <SourceSelect
+              label="Resume Builder"
+              value={selectedResumeId}
+              emptyLabel="No saved resumes yet"
+              href="/dashboard/resume"
+              options={resumes.map((resume, index) => ({
+                value: resume.id || `resume-${index}`,
+                label: resume.title || `Saved resume ${index + 1}`,
+              }))}
+              onChange={setSelectedResumeId}
+            />
+
+            <SourceSelect
+              label="Job Description Library"
+              value={selectedJobId}
+              emptyLabel="No saved job descriptions yet"
+              href="/dashboard/job-descriptions"
+              options={jobDescriptions.map((job, index) => ({
+                value: job.id || `job-${index}`,
+                label:
+                  [job.company, job.role || job.title].filter(Boolean).join(" - ") ||
+                  `Saved job ${index + 1}`,
+              }))}
+              onChange={(value) => {
+                setSelectedJobId(value)
+                const job = jobDescriptions.find((item) => item.id === value)
+                if (job) {
+                  setFormState((current) => ({
+                    ...current,
+                    company: job.company || current.company,
+                    role: job.role || job.title || current.role,
+                  }))
+                }
+              }}
+            />
           </AssistantPanel>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <AssistantPanel
-              eyebrow="Follow-Up Manager"
-              title="What to do next"
-              icon={CalendarClock}
-            >
-              <SignalList
-                title="Recommended actions"
-                emptyText=""
-                items={getManagedNextActions(playbook.id)}
-              />
-            </AssistantPanel>
+          <AssistantPanel
+            eyebrow="Available Signals"
+            title="What the assistant can use"
+            icon={BriefcaseBusiness}
+          >
+            <SignalList
+              title="Resume proof points"
+              emptyText="Save a resume to pull achievements, skills, and summary language."
+              items={resumeSignals.slice(0, 5)}
+            />
 
-            <AssistantPanel
-              eyebrow="Quality Check"
-              title="Before you send"
-              icon={CheckCircle2}
+            <SignalList
+              title="Job description signals"
+              emptyText="Save a job description to pull company, role, requirements, and keywords."
+              items={jobSignals.slice(0, 5)}
+            />
+          </AssistantPanel>
+        </div>
+      )}
+
+      {activeTab === "templates" && (
+        <div className="grid gap-4">
+          {playbook.templates.map((template) => (
+            <article
+              key={template.label}
+              className="rounded-[24px] border border-slate-200 bg-slate-50 p-4"
             >
-              <SignalList
-                title="Assistant checks"
-                emptyText=""
-                items={playbook.checklist.slice(0, 4)}
-              />
-            </AssistantPanel>
+              <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+                <div>
+                  <div className="w-fit rounded-2xl bg-blue-50 p-3 text-blue-700">
+                    <FileText size={18} />
+                  </div>
+
+                  <p className="mt-4 text-xs font-black uppercase tracking-[0.14em] text-blue-600">
+                    {template.label}
+                  </p>
+
+                  <h4 className="mt-2 text-lg font-black text-slate-950">
+                    {template.subject}
+                  </h4>
+
+                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
+                    {template.bestFor}
+                  </p>
+                </div>
+
+                <div className="rounded-[20px] bg-white p-4 shadow-sm">
+                  <p className="whitespace-pre-line text-sm font-semibold leading-7 text-slate-700">
+                    {template.body}
+                  </p>
+                </div>
+              </div>
+            </article>
+          ))}
+
+          <div className="rounded-[24px] border border-blue-100 bg-blue-50 p-4">
+            <p className="text-sm font-semibold leading-6 text-blue-950">
+              {playbook.usageNote}
+            </p>
           </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === "followup" && (
+        <div className="grid gap-4 xl:grid-cols-3">
+          <AssistantPanel
+            eyebrow="Follow-Up Manager"
+            title="What to do next"
+            icon={CalendarClock}
+          >
+            <SignalList
+              title="Recommended actions"
+              emptyText=""
+              items={getManagedNextActions(playbook.id)}
+            />
+          </AssistantPanel>
+
+          <AssistantPanel
+            eyebrow="Before Sending"
+            title="Quality checks"
+            icon={CheckCircle2}
+          >
+            <SignalList title="Check message" emptyText="" items={playbook.checklist} />
+          </AssistantPanel>
+
+          <AssistantPanel
+            eyebrow="After Sending"
+            title="Keep the relationship moving"
+            icon={ContactRound}
+          >
+            <SignalList title="Next steps" emptyText="" items={playbook.nextActions} />
+          </AssistantPanel>
+        </div>
+      )}
     </section>
+  )
+}
+
+function TabButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`min-h-11 rounded-[18px] px-4 text-sm font-black transition ${
+        active
+          ? "bg-white text-blue-700 shadow-sm"
+          : "text-slate-600 hover:bg-white/70 hover:text-slate-950"
+      }`}
+    >
+      {label}
+    </button>
   )
 }
 

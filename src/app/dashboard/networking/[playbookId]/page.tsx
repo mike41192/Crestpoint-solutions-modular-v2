@@ -6,10 +6,7 @@ import {
   ArrowRight,
   BriefcaseBusiness,
   CalendarClock,
-  CheckCircle2,
-  ClipboardCheck,
   ContactRound,
-  FileText,
   MessageSquareText,
   Send,
   Sparkles,
@@ -157,74 +154,6 @@ export default async function NetworkingPlaybookPage({
 
         <NetworkingAssistantWorkspace playbook={playbook} />
 
-        <section className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-600">
-              Ready-To-Use Templates
-            </p>
-
-            <h3 className="mt-1 text-xl font-black text-slate-950">
-              Choose a draft and replace the fields with your source context
-            </h3>
-          </div>
-
-          <div className="grid gap-4">
-            {playbook.templates.map((template) => (
-              <article
-                key={template.label}
-                className="rounded-[24px] border border-slate-200 bg-slate-50 p-4"
-              >
-                <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-                  <div>
-                    <div className="w-fit rounded-2xl bg-blue-50 p-3 text-blue-700">
-                      <FileText size={18} />
-                    </div>
-
-                    <p className="mt-4 text-xs font-black uppercase tracking-[0.14em] text-blue-600">
-                      {template.label}
-                    </p>
-
-                    <h4 className="mt-2 text-lg font-black text-slate-950">
-                      {template.subject}
-                    </h4>
-
-                    <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
-                      {template.bestFor}
-                    </p>
-                  </div>
-
-                  <div className="rounded-[20px] bg-white p-4 shadow-sm">
-                    <p className="whitespace-pre-line text-sm font-semibold leading-7 text-slate-700">
-                      {template.body}
-                    </p>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <div className="mt-4 rounded-[24px] border border-blue-100 bg-blue-50 p-4">
-            <p className="text-sm font-semibold leading-6 text-blue-950">
-              {playbook.usageNote}
-            </p>
-          </div>
-        </section>
-
-        <section className="grid gap-4 xl:grid-cols-2">
-          <Panel
-            title="Before Sending"
-            icon={ClipboardCheck}
-            items={playbook.checklist}
-            tone="blue"
-          />
-          <Panel
-            title="After Sending"
-            icon={CheckCircle2}
-            items={playbook.nextActions}
-            tone="emerald"
-          />
-        </section>
-
         {relatedPlaybooks.length > 0 && (
           <section className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm">
             <div className="mb-4">
@@ -278,45 +207,5 @@ export default async function NetworkingPlaybookPage({
         )}
       </div>
     </ModulePageLayout>
-  )
-}
-
-type PanelProps = {
-  title: string
-  icon: ComponentType<{ size?: number; className?: string }>
-  items: string[]
-  tone: "amber" | "blue" | "emerald"
-}
-
-const panelTone: Record<PanelProps["tone"], string> = {
-  amber: "bg-amber-50 text-amber-700",
-  blue: "bg-blue-50 text-blue-700",
-  emerald: "bg-emerald-50 text-emerald-700",
-}
-
-function Panel({ title, icon: Icon, items, tone }: PanelProps) {
-  return (
-    <article className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-      <div className={`w-fit rounded-2xl p-3 ${panelTone[tone]}`}>
-        <Icon size={20} />
-      </div>
-
-      <h3 className="mt-4 text-lg font-black text-slate-950">{title}</h3>
-
-      <div className="mt-4 grid gap-3">
-        {items.map((item) => (
-          <div
-            key={item}
-            className="flex items-start gap-2 text-sm font-semibold leading-6 text-slate-600"
-          >
-            <CheckCircle2
-              size={15}
-              className="mt-1 shrink-0 text-emerald-600"
-            />
-            {item}
-          </div>
-        ))}
-      </div>
-    </article>
   )
 }
