@@ -291,6 +291,63 @@ async function saveOrganizationMember({
   }
 }
 
+async function saveMembershipAssignment({
+  userId,
+  tier,
+  status,
+  organizationId,
+  assignedBy,
+}: {
+  userId: string
+  tier: MembershipTier
+  status: string
+  organizationId: string
+  assignedBy: string
+}) {
+  const supabase = createSupabaseAdminClient()
+  const timestamp = new Date().toISOString()
+  const payload = {
+    plan_name: tier,
+    status,
+    organization_id: organizationId,
+    assigned_by: assignedBy,
+    assigned_at: timestamp,
+  }
+
+  const { data: existingMembership, error: lookupError } = await supabase
+    .from("memberships")
+    .select("user_id")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle()
+
+  if (lookupError) {
+    throw new Error(lookupError.message)
+  }
+
+  if (existingMembership?.user_id) {
+    const { error } = await supabase
+      .from("memberships")
+      .update(payload)
+      .eq("user_id", userId)
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return
+  }
+
+  const { error } = await supabase.from("memberships").insert({
+    user_id: userId,
+    ...payload,
+  })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
 async function loadProfiles(userIds: string[]) {
   if (userIds.length === 0) {
     return []
@@ -319,6 +376,7 @@ async function loadMemberships(userIds: string[]) {
     .from("memberships")
     .select("user_id, plan_name, status, organization_id, assigned_at")
     .in("user_id", userIds)
+    .order("assigned_at", { ascending: true })
 
   if (error) {
     throw new Error(error.message)
@@ -768,17 +826,26 @@ export async function POST(request: Request) {
           updated_at: new Date().toISOString(),
         })
 
-        await supabase.from("memberships").upsert(
-          {
-            user_id: userId,
-            plan_name: assignedTier,
+        try {
+          await saveMembershipAssignment({
+            userId,
+            tier: assignedTier,
             status: "active",
-            organization_id: organizationId,
-            assigned_by: manager.userId,
-            assigned_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id" },
-        )
+            organizationId,
+            assignedBy: manager.userId,
+          })
+        } catch (error) {
+          return Response.json(
+            {
+              status: "error",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Unable to save membership tier.",
+            },
+            { status: 500, headers: NO_STORE_HEADERS },
+          )
+        }
       }
 
       await writeAudit({
@@ -909,19 +976,28 @@ export async function POST(request: Request) {
           })
           .eq("id", userId)
 
-        await supabase.from("memberships").upsert(
-          {
-            user_id: userId,
-            plan_name: isCompanyScope(manager.scope)
+        try {
+          await saveMembershipAssignment({
+            userId,
+            tier: isCompanyScope(manager.scope)
               ? cleanTier(organization?.tier)
               : tier,
             status: status === "suspended" ? "paused" : "active",
-            organization_id: organizationId,
-            assigned_by: manager.userId,
-            assigned_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id" },
-        )
+            organizationId,
+            assignedBy: manager.userId,
+          })
+        } catch (error) {
+          return Response.json(
+            {
+              status: "error",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Unable to save membership tier.",
+            },
+            { status: 500, headers: NO_STORE_HEADERS },
+          )
+        }
       }
 
       await writeAudit({
