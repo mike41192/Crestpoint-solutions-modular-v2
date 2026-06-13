@@ -104,7 +104,7 @@ export default function AdminLoginPage() {
               method="post"
               className="mt-6 grid gap-4"
             >
-              <input type="hidden" name="redirectTo" value="/admin" />
+              <input type="hidden" name="redirectTo" value="/admin/settings" />
               <input type="hidden" name="adminLogin" value="true" />
 
               <label className="block">
