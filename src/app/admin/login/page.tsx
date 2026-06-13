@@ -8,8 +8,9 @@ import {
   LockKeyhole,
   Mail,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react"
+
+import { BrandIdentity } from "@/components/branding/BrandIdentity"
 
 export default function AdminLoginPage() {
   const [message, setMessage] = useState("")
@@ -28,18 +29,7 @@ export default function AdminLoginPage() {
     <main className="min-h-screen bg-slate-100">
       <header className="mx-auto flex max-w-[1300px] items-center justify-between px-5 py-5 lg:px-8">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-white">
-            <Sparkles size={20} />
-          </div>
-
-          <div>
-            <p className="text-sm font-black text-slate-950">
-              Crestpoint Solutions
-            </p>
-            <p className="text-xs font-semibold text-slate-500">
-              Admin Control Center
-            </p>
-          </div>
+          <BrandIdentity subtitle="Admin Control Center" />
         </Link>
 
         <div className="flex items-center gap-2">

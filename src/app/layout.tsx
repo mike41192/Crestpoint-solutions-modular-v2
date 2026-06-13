@@ -2,6 +2,8 @@ import "./globals.css"
 import type { Metadata } from "next"
 import type { ReactNode } from "react"
 
+import { BrandRuntime } from "@/components/branding/BrandRuntime"
+
 export const metadata: Metadata = {
   title: "Crestpoint Solutions",
   description: "Crestpoint Modular V2 Career Operating System",
@@ -15,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-slate-100 text-slate-950 antialiased">
+        <BrandRuntime />
         {children}
       </body>
     </html>

@@ -35,6 +35,7 @@ import {
 // =====================================================
 
 import { LogoutButton } from "@/components/auth/LogoutButton"
+import { BrandIdentity } from "@/components/branding/BrandIdentity"
 import { getModuleAccess } from "@/lib/access/getModuleAccess"
 import { normalizeMembershipTier } from "@/lib/config/limits.config"
 import {
@@ -138,19 +139,7 @@ export function ModulePageLayout({
         <aside className="hidden lg:block">
           <div className="sticky top-5 rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
             <div className="mb-5 rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-5 text-white">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur">
-                  <span className="text-xl font-black text-blue-300">C</span>
-                </div>
-
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-200">
-                    Crestpoint
-                  </p>
-
-                  <h2 className="text-xl font-black">Career OS</h2>
-                </div>
-              </div>
+              <BrandIdentity variant="sidebar" />
 
               <p className="mt-4 text-sm leading-6 text-slate-300">
                 Resume, interview, job search, and career growth tools.

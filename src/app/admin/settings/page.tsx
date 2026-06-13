@@ -161,7 +161,7 @@ const maintenanceLinks = [
   },
   {
     title: "Appearance",
-    description: "Older layout and appearance review page.",
+    description: "Manage logo, favicon, names, and brand color.",
     href: "/admin/settings/appearance",
     icon: SlidersHorizontal,
   },
