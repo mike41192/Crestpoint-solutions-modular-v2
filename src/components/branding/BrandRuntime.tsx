@@ -2,7 +2,10 @@
 
 import { useEffect } from "react"
 
-import type { BrandSettings } from "@/lib/branding/brand-config"
+import {
+  isBrowserIconUrl,
+  type BrandSettings,
+} from "@/lib/branding/brand-config"
 
 type BrandResponse = {
   status: string
@@ -39,7 +42,7 @@ export function BrandRuntime() {
 
         document.title = settings.brandName
 
-        if (settings.faviconUrl) {
+        if (settings.faviconUrl && isBrowserIconUrl(settings.faviconUrl)) {
           setFavicon(settings.faviconUrl)
         }
 

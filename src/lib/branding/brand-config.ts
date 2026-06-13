@@ -19,8 +19,11 @@ export const defaultBrandSettings: BrandSettings = {
 }
 
 export const BRAND_SETTING_ID = "global"
+export const BRAND_ASSETS_BUCKET = "brand-assets"
 
 const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/
+const IMAGE_ASSET_PATTERN = /\.(png|jpe?g|webp|gif|svg|ico)(\?.*)?$/i
+const ICON_ASSET_PATTERN = /\.(ico|png|svg|webp|gif)(\?.*)?$/i
 
 export function cleanBrandText(value: unknown, fallback: string, maxLength = 80) {
   if (typeof value !== "string") {
@@ -119,5 +122,28 @@ export function toBrandSettingsRow(settings: BrandSettings, updatedBy: string | 
     primary_color: settings.primaryColor,
     updated_by: updatedBy,
     updated_at: new Date().toISOString(),
+  }
+}
+
+export function isImageAssetUrl(value: string) {
+  return IMAGE_ASSET_PATTERN.test(value)
+}
+
+export function isBrowserIconUrl(value: string) {
+  return ICON_ASSET_PATTERN.test(value)
+}
+
+export function assetFileName(value: string) {
+  if (!value) {
+    return ""
+  }
+
+  try {
+    const url = value.startsWith("/") ? new URL(value, "https://local.app") : new URL(value)
+    const segment = url.pathname.split("/").filter(Boolean).pop()
+
+    return segment ? decodeURIComponent(segment) : value
+  } catch {
+    return value.split("/").filter(Boolean).pop() || value
   }
 }

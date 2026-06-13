@@ -4,16 +4,21 @@ import type { ReactNode } from "react"
 import { useEffect, useState } from "react"
 import {
   BadgeCheck,
+  FileText,
   Image as ImageIcon,
   Loader2,
   Paintbrush,
   RefreshCw,
   RotateCcw,
   Save,
+  Upload,
 } from "lucide-react"
 
 import {
+  assetFileName,
   defaultBrandSettings,
+  isBrowserIconUrl,
+  isImageAssetUrl,
   type BrandSettings,
 } from "@/lib/branding/brand-config"
 
@@ -21,6 +26,14 @@ type BrandApiResponse = {
   status: string
   message?: string
   settings?: BrandSettings
+}
+
+type UploadApiResponse = {
+  status: string
+  message?: string
+  publicUrl?: string
+  fileName?: string
+  contentType?: string
 }
 
 const colorPresets = [
@@ -36,6 +49,8 @@ export default function AdminAppearanceSettingsPage() {
   const [settings, setSettings] = useState<BrandSettings>(defaultBrandSettings)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [uploadingFavicon, setUploadingFavicon] = useState(false)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
 
@@ -113,6 +128,48 @@ export default function AdminAppearanceSettingsPage() {
     setSettings(defaultBrandSettings)
     setMessage("Defaults staged. Save changes to publish them.")
     setError("")
+  }
+
+  async function uploadBrandAsset(assetType: "logo" | "favicon", file: File | null) {
+    if (!file) {
+      return
+    }
+
+    const setUploading =
+      assetType === "logo" ? setUploadingLogo : setUploadingFavicon
+
+    setUploading(true)
+    setMessage("")
+    setError("")
+
+    try {
+      const formData = new FormData()
+      formData.append("assetType", assetType)
+      formData.append("file", file)
+
+      const response = await fetch("/api/admin/branding/upload", {
+        method: "POST",
+        body: formData,
+      })
+      const payload = (await response.json()) as UploadApiResponse
+
+      if (!response.ok || payload.status !== "success" || !payload.publicUrl) {
+        throw new Error(payload.message || "Brand asset could not be uploaded.")
+      }
+
+      updateField(assetType === "logo" ? "logoUrl" : "faviconUrl", payload.publicUrl)
+      setMessage(
+        `${payload.fileName || file.name} uploaded and staged. Save branding to publish it.`,
+      )
+    } catch (uploadError) {
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Brand asset could not be uploaded.",
+      )
+    } finally {
+      setUploading(false)
+    }
   }
 
   useEffect(() => {
@@ -196,22 +253,27 @@ export default function AdminAppearanceSettingsPage() {
 
             <Panel title="Assets">
               <div className="grid gap-4">
-                <TextField
+                <AssetField
                   label="Logo URL"
                   value={settings.logoUrl}
                   onChange={(value) => updateField("logoUrl", value)}
+                  onUpload={(file) => uploadBrandAsset("logo", file)}
+                  uploading={uploadingLogo}
                   placeholder="https://example.com/logo.png"
                 />
-                <TextField
+                <AssetField
                   label="Favicon URL"
                   value={settings.faviconUrl}
                   onChange={(value) => updateField("faviconUrl", value)}
+                  onUpload={(file) => uploadBrandAsset("favicon", file)}
+                  uploading={uploadingFavicon}
                   placeholder="https://example.com/favicon.ico"
                 />
                 <p className="text-sm font-semibold leading-6 text-slate-500">
-                  Use a square PNG/SVG for the logo and a 32x32 or 48x48 ICO/PNG
-                  for the favicon. Relative paths like /brand/favicon.png are
-                  also supported after the file exists in the app.
+                  Upload PNG, JPG, WEBP, GIF, SVG, ICO, or PDF assets up to 10 MB.
+                  Image files render as logo previews. Browser favicons should be
+                  ICO, PNG, SVG, WEBP, or GIF; PDFs are stored as brand files but
+                  cannot render as the browser tab icon.
                 </p>
               </div>
             </Panel>
@@ -303,12 +365,14 @@ export default function AdminAppearanceSettingsPage() {
                   </div>
                   <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
                     <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
-                      {settings.faviconUrl ? (
+                      {settings.faviconUrl && isBrowserIconUrl(settings.faviconUrl) ? (
                         <img
                           src={settings.faviconUrl}
                           alt=""
                           className="h-full w-full object-contain"
                         />
+                      ) : settings.faviconUrl ? (
+                        <FileText size={15} className="text-slate-500" />
                       ) : (
                         <span className="text-xs font-black text-slate-500">
                           {settings.shortName.slice(0, 1)}
@@ -357,7 +421,8 @@ export default function AdminAppearanceSettingsPage() {
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold leading-6 text-slate-600">
                   <BadgeCheck className="mr-2 inline text-emerald-600" size={17} />
                   Saved branding is loaded by the favicon runtime, login
-                  headers, and dashboard sidebar.
+                  headers, and dashboard sidebar. Uploaded files are stored in
+                  the public brand-assets bucket.
                 </div>
               </div>
             </Panel>
@@ -408,8 +473,56 @@ function TextField({
   )
 }
 
+function AssetField({
+  label,
+  value,
+  onChange,
+  onUpload,
+  uploading,
+  placeholder,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  onUpload: (file: File | null) => void
+  uploading: boolean
+  placeholder: string
+}) {
+  return (
+    <div className="grid gap-2">
+      <TextField
+        label={label}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+      />
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <label className="inline-flex w-fit cursor-pointer items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 hover:bg-slate-50">
+          {uploading ? <Loader2 size={17} className="animate-spin" /> : <Upload size={17} />}
+          Upload File
+          <input
+            type="file"
+            accept=".png,.jpg,.jpeg,.webp,.gif,.svg,.ico,.pdf,image/png,image/jpeg,image/webp,image/gif,image/svg+xml,image/x-icon,application/pdf"
+            className="sr-only"
+            disabled={uploading}
+            onChange={(event) => {
+              onUpload(event.target.files?.[0] || null)
+              event.target.value = ""
+            }}
+          />
+        </label>
+        {value ? (
+          <span className="min-w-0 truncate text-xs font-bold text-slate-500">
+            Current: {assetFileName(value)}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 function BrandPreviewMark({ settings }: { settings: BrandSettings }) {
-  if (settings.logoUrl) {
+  if (settings.logoUrl && isImageAssetUrl(settings.logoUrl)) {
     return (
       <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white">
         <img
@@ -417,6 +530,14 @@ function BrandPreviewMark({ settings }: { settings: BrandSettings }) {
           alt=""
           className="h-full w-full object-contain p-1"
         />
+      </div>
+    )
+  }
+
+  if (settings.logoUrl) {
+    return (
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-600">
+        <FileText size={24} />
       </div>
     )
   }

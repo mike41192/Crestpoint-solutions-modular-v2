@@ -1,10 +1,11 @@
 "use client"
 
-import { Sparkles } from "lucide-react"
+import { FileText, Sparkles } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import {
   defaultBrandSettings,
+  isImageAssetUrl,
   type BrandSettings,
 } from "@/lib/branding/brand-config"
 
@@ -90,7 +91,7 @@ function BrandMark({
       ? "h-12 w-12 rounded-2xl"
       : "h-10 w-10 rounded-2xl"
 
-  if (settings.logoUrl) {
+  if (settings.logoUrl && isImageAssetUrl(settings.logoUrl)) {
     return (
       <div
         className={`flex shrink-0 items-center justify-center overflow-hidden bg-white/95 ${classes}`}
@@ -100,6 +101,16 @@ function BrandMark({
           alt=""
           className="h-full w-full object-contain p-1"
         />
+      </div>
+    )
+  }
+
+  if (settings.logoUrl) {
+    return (
+      <div
+        className={`flex shrink-0 items-center justify-center bg-white/95 text-slate-700 ${classes}`}
+      >
+        <FileText size={size === "lg" ? 22 : 18} />
       </div>
     )
   }
