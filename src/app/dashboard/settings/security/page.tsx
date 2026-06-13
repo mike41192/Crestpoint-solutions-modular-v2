@@ -64,9 +64,6 @@ export default function SecuritySettingsPage() {
                 </div>
               </div>
 
-              <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-emerald-700 shadow-sm">
-                Live
-              </span>
             </div>
           </section>
 
@@ -80,7 +77,6 @@ export default function SecuritySettingsPage() {
               icon={KeyRound}
               title="Reset Password"
               description="Update your password from the secure reset screen."
-              status="Available"
               href="/auth/reset-password"
             />
 
@@ -88,7 +84,6 @@ export default function SecuritySettingsPage() {
               icon={Lock}
               title="Email Verification"
               description="Manage your primary login email and alternate email usage."
-              status="Connected"
               href="/dashboard/settings/security/email"
             />
 
@@ -96,7 +91,6 @@ export default function SecuritySettingsPage() {
               icon={ShieldCheck}
               title="Two-Factor Authentication"
               description="Enable or manage authenticator app protection for login."
-              status="Available"
               href="/dashboard/settings/security/two-factor"
             />
 
@@ -104,7 +98,6 @@ export default function SecuritySettingsPage() {
               icon={MonitorSmartphone}
               title="Device Management"
               description="Review and manage active login sessions."
-              status="Available"
               href="/dashboard/settings/security/devices"
             />
 
@@ -124,7 +117,6 @@ function SecurityCard({
   icon: Icon,
   title,
   description,
-  status,
   href,
 }: {
   icon: React.ComponentType<{
@@ -133,7 +125,6 @@ function SecurityCard({
   }>
   title: string
   description: string
-  status: string
   href: string
 }) {
   return (
@@ -147,15 +138,9 @@ function SecurityCard({
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-black text-slate-950">
-              {title}
-            </h3>
-
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-600">
-              {status}
-            </span>
-          </div>
+          <h3 className="font-black text-slate-950">
+            {title}
+          </h3>
 
           <p className="mt-2 text-sm leading-6 text-slate-500">
             {description}

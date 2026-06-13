@@ -11,7 +11,6 @@ import {
   MessageSquare,
   Sparkles,
   Target,
-  TrendingUp,
   Users,
 } from "lucide-react"
 import { ModulePageLayout } from "@/components/layout/ModulePageLayout"
@@ -159,33 +158,6 @@ export default function DashboardHomePage() {
           </div>
         </section>
 
-        <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            icon={FileText}
-            label="Resume Progress"
-            value="Active"
-            description="Builder, autosave, versions, and DOCX export online."
-          />
-          <StatCard
-            icon={Target}
-            label="ATS Readiness"
-            value="Ready"
-            description="Scoring system prepared for job-match workflows."
-          />
-          <StatCard
-            icon={MessageSquare}
-            label="Interview Prep"
-            value="Available"
-            description="Practice modules available from the dashboard."
-          />
-          <StatCard
-            icon={TrendingUp}
-            label="Growth System"
-            value="Phase 157.2"
-            description="Command center modernization in progress."
-          />
-        </section>
-
         <section>
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -225,60 +197,34 @@ export default function DashboardHomePage() {
           </div>
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-          <div className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-5 flex items-start gap-3 border-b border-slate-100 pb-4">
-              <div className="rounded-2xl bg-blue-50 p-2 text-blue-700">
-                <Brain size={19} />
-              </div>
-
-              <div>
-                <h2 className="text-xl font-black text-slate-950">
-                  AI Recommendations
-                </h2>
-                <p className="mt-1 text-sm leading-6 text-slate-500">
-                  Suggested next actions to keep your career system moving.
-                </p>
-              </div>
+        <section className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-5 flex items-start gap-3 border-b border-slate-100 pb-4">
+            <div className="rounded-2xl bg-blue-50 p-2 text-blue-700">
+              <Brain size={19} />
             </div>
 
-            <div className="grid gap-3">
-              {recommendationCards.map((item) => (
-                <div
-                  key={item}
-                  className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                >
-                  <CheckCircle2 size={18} className="mt-0.5 text-blue-600" />
-                  <p className="text-sm font-semibold leading-6 text-slate-700">
-                    {item}
-                  </p>
-                </div>
-              ))}
+            <div>
+              <h2 className="text-xl font-black text-slate-950">
+                Recommended Focus
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                Suggested next actions to keep your career system moving.
+              </p>
             </div>
           </div>
 
-          <div className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-5 flex items-start gap-3 border-b border-slate-100 pb-4">
-              <div className="rounded-2xl bg-blue-50 p-2 text-blue-700">
-                <BarChart3 size={19} />
-              </div>
-
-              <div>
-                <h2 className="text-xl font-black text-slate-950">
-                  Activity Snapshot
-                </h2>
-                <p className="mt-1 text-sm leading-6 text-slate-500">
-                  Live metrics will connect to Supabase in a later phase.
+          <div className="grid gap-3 md:grid-cols-2">
+            {recommendationCards.map((item) => (
+              <div
+                key={item}
+                className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4"
+              >
+                <CheckCircle2 size={18} className="mt-0.5 text-blue-600" />
+                <p className="text-sm font-semibold leading-6 text-slate-700">
+                  {item}
                 </p>
               </div>
-            </div>
-
-            <div className="grid gap-3">
-              <ActivityRow label="Recent resume update" value="Ready" />
-              <ActivityRow label="Autosave engine" value="Online" />
-              <ActivityRow label="Version history" value="Online" />
-              <ActivityRow label="PDF integration" value="Next phase" />
-            </div>
+            ))}
           </div>
         </section>
 
@@ -318,53 +264,5 @@ export default function DashboardHomePage() {
         </section>
       </div>
     </ModulePageLayout>
-  )
-}
-
-type StatCardProps = {
-  icon: React.ComponentType<{ size?: number }>
-  label: string
-  value: string
-  description: string
-}
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  description,
-}: StatCardProps) {
-  return (
-    <article className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="rounded-2xl bg-blue-50 p-3 text-blue-700">
-          <Icon size={20} />
-        </div>
-
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
-          {value}
-        </span>
-      </div>
-
-      <h3 className="font-black text-slate-950">{label}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
-    </article>
-  )
-}
-
-function ActivityRow({
-  label,
-  value,
-}: {
-  label: string
-  value: string
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-      <p className="text-sm font-bold text-slate-700">{label}</p>
-      <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-blue-700">
-        {value}
-      </span>
-    </div>
   )
 }

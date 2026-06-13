@@ -65,7 +65,6 @@ const accountSections = [
     description:
       "Manage personal details, career goals, contact information, and profile preferences.",
     icon: UserRound,
-    status: "Active",
     href: "/dashboard/settings/profile",
   },
   {
@@ -73,7 +72,6 @@ const accountSections = [
     description:
       "Review your current tier and which Crestpoint modules are available to your account.",
     icon: CreditCard,
-    status: "Connected",
     href: "/dashboard/settings/billing",
   },
   {
@@ -81,7 +79,6 @@ const accountSections = [
     description:
       "Control email updates, reminders, job alerts, and interview prep notifications.",
     icon: Bell,
-    status: "Connected",
     href: "/dashboard/settings/preferences",
   },
   {
@@ -89,7 +86,6 @@ const accountSections = [
     description:
       "Manage password reset, authentication, sessions, and account protection.",
     icon: Lock,
-    status: "Protected",
     href: "/dashboard/settings/security",
   },
 ]
@@ -111,8 +107,6 @@ const defaultAccountHealth: AccountHealthReport = calculateAccountHealth({
 export default function AccountSettingsPage() {
   const [healthReport, setHealthReport] =
     useState<AccountHealthReport>(defaultAccountHealth)
-
-  const [loading, setLoading] = useState(true)
 
   // =====================================================
   // BLOCK: Load Account Health Data
@@ -138,7 +132,6 @@ export default function AccountSettingsPage() {
         setHealthReport(defaultAccountHealth)
       }
 
-      setLoading(false)
     }
 
     loadAccountHealth()
@@ -159,7 +152,7 @@ export default function AccountSettingsPage() {
         ===================================================== */}
 
         <section className="rounded-[28px] border border-slate-200 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-6 text-white shadow-sm">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
             <div>
               <div className="mb-3 flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-blue-100">
                 <ShieldCheck size={14} />
@@ -173,20 +166,6 @@ export default function AccountSettingsPage() {
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
                 Keep your profile, access level, preferences, and security
                 controls organized in one place.
-              </p>
-            </div>
-
-            <div className="rounded-3xl border border-white/15 bg-white/10 p-4">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-100">
-                Current Status
-              </p>
-
-              <p className="mt-2 text-lg font-black">
-                {loading ? "Checking Account..." : "Account Active"}
-              </p>
-
-              <p className="mt-1 text-sm text-slate-300">
-                Module access managed by your membership tier.
               </p>
             </div>
           </div>
@@ -219,15 +198,9 @@ export default function AccountSettingsPage() {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-lg font-black text-slate-950">
-                          {section.title}
-                        </h2>
-
-                        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-extrabold text-blue-700">
-                          {section.status}
-                        </span>
-                      </div>
+                      <h2 className="text-lg font-black text-slate-950">
+                        {section.title}
+                      </h2>
 
                       <p className="mt-2 text-sm leading-6 text-slate-500">
                         {section.description}
